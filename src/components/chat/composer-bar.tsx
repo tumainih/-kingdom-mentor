@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ArrowUp, MessageSquare, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
+import { ArrowUp, MessageSquare, Mic, MicOff } from "lucide-react";
 import type { AppMode } from "@/components/app-shell";
 import { cn } from "@/lib/utils";
 
@@ -16,8 +16,6 @@ interface ComposerBarProps {
   isListening?: boolean;
   onTalkToggle?: () => void;
   talkDisabled?: boolean;
-  autoSpeak?: boolean;
-  onAutoSpeakChange?: (value: boolean) => void;
 }
 
 export function ComposerBar({
@@ -31,8 +29,6 @@ export function ComposerBar({
   isListening,
   onTalkToggle,
   talkDisabled,
-  autoSpeak,
-  onAutoSpeakChange,
 }: ComposerBarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -111,20 +107,6 @@ export function ComposerBar({
                 rows={1}
                 className="mb-0.5 max-h-40 min-h-[36px] flex-1 resize-none bg-transparent py-1.5 text-[15px] leading-6 text-foreground outline-none placeholder:text-muted-foreground sm:min-h-[40px]"
               />
-              {onAutoSpeakChange && (
-                <button
-                  type="button"
-                  onClick={() => onAutoSpeakChange(!autoSpeak)}
-                  aria-label={autoSpeak ? "Mute read aloud" : "Read replies aloud"}
-                  className="mb-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:h-9 sm:w-9"
-                >
-                  {autoSpeak ? (
-                    <Volume2 className="h-4 w-4" />
-                  ) : (
-                    <VolumeX className="h-4 w-4" />
-                  )}
-                </button>
-              )}
               <button
                 type="button"
                 onClick={onSend}

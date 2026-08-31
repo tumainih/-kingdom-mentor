@@ -5,7 +5,6 @@ import { BrandLogo, BrandTitle } from "./brand";
 import { MessageList } from "./message-list";
 import { AiThinking } from "./ai-badge";
 import { ComposerBar } from "./composer-bar";
-import { speakText } from "@/hooks/use-speech";
 import { streamKingdomReply } from "@/lib/chat-stream";
 import type { AppMode } from "@/components/app-shell";
 import { type ChatMessage, type ScripturePassage } from "./types";
@@ -29,7 +28,6 @@ export function ChatContainer({
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [autoSpeak, setAutoSpeak] = useState(true);
   const messagesRef = useRef<ChatMessage[]>([]);
 
   messagesRef.current = messages;
@@ -41,7 +39,7 @@ export function ChatContainer({
 
       try {
         let passages: ScripturePassage[] = [];
-        const accumulated = await streamKingdomReply(
+        await streamKingdomReply(
           history.map(({ role, content }) => ({ role, content })),
           {
             onScripture: (p) => {
@@ -65,8 +63,6 @@ export function ChatContainer({
             },
           },
         );
-
-        if (accumulated && autoSpeak) speakText(accumulated);
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Something went wrong.";
@@ -76,7 +72,7 @@ export function ChatContainer({
         setIsStreaming(false);
       }
     },
-    [autoSpeak],
+    [],
   );
 
   const sendMessage = useCallback(
@@ -151,8 +147,6 @@ export function ChatContainer({
         onSend={() => sendMessage(input)}
         disabled={inputDisabled}
         placeholder="Write what you feel or doubt…"
-        autoSpeak={autoSpeak}
-        onAutoSpeakChange={setAutoSpeak}
       />
 
       {error && (

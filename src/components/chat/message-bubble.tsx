@@ -2,9 +2,7 @@
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Volume2 } from "lucide-react";
 import { BrandLogo } from "./brand";
-import { speakText } from "@/hooks/use-speech";
 import type { ScripturePassage } from "./types";
 
 interface MessageBubbleProps {
@@ -40,16 +38,6 @@ export function MessageBubble({
           <p className="text-[11px] font-medium uppercase tracking-wide text-brand">
             Kingdom AI
           </p>
-          {content && !isStreaming && (
-            <button
-              type="button"
-              onClick={() => speakText(content)}
-              aria-label="Listen to response"
-              className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-brand/10 hover:text-brand"
-            >
-              <Volume2 className="h-3.5 w-3.5" />
-            </button>
-          )}
         </div>
 
         {scripture && scripture.length > 0 && (

@@ -24,11 +24,11 @@ export function MessageList({
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-6">
       {scripture.length > 0 && (
-        <div className="mb-6 rounded-2xl border border-border/80 bg-background px-4 py-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <div className="mb-6 rounded-2xl border border-brand/15 bg-white px-4 py-3 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-brand">
             Scripture context · KJV
           </p>
-          <p className="mt-1.5 text-sm leading-relaxed text-foreground/80">
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
             {scripture.map((p) => p.ref).join(" · ")}
           </p>
         </div>

@@ -18,7 +18,7 @@ export function ChatInput({
   onChange,
   onSend,
   disabled,
-  placeholder = "Ask anything…",
+  placeholder = "Ask Kingdom AI anything…",
   centered = false,
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -48,7 +48,7 @@ export function ChatInput({
     >
       <div
         className={cn(
-          "flex items-end gap-2 rounded-[26px] border border-border bg-composer px-4 py-3 shadow-[0_2px_16px_rgba(0,0,0,0.06)] transition-shadow focus-within:shadow-[0_4px_24px_rgba(0,0,0,0.1)]",
+          "flex items-end gap-2 rounded-[26px] border border-brand/15 bg-composer px-4 py-3 shadow-[0_4px_24px_rgba(79,70,229,0.08)] transition-all focus-within:border-brand/30 focus-within:shadow-[0_6px_32px_rgba(79,70,229,0.14)]",
           disabled && "opacity-70",
         )}
       >
@@ -68,9 +68,9 @@ export function ChatInput({
           disabled={!canSend}
           aria-label="Send message"
           className={cn(
-            "mb-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors",
+            "mb-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all",
             canSend
-              ? "bg-foreground text-background hover:bg-foreground/90"
+              ? "brand-gradient text-white shadow-md shadow-brand/30 hover:opacity-90"
               : "bg-muted text-muted-foreground cursor-not-allowed",
           )}
         >

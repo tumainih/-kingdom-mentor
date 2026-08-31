@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { Sparkles } from "lucide-react";
 import { ChatHeader } from "./chat-header";
 import { ChatInput } from "./chat-input";
 import { MessageList } from "./message-list";
+import { BrandLogo, BrandTitle } from "./brand";
 import {
   STARTER_PROMPTS,
   type ChatMessage,
@@ -130,29 +132,36 @@ export function ChatContainer() {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className="flex h-full flex-col bg-canvas">
+    <div className="canvas-gradient flex h-full flex-col">
       <ChatHeader />
 
       <div className="relative flex min-h-0 flex-1 flex-col">
         {!hasMessages ? (
           <div className="flex flex-1 flex-col items-center justify-center px-4 pb-8">
+            <BrandLogo size="lg" className="mb-6 rounded-2xl shadow-lg shadow-brand/20" />
+
+            <div className="mb-3">
+              <BrandTitle size="lg" />
+            </div>
+
             <div className="mb-10 text-center">
-              <h2 className="text-[32px] font-normal tracking-tight text-foreground sm:text-[36px]">
+              <h2 className="text-xl font-medium text-brand-navy sm:text-2xl">
                 What would wisdom require?
               </h2>
-              <p className="mt-3 max-w-md text-[15px] text-muted-foreground">
-                Biblical guidance grounded in retrieved KJV Scripture
+              <p className="mt-3 flex items-center justify-center gap-1.5 text-[15px] text-muted-foreground">
+                <Sparkles className="h-4 w-4 text-brand" />
+                Scripture-grounded AI guidance from the King James Version
               </p>
             </div>
 
-            <div className="mb-8 w-full flex justify-center">
+            <div className="mb-8 flex w-full justify-center">
               <ChatInput
                 value={input}
                 onChange={setInput}
                 onSend={() => sendMessage(input)}
                 disabled={isStreaming}
                 centered
-                placeholder="Describe your situation or ask for guidance…"
+                placeholder="Describe your situation or ask Kingdom AI…"
               />
             </div>
 
@@ -163,7 +172,7 @@ export function ChatContainer() {
                   type="button"
                   onClick={() => sendMessage(prompt)}
                   disabled={isStreaming}
-                  className="rounded-2xl border border-border/80 bg-background px-4 py-3 text-left text-sm leading-snug text-foreground/80 transition-colors hover:bg-accent disabled:opacity-50"
+                  className="rounded-2xl border border-brand/10 bg-white/80 px-4 py-3 text-left text-sm leading-snug text-foreground/80 shadow-sm transition-all hover:border-brand/25 hover:bg-white hover:shadow-md disabled:opacity-50"
                 >
                   {prompt}
                 </button>
@@ -181,7 +190,7 @@ export function ChatContainer() {
         )}
 
         {hasMessages && (
-          <div className="shrink-0 bg-gradient-to-t from-canvas from-60% to-transparent px-0 pb-5 pt-6">
+          <div className="shrink-0 bg-gradient-to-t from-[#f4f7fc] from-60% to-transparent px-0 pb-5 pt-6">
             <ChatInput
               value={input}
               onChange={setInput}
@@ -194,14 +203,14 @@ export function ChatContainer() {
       </div>
 
       {error && (
-        <div className="absolute bottom-24 left-1/2 z-30 -translate-x-1/2 rounded-full border border-destructive/20 bg-background px-4 py-2 text-sm text-destructive shadow-lg">
+        <div className="absolute bottom-24 left-1/2 z-30 -translate-x-1/2 rounded-full border border-destructive/20 bg-white px-4 py-2 text-sm text-destructive shadow-lg">
           {error}
         </div>
       )}
 
       <p className="shrink-0 pb-3 text-center text-[11px] text-muted-foreground/80">
-        Kingdom AI is not a replacement for God, pastoral care, or qualified
-        professionals. Guidance comes from retrieved Scripture only.
+        <span className="font-medium text-brand">Kingdom AI</span> is not a
+        replacement for God, pastoral care, or qualified professionals.
       </p>
     </div>
   );

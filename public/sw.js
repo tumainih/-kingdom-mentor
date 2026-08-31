@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build 1rstaZbauPBdoiPikwhga) */
-const CACHE = "kingdom-ai-1rstaZbauPBdoiPikwhga";
+/* Kingdom AI — offline-capable service worker (build DAYQJicryhTlTecfW2PEf) */
+const CACHE = "kingdom-ai-DAYQJicryhTlTecfW2PEf";
 const PRECACHE = [
   "/",
   "/home",
@@ -10,9 +10,9 @@ const PRECACHE = [
   "/icon-512.png",
   "/data/hourly-en.json",
   "/data/hourly-sw.json",
-  "/_next/static/1rstaZbauPBdoiPikwhga/_buildManifest.js",
-  "/_next/static/1rstaZbauPBdoiPikwhga/_clientMiddlewareManifest.js",
-  "/_next/static/1rstaZbauPBdoiPikwhga/_ssgManifest.js",
+  "/_next/static/DAYQJicryhTlTecfW2PEf/_buildManifest.js",
+  "/_next/static/DAYQJicryhTlTecfW2PEf/_clientMiddlewareManifest.js",
+  "/_next/static/DAYQJicryhTlTecfW2PEf/_ssgManifest.js",
   "/_next/static/chunks/00izapk6l813d.css",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",

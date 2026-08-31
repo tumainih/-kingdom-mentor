@@ -12,16 +12,11 @@ import {
 } from "@/hooks/use-speech";
 
 interface ConverseViewProps {
-  aiReady: boolean;
   mode: AppMode;
   onModeChange: (mode: AppMode) => void;
 }
 
-export function ConverseView({
-  aiReady,
-  mode,
-  onModeChange,
-}: ConverseViewProps) {
+export function ConverseView({ mode, onModeChange }: ConverseViewProps) {
   const [liveTranscript, setLiveTranscript] = useState("");
   const [lastUser, setLastUser] = useState("");
   const [lastReply, setLastReply] = useState("");
@@ -31,43 +26,40 @@ export function ConverseView({
   const historyRef = useRef<StreamMessage[]>([]);
   const busyRef = useRef(false);
 
-  const askKingdom = useCallback(
-    async (question: string) => {
-      if (busyRef.current || !aiReady) return;
-      busyRef.current = true;
-      setError(null);
-      setLiveTranscript("");
-      setLastUser(question);
-      setLastReply("");
-      setPhase("thinking");
+  const askKingdom = useCallback(async (question: string) => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setError(null);
+    setLiveTranscript("");
+    setLastUser(question);
+    setLastReply("");
+    setPhase("thinking");
 
-      const history: StreamMessage[] = [
-        ...historyRef.current,
-        { role: "user", content: question },
-      ];
+    const history: StreamMessage[] = [
+      ...historyRef.current,
+      { role: "user", content: question },
+    ];
+    historyRef.current = history;
+
+    try {
+      const { text: reply } = await fetchKingdomReply(history);
+      setLastReply(reply);
+
+      historyRef.current = [...history, { role: "assistant", content: reply }];
+
+      setPhase("speaking");
+      await speakTextAsync(reply);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Something went wrong.";
+      setError(message);
       historyRef.current = history;
-
-      try {
-        const { text: reply } = await fetchKingdomReply(history);
-        setLastReply(reply);
-
-        historyRef.current = [...history, { role: "assistant", content: reply }];
-
-        setPhase("speaking");
-        await speakTextAsync(reply);
-      } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Something went wrong.";
-        setError(message);
-        historyRef.current = history;
-      } finally {
-        busyRef.current = false;
-        setPhase("idle");
-        setLiveTranscript("");
-      }
-    },
-    [aiReady],
-  );
+    } finally {
+      busyRef.current = false;
+      setPhase("idle");
+      setLiveTranscript("");
+    }
+  }, []);
 
   const {
     isListening,
@@ -89,10 +81,6 @@ export function ConverseView({
   }, [isListening, phase]);
 
   const toggleMic = () => {
-    if (!aiReady) {
-      setError("Add GEMINI_API_KEY to .env.local.");
-      return;
-    }
     if (busyRef.current) return;
     clearError();
     setError(null);
@@ -104,8 +92,7 @@ export function ConverseView({
     }
   };
 
-  const talkDisabled =
-    !aiReady || phase === "thinking" || phase === "speaking";
+  const talkDisabled = phase === "thinking" || phase === "speaking";
   const displayError = error ?? speechError;
 
   const status =

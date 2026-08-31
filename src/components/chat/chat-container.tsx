@@ -14,13 +14,11 @@ function createId() {
 }
 
 interface ChatContainerProps {
-  aiReady?: boolean;
   mode: AppMode;
   onModeChange: (mode: AppMode) => void;
 }
 
 export function ChatContainer({
-  aiReady = false,
   mode,
   onModeChange,
 }: ChatContainerProps) {
@@ -80,11 +78,6 @@ export function ChatContainer({
       const trimmed = text.trim();
       if (!trimmed || isStreaming) return;
 
-      if (!aiReady) {
-        setError("Add GEMINI_API_KEY to .env.local to chat.");
-        return;
-      }
-
       const userMessage: ChatMessage = {
         id: createId(),
         role: "user",
@@ -102,7 +95,7 @@ export function ChatContainer({
 
       await streamReply(history, assistantId);
     },
-    [aiReady, isStreaming, streamReply],
+    [isStreaming, streamReply],
   );
 
   const lastMessage = messages[messages.length - 1];
@@ -111,7 +104,7 @@ export function ChatContainer({
     lastMessage?.role === "assistant" &&
     !lastMessage.content.trim();
 
-  const inputDisabled = isStreaming || !aiReady;
+  const inputDisabled = isStreaming;
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-2 pb-1 pt-2 sm:px-4 sm:pt-3">

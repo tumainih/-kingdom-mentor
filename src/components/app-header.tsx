@@ -3,15 +3,18 @@
 import { Plus } from "lucide-react";
 import { BrandLogo, BrandTitle } from "@/components/chat/brand";
 import { Button } from "@/components/ui/button";
+import type { GuidanceMode } from "@/components/app-shell";
 
 interface AppHeaderProps {
   aiReady?: boolean;
+  guidanceMode?: GuidanceMode;
   showNewChat?: boolean;
   onNewChat?: () => void;
 }
 
 export function AppHeader({
   aiReady = true,
+  guidanceMode,
   showNewChat,
   onNewChat,
 }: AppHeaderProps) {
@@ -27,7 +30,7 @@ export function AppHeader({
           {aiReady && (
             <span className="flex items-center gap-1 text-[10px] font-medium text-brand sm:text-xs">
               <span className="h-1.5 w-1.5 rounded-full bg-brand animate-pulse" />
-              Live
+              {guidanceMode === "gemini" ? "AI Live" : "Free"}
             </span>
           )}
           {showNewChat && onNewChat && (

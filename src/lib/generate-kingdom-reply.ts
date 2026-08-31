@@ -8,6 +8,8 @@ import {
   retrieveAndFormat,
 } from "@/lib/bible/retrieval";
 import { formatAIError } from "@/lib/format-ai-error";
+import { generateFreeFeedback } from "@/lib/free-feedback";
+import { isApiUnavailableError } from "@/lib/is-api-unavailable-error";
 import { getGeminiClient, getModel, isAIConfigured } from "@/lib/gemini";
 import type { RetrievedPassage } from "@/lib/bible/types";
 
@@ -16,10 +18,13 @@ export interface KingdomMessage {
   content: string;
 }
 
+export type ReplyMode = "gemini" | "free";
+
 export interface KingdomReply {
   text: string;
   passages: RetrievedPassage[];
   questionKind: PromptKind;
+  mode: ReplyMode;
 }
 
 function sanitizeMessages(messages: KingdomMessage[]): KingdomMessage[] {
@@ -64,7 +69,6 @@ function toGeminiHistory(messages: KingdomMessage[]) {
     history.shift();
   }
 
-  // Drop trailing model turn if history ends unevenly
   while (history.length > 0 && history[history.length - 1].role === "model") {
     history.pop();
   }
@@ -93,25 +97,15 @@ function extractTextFromResponse(response: {
   return parts.trim();
 }
 
-export async function generateKingdomReply(
+async function generateWithGemini(
   messages: KingdomMessage[],
 ): Promise<KingdomReply> {
-  if (!isAIConfigured()) {
-    throw new Error(
-      "Gemini API key is not configured. Add GEMINI_API_KEY to your environment.",
-    );
-  }
-
   const client = getGeminiClient();
   if (!client) {
     throw new Error("Gemini client failed to initialize.");
   }
 
   const sanitized = sanitizeMessages(messages);
-  if (sanitized.length === 0) {
-    throw new Error("At least one message is required.");
-  }
-
   const questionKind = resolveQuestionKind(sanitized);
   const retrievalQuery = buildRetrievalQueryFromMessages(sanitized);
 
@@ -124,12 +118,10 @@ export async function generateKingdomReply(
     passages = retrieved.passages;
   }
 
-  const systemPrompt = buildSystemPromptForKind(questionKind, scriptureBlock);
   const latestMessage = sanitized[sanitized.length - 1];
-
   const model = client.getGenerativeModel({
     model: getModel(),
-    systemInstruction: systemPrompt,
+    systemInstruction: buildSystemPromptForKind(questionKind, scriptureBlock),
     generationConfig: generationConfigForKind(questionKind),
   });
 
@@ -137,14 +129,37 @@ export async function generateKingdomReply(
     history: toGeminiHistory(sanitized),
   });
 
+  const result = await chat.sendMessage(latestMessage.content);
+  const text = extractTextFromResponse(result.response);
+  if (!text) {
+    throw new Error("Kingdom AI returned an empty response.");
+  }
+
+  return { text, passages, questionKind, mode: "gemini" };
+}
+
+export async function generateKingdomReply(
+  messages: KingdomMessage[],
+): Promise<KingdomReply> {
+  const sanitized = sanitizeMessages(messages);
+  if (sanitized.length === 0) {
+    throw new Error("At least one message is required.");
+  }
+
+  const latest = sanitized[sanitized.length - 1].content;
+
+  if (!isAIConfigured()) {
+    const free = await generateFreeFeedback(latest);
+    return { ...free, mode: "free" };
+  }
+
   try {
-    const result = await chat.sendMessage(latestMessage.content);
-    const text = extractTextFromResponse(result.response);
-    if (!text) {
-      throw new Error("Kingdom AI returned an empty response. Please try again.");
-    }
-    return { text, passages, questionKind };
+    return await generateWithGemini(sanitized);
   } catch (err) {
+    if (isApiUnavailableError(err)) {
+      const free = await generateFreeFeedback(latest);
+      return { ...free, mode: "free" };
+    }
     throw new Error(formatAIError(err));
   }
 }
@@ -167,6 +182,10 @@ export function getChunkText(chunk: {
 }
 
 export async function prepareKingdomStream(messages: KingdomMessage[]) {
+  if (!isAIConfigured()) {
+    throw new Error("free-mode");
+  }
+
   const sanitized = sanitizeMessages(messages);
   if (sanitized.length === 0) {
     throw new Error("At least one message is required.");
@@ -186,7 +205,7 @@ export async function prepareKingdomStream(messages: KingdomMessage[]) {
 
   const client = getGeminiClient();
   if (!client) {
-    throw new Error("Gemini client failed to initialize.");
+    throw new Error("free-mode");
   }
 
   const latestMessage = sanitized[sanitized.length - 1];

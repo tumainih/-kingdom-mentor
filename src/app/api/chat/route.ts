@@ -5,7 +5,7 @@ import {
   type KingdomMessage,
 } from "@/lib/generate-kingdom-reply";
 import { formatAIError } from "@/lib/format-ai-error";
-import { isAIConfigured } from "@/lib/gemini";
+import { isApiUnavailableError } from "@/lib/is-api-unavailable-error";
 
 export const runtime = "nodejs";
 
@@ -62,16 +62,6 @@ function validateMessages(messages: unknown): ChatMessage[] {
 
 export async function POST(request: Request) {
   try {
-    if (!isAIConfigured()) {
-      return Response.json(
-        {
-          error:
-            "Gemini API key is not configured. Add GEMINI_API_KEY to your environment.",
-        },
-        { status: 503 },
-      );
-    }
-
     const body = (await request.json()) as {
       messages?: unknown;
       stream?: boolean;
@@ -86,15 +76,16 @@ export async function POST(request: Request) {
       return Response.json({
         content: reply.text,
         passages: reply.passages,
+        mode: reply.mode,
       });
     }
 
     let streamResult;
     try {
       streamResult = await prepareKingdomStream(kingdomMessages);
-    } catch (err) {
+    } catch {
       const reply = await generateKingdomReply(kingdomMessages);
-      return streamJsonFallback(reply.text, reply.passages);
+      return streamJsonFallback(reply.text, reply.passages, reply.mode);
     }
 
     const { result, passages } = streamResult;
@@ -130,7 +121,20 @@ export async function POST(request: Request) {
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`),
           );
-        } catch {
+        } catch (err) {
+          if (isApiUnavailableError(err)) {
+            const fallback = await generateKingdomReply(kingdomMessages);
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ type: "content", text: fallback.text })}\n\n`,
+              ),
+            );
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`),
+            );
+            return;
+          }
+
           try {
             const fallback = await generateKingdomReply(kingdomMessages);
             if (fallback.text) {
@@ -158,7 +162,7 @@ export async function POST(request: Request) {
             encoder.encode(
               `data: ${JSON.stringify({
                 type: "error",
-                message: "Could not get a response. Please try again.",
+                message: "Something went wrong. Please try again.",
               })}\n\n`,
             ),
           );
@@ -179,17 +183,19 @@ export async function POST(request: Request) {
     const message = formatAIError(err);
     const status = message.includes("Invalid") || message.includes("Too many")
       ? 400
-      : message.includes("quota")
-        ? 402
-        : 500;
+      : 500;
     return Response.json({ error: message }, { status });
   }
 }
 
-function streamJsonFallback(content: string, passages: unknown[]) {
+function streamJsonFallback(
+  content: string,
+  passages: unknown[],
+  mode?: string,
+) {
   const encoder = new TextEncoder();
   const body = [
-    `data: ${JSON.stringify({ type: "scripture", passages })}\n\n`,
+    `data: ${JSON.stringify({ type: "scripture", passages, mode })}\n\n`,
     `data: ${JSON.stringify({ type: "content", text: content })}\n\n`,
     `data: ${JSON.stringify({ type: "done" })}\n\n`,
   ].join("");

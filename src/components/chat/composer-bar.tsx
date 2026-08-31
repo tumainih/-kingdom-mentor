@@ -26,13 +26,14 @@ export function ComposerBar({
   onChange,
   onSend,
   disabled,
-  placeholder = "Ask Kingdom AI…",
+  placeholder,
   isListening,
   onTalkToggle,
   talkDisabled,
 }: ComposerBarProps) {
   const { t } = useLocale();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const resolvedPlaceholder = placeholder ?? t("placeholder");
 
   useEffect(() => {
     if (mode !== "chat") return;
@@ -104,7 +105,7 @@ export function ComposerBar({
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={placeholder}
+                placeholder={resolvedPlaceholder}
                 disabled={disabled}
                 rows={1}
                 className="mb-0.5 max-h-40 min-h-[36px] flex-1 resize-none bg-transparent py-1.5 text-[15px] leading-6 text-foreground outline-none placeholder:text-muted-foreground sm:min-h-[40px]"

@@ -60,7 +60,7 @@ export function ConverseView({ mode, onModeChange }: ConverseViewProps) {
       await speakTextAsync(reply, speechLang(locale));
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Something went wrong.";
+        err instanceof Error ? err.message : t("errorGeneric");
       setError(message);
       historyRef.current = history;
     } finally {
@@ -85,6 +85,7 @@ export function ConverseView({ mode, onModeChange }: ConverseViewProps) {
       },
     },
     speechLang(locale),
+    locale,
   );
 
   useEffect(() => {
@@ -153,7 +154,7 @@ export function ConverseView({ mode, onModeChange }: ConverseViewProps) {
               {lastReply && (
                 <div>
                   <div className="mb-1 flex items-center justify-between gap-2">
-                    <span className="text-brand-light">Kingdom AI: </span>
+                    <span className="text-brand-light">{t("assistantName")}: </span>
                     <Button
                       type="button"
                       variant="ghost"

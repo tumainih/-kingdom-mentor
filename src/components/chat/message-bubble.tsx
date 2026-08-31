@@ -74,7 +74,7 @@ export function MessageBubble({
       <div className="min-w-0 flex-1 pt-0.5">
         <div className="mb-1 flex items-center gap-2">
           <p className="text-[11px] font-medium uppercase tracking-wide text-brand">
-            Kingdom AI
+            {t("assistantName")}
           </p>
           {!isStreaming && content.trim() && (
             <Button
@@ -116,7 +116,7 @@ export function MessageBubble({
             </ul>
             {scripture.length > 5 && (
               <p className="mt-1.5 text-[10px] text-muted-foreground/80">
-                +{scripture.length - 5} more in context
+                {t("morePassages", { count: scripture.length - 5 })}
               </p>
             )}
           </div>

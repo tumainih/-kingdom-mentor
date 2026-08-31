@@ -16,9 +16,26 @@ const sortedAliasCache = new Map<
   BibleLocale,
   Array<{ alias: string; book: string }>
 >();
+let crossBookPairs: Array<{ en: string; sw: string }> | null = null;
+
+async function loadCrossBookPairs(): Promise<Array<{ en: string; sw: string }>> {
+  if (crossBookPairs) return crossBookPairs;
+  const swVerses = await loadVerses("sw");
+  const seen = new Set<string>();
+  const pairs: Array<{ en: string; sw: string }> = [];
+  for (const v of swVerses) {
+    if (!v.bookEn) continue;
+    const key = `${v.bookEn}::${v.book}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    pairs.push({ en: v.bookEn, sw: v.book });
+  }
+  crossBookPairs = pairs;
+  return pairs;
+}
 
 const LEADING_FILLER_RE =
-  /^(?:(?:please|kindly|can you|could you|would you|show me|tell me|read|quote|give me|what is|what does|what's|find|lookup|get|share|the book of|book of|from|in|about|verse|mstari|nipe|nisomee|onyesha|tafuta|eleza|ni|kwa|nipe mstari wa)\s+)+/i;
+  /^(?:(?:please|kindly|can you|could you|would you|show me|tell me|read|quote|give me|what is|what does|what's|find|lookup|get|share|the book of|book of|from|in|about|verse|mstari|nipe|nisomee|nisome|onyesha|tafuta|eleza|ni|kwa|nipe mstari wa|nisomee mstari|tafadhali)\s+)+/i;
 
 async function loadVerses(locale: BibleLocale): Promise<BibleVerse[]> {
   const cached = verseCache.get(locale);
@@ -52,6 +69,7 @@ function normalizeInput(text: string): string {
 function buildBookAliases(
   verses: BibleVerse[],
   locale: BibleLocale,
+  crossPairs: Array<{ en: string; sw: string }>,
 ): Map<string, string> {
   const aliases = new Map<string, string>();
 
@@ -208,14 +226,27 @@ function buildBookAliases(
     for (const alias of extras) add(alias, v.book);
   }
 
+  for (const { en, sw } of crossPairs) {
+    const canonical = locale === "sw" ? sw : en;
+    add(en, canonical);
+    add(sw, canonical);
+    const enAliases = enExtra[en] ?? [];
+    const swAliases = swExtra[sw] ?? [];
+    for (const alias of enAliases) add(alias, canonical);
+    for (const alias of swAliases) add(alias, canonical);
+  }
+
   return aliases;
 }
 
 async function getBookAliases(locale: BibleLocale): Promise<Map<string, string>> {
   const cached = bookAliasCache.get(locale);
   if (cached) return cached;
-  const verses = await loadVerses(locale);
-  const map = buildBookAliases(verses, locale);
+  const [verses, crossPairs] = await Promise.all([
+    loadVerses(locale),
+    loadCrossBookPairs(),
+  ]);
+  const map = buildBookAliases(verses, locale, crossPairs);
   bookAliasCache.set(locale, map);
   sortedAliasCache.set(
     locale,
@@ -316,7 +347,7 @@ export function looksLikeVerseRequest(text: string): boolean {
   if (!t) return false;
   if (/\d{1,3}\s*:\s*\d{1,3}/.test(t)) return true;
   if (
-    /\b(read|quote|show|give|find|lookup|what does|what is|nipe|nisomee|onyesha|tafuta|mstari|verse)\b/i.test(
+    /\b(read|quote|show|give|find|lookup|what does|what is|nipe|nisomee|nisome|onyesha|tafuta|mstari|verse|andika|soma)\b/i.test(
       t,
     ) &&
     /\b\d{1,3}\b/.test(t)

@@ -63,7 +63,7 @@ export function ChatContainer({ mode, onModeChange }: ChatContainerProps) {
         );
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : "Something went wrong.";
+          err instanceof Error ? err.message : t("errorGeneric");
         setError(message);
         setMessages((prev) => prev.filter((m) => m.id !== assistantId));
       } finally {

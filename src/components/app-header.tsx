@@ -35,7 +35,7 @@ export function AppHeader({
           <div
             className="flex items-center rounded-lg border border-border/60 bg-muted/40 p-0.5"
             role="group"
-            aria-label="Language"
+            aria-label={t("languageLabel")}
           >
             {(["en", "sw"] as AppLocale[]).map((code) => (
               <button

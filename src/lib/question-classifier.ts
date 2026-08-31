@@ -13,13 +13,13 @@ const OFF_TOPIC_RE =
   /\b(weather|forecast|temperature|recipe|cook|ingredient|score|football|basketball|soccer|nba|nfl|stock|crypto|bitcoin|python|javascript|typescript|code|program|debug|sql|capital of|population|who won|movie|netflix|spotify|game cheat|homework|calculate|math problem|2\+2|translate this|write an essay|email template|resume|cover letter|hali ya hewa|mpira|mapishi|programu|kompyuta)\b/i;
 
 const GREETING_RE =
-  /^(hi|hello|hey|habari|jambo|hujambo|salamu|good morning|good evening|asante|thanks|thank you|ok|okay|yes|no|bye|goodbye|kwaheri|shikamoo|marahaba)[\s!.?,]*$/i;
+  /^(hi|hello|hey|habari|jambo|hujambo|salamu|shalom|good morning|good evening|good afternoon|asante|thanks|thank you|ok|okay|yes|no|bye|goodbye|kwaheri|shikamoo|marahaba|sasa|mambo)[\s!.?,]*$/i;
 
 const STORY_OR_BIBLE_RE =
-  /\b(story|stories|tell me|hadithi|simulia|eleza|moses|musa|david|daudi|noah|nuhu|jesus|yesu|jonah|yona|daniel|danieli|joseph|yusufu|bible|biblia|scripture|maandiko|mstari)\b/i;
+  /\b(story|stories|tell me|hadithi|simulia|eleza|msimulie|uliza|moses|musa|david|daudi|noah|nuhu|jesus|yesu|jonah|yona|daniel|danieli|joseph|yusufu|bible|biblia|scripture|maandiko|mstari|zaburi)\b/i;
 
 const LIFE_QUESTION_RE =
-  /\b(why|how|what|should|can i|is it wrong|feel|doubt|hurt|wrong|right|advice|help|kwa nini|jinsi gani|nini|nifanye|je|naweza|umeku|nimekuwa|nina)\b/i;
+  /\b(why|how|what|should|can i|is it wrong|feel|doubt|hurt|wrong|right|advice|help|kwa nini|jinsi gani|nini|nifanye|je|naweza|umeku|nimekuwa|nina|najisikia|naomba|nisaidie|niweze|nifanyie|nifanyaje)\b/i;
 
 export function classifyQuestion(text: string): QuestionKind {
   const trimmed = text.trim();

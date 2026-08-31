@@ -3,6 +3,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { t, type AppLocale } from "@/lib/i18n/translations";
 
 type SpeechRecognitionInstance = {
   continuous: boolean;
@@ -47,6 +48,7 @@ function getSpeechRecognitionCtor():
 export function useSpeechRecognition(
   options: UseSpeechRecognitionOptions | ((transcript: string) => void) = {},
   lang = "en-US",
+  locale: AppLocale = lang.startsWith("sw") ? "sw" : "en",
 ): UseSpeechRecognitionResult {
   const opts =
     typeof options === "function" ? { onResult: options } : options;
@@ -97,7 +99,7 @@ export function useSpeechRecognition(
       setIsListening(false);
       transcriptRef.current = "";
       if (event.error !== "aborted") {
-        setError("Could not hear you. Check your microphone and try again.");
+        setError(t(locale, "micError"));
       }
     };
 
@@ -106,7 +108,7 @@ export function useSpeechRecognition(
     return () => {
       recognition.abort();
     };
-  }, [isSupported, opts.continuous, lang]);
+  }, [isSupported, opts.continuous, lang, locale]);
 
   const startListening = useCallback(() => {
     if (!recognitionRef.current) return;
@@ -116,7 +118,7 @@ export function useSpeechRecognition(
       recognitionRef.current.start();
       setIsListening(true);
     } catch {
-      setError("Microphone is already active.");
+      setError(t(locale, "micActive"));
     }
   }, []);
 

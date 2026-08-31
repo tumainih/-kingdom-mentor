@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/context/locale-context";
 
 interface AiBadgeProps {
   className?: string;
@@ -54,6 +55,7 @@ interface AiThinkingProps {
 }
 
 export function AiThinking({ visible }: AiThinkingProps) {
+  const { t } = useLocale();
   if (!visible) return null;
 
   return (
@@ -63,9 +65,7 @@ export function AiThinking({ visible }: AiThinkingProps) {
         <span className="h-2 w-2 animate-bounce rounded-full bg-brand [animation-delay:150ms]" />
         <span className="h-2 w-2 animate-bounce rounded-full bg-brand [animation-delay:300ms]" />
       </div>
-      <span className="text-sm text-muted-foreground">
-        Kingdom AI is thinking…
-      </span>
+      <span className="text-sm text-muted-foreground">{t("thinking")}</span>
     </div>
   );
 }

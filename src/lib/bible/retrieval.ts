@@ -13,16 +13,18 @@ import { lookupVerseReference } from "./verse-lookup";
 export type { BibleLocale };
 
 const TOPIC_KEYWORDS: Record<string, string[]> = {
-  forgiveness: ["forgive", "mercy", "pardon", "reconcile", "msamaha"],
-  anger: ["anger", "wrath", "slow to anger", "hasira"],
-  love: ["love one another", "charity", "beloved", "upendo"],
-  wisdom: ["wisdom", "understanding", "prudent", "wise", "hekima"],
-  fear: ["fear not", "afraid", "anxious", "trust in the lord", "ogopa"],
-  marriage: ["husband", "wife", "marriage", "adultery", "mume", "mke"],
-  prayer: ["pray", "prayer", "supplication", "omba", "sala"],
-  faith: ["faith", "believe", "trust", "imani"],
-  doubt: ["doubt", "unbelief", "shaka"],
-  guilt: ["guilty", "repent", "forgive", "confess", "hatia"],
+  forgiveness: ["forgive", "mercy", "pardon", "reconcile", "msamaha", "samehe"],
+  anger: ["anger", "wrath", "slow to anger", "hasira", "ghadhabu"],
+  love: ["love one another", "charity", "beloved", "upendo", "penda"],
+  wisdom: ["wisdom", "understanding", "prudent", "wise", "hekima", "busara"],
+  fear: ["fear not", "afraid", "anxious", "trust in the lord", "ogopa", "wasiwasi", "hofu"],
+  marriage: ["husband", "wife", "marriage", "adultery", "mume", "mke", "ndoa"],
+  prayer: ["pray", "prayer", "supplication", "omba", "sala", "ombea"],
+  faith: ["faith", "believe", "trust", "imani", "amini"],
+  doubt: ["doubt", "unbelief", "shaka", "waswas"],
+  guilt: ["guilty", "repent", "forgive", "confess", "hatia", "toba"],
+  grief: ["grief", "mourn", "loss", "huzuni", "ombolezo", "faraja"],
+  peace: ["peace", "comfort", "amani", "faraja"],
 };
 
 const WEAK_SINGLE_WORDS = new Set([
@@ -32,7 +34,9 @@ const WEAK_SINGLE_WORDS = new Set([
   "shall", "should", "some", "that", "their", "them", "then", "there", "these",
   "they", "this", "those", "very", "want", "what", "when", "where", "which",
   "without", "with", "would", "write", "your", "user", "assistant", "kingdom",
-  "story", "stories", "tell", "hadithi", "simulia",
+  "story", "stories", "tell", "hadithi", "simulia", "eleza", "kuhusu",
+  "nina", "nime", "yangu", "yako", "yetu", "wao", "hii", "hiyo", "hilo",
+  "kwamba", "kama", "pia", "sana", "tu", "bado", "hapa", "hapo",
 ]);
 
 const STOP_WORDS = new Set([
@@ -40,6 +44,8 @@ const STOP_WORDS = new Set([
   "just", "like", "make", "more", "much", "need", "should", "some", "that",
   "their", "them", "then", "there", "these", "they", "this", "very", "want",
   "what", "when", "where", "which", "with", "would", "your",
+  "nina", "nime", "yangu", "yako", "yetu", "wao", "hii", "hiyo", "kwamba",
+  "kama", "pia", "sana", "tu", "bado", "hapa", "na", "ya", "wa", "ni",
 ]);
 
 const verseCache = new Map<BibleLocale, BibleVerse[]>();

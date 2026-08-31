@@ -151,25 +151,28 @@ export const BIBLE_NARRATIVES: BibleNarrative[] = [
 ];
 
 const STORY_REQUEST_RE =
-  /\b(story|stories|tell me about|tell me the|life of|who was|what happened|narrative|history of|simulia|hadithi|eleza|ni nani)\b/i;
+  /\b(story|stories|tell me about|tell me the|life of|who was|what happened|narrative|history of|simulia|hadithi|eleza|ni nani|kuhusu|hadithi ya|simulie|msimulie)\b/i;
+
+const FIGURE_HINT_RE =
+  /\b(moses|musa|david|daudi|noah|nuhu|jesus|yesu|jonah|yona|daniel|danieli|joseph|yusufu|creation|uumbaji|adam|adamu|eve|hawa|goliath|goliathi|gharika|safina)\b/i;
 
 export function detectNarrative(
   text: string,
-  locale: BibleLocale,
+  _locale: BibleLocale,
 ): BibleNarrative | null {
   const lower = text.toLowerCase();
-  if (!STORY_REQUEST_RE.test(lower) && !/\b(moses|musa|david|daudi|noah|nuhu|jesus|yesu|jonah|yona|daniel|joseph|yusufu|creation|uumbaji)\b/i.test(lower)) {
+  if (!STORY_REQUEST_RE.test(lower) && !FIGURE_HINT_RE.test(lower)) {
     return null;
   }
 
   for (const narrative of BIBLE_NARRATIVES) {
-    const cfg = locale === "sw" ? narrative.sw : narrative.en;
-    if (
-      cfg.aliases.some((alias) => lower.includes(alias)) ||
-      lower.includes(cfg.figure.toLowerCase())
-    ) {
-      return narrative;
-    }
+    const configs = [narrative.en, narrative.sw];
+    const matched = configs.some(
+      (cfg) =>
+        cfg.aliases.some((alias) => lower.includes(alias)) ||
+        lower.includes(cfg.figure.toLowerCase()),
+    );
+    if (matched) return narrative;
   }
 
   return null;

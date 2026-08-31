@@ -141,7 +141,7 @@ export function ChatContainer() {
 
       if (!aiReady) {
         setError(
-          "Add OPENAI_API_KEY to .env.local to start conversing with Kingdom AI.",
+          "Add GEMINI_API_KEY to .env.local to start conversing with Kingdom AI.",
         );
         return;
       }
@@ -187,7 +187,7 @@ export function ChatContainer() {
 
       {mounted && !aiReady && (
         <div className="shrink-0 border-b border-amber-200/60 bg-amber-50 px-3 py-2 text-center text-xs text-amber-900 sm:text-sm">
-          Add <code className="rounded bg-amber-100/80 px-1 text-[10px] sm:text-xs">OPENAI_API_KEY</code> to{" "}
+          Add <code className="rounded bg-amber-100/80 px-1 text-[10px] sm:text-xs">GEMINI_API_KEY</code> to{" "}
           <code className="rounded bg-amber-100/80 px-1 text-[10px] sm:text-xs">.env.local</code> to enable chat.
         </div>
       )}

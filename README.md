@@ -16,14 +16,14 @@ Kingdom AI is an AI assistant, **not** God, Jesus, the Holy Spirit, a prophet, o
 ## Prerequisites
 
 - Node.js 18+
-- An [OpenAI API key](https://platform.openai.com/api-keys)
+- A [Google Gemini API key](https://aistudio.google.com/apikey)
 
 ## Setup
 
 ```bash
 npm install
 cp .env.example .env.local
-# Add your OPENAI_API_KEY to .env.local
+# Add your GEMINI_API_KEY to .env.local
 npm run dev
 ```
 
@@ -36,7 +36,7 @@ Open [http://localhost:43123](http://localhost:43123).
 - **Listen** — enable "AI reads replies aloud" or tap the speaker icon on any reply
 - **Continue the conversation** — Kingdom AI remembers the full thread and stays focused on your issue
 
-You need a valid `OPENAI_API_KEY` in `.env.local` for AI responses to work.
+You need a valid `GEMINI_API_KEY` in `.env.local` for AI responses to work.
 
 ### Rebuild the Bible index (optional)
 
@@ -87,7 +87,7 @@ source ~/.bashrc
 ## Tech stack
 
 - Next.js 16, TypeScript, Tailwind CSS, shadcn/ui
-- OpenAI API (streaming)
+- Google Gemini API (streaming)
 - Fuse.js full-text search over bundled KJV JSON
 
 ## License

@@ -19,7 +19,7 @@ export function AiBadge({
           className,
         )}
       >
-        GPT-4o
+        Gemini
       </span>
     );
   }

@@ -1,9 +1,9 @@
-import { getOpenAIClient, getModel } from "@/lib/openai";
+import { getModel, isAIConfigured } from "@/lib/gemini";
 
 export async function GET() {
-  const client = getOpenAIClient();
   return Response.json({
-    aiReady: Boolean(client),
+    aiReady: isAIConfigured(),
+    provider: "gemini",
     model: getModel(),
   });
 }

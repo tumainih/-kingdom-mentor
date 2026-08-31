@@ -23,6 +23,7 @@ export function ChatHeader({
           <BrandLogo size="sm" />
           <BrandTitle size="md" />
           <AiBadge variant="scripture" className="hidden min-[480px]:inline-flex" />
+          <AiBadge variant="model" className="hidden sm:inline-flex" />
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">

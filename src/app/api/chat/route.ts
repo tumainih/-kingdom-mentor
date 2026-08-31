@@ -1,8 +1,7 @@
 import { buildSystemPrompt } from "@/lib/prompts/kingdom-ai-system-prompt";
 import { retrieveAndFormat } from "@/lib/bible/retrieval";
-import { formatOpenAIError } from "@/lib/format-openai-error";
-import { getOpenAIClient, getModel } from "@/lib/openai";
-import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
+import { formatAIError } from "@/lib/format-ai-error";
+import { getGeminiClient, getModel, isAIConfigured } from "@/lib/gemini";
 
 export const runtime = "nodejs";
 
@@ -57,22 +56,41 @@ function validateMessages(messages: unknown): ChatMessage[] {
   });
 }
 
-
-/** Build retrieval query from full conversation so follow-ups stay on topic. */
 function buildRetrievalQuery(messages: ChatMessage[]): string {
   const recent = messages.slice(-10);
   return recent.map((m) => `${m.role}: ${m.content}`).join("\n");
 }
 
+/** Gemini requires history to start with a user turn and alternate roles. */
+function toGeminiHistory(messages: ChatMessage[]) {
+  const history = messages.slice(0, -1).map((m) => ({
+    role: m.role === "assistant" ? ("model" as const) : ("user" as const),
+    parts: [{ text: m.content }],
+  }));
+
+  while (history.length > 0 && history[0].role === "model") {
+    history.shift();
+  }
+
+  return history;
+}
+
 export async function POST(request: Request) {
   try {
-    const client = getOpenAIClient();
-    if (!client) {
+    if (!isAIConfigured()) {
       return Response.json(
         {
           error:
-            "OpenAI API key is not configured. Add OPENAI_API_KEY to your environment.",
+            "Gemini API key is not configured. Add GEMINI_API_KEY to your environment.",
         },
+        { status: 503 },
+      );
+    }
+
+    const client = getGeminiClient();
+    if (!client) {
+      return Response.json(
+        { error: "Gemini client failed to initialize." },
         { status: 503 },
       );
     }
@@ -85,24 +103,26 @@ export async function POST(request: Request) {
       await retrieveAndFormat(retrievalQuery);
 
     const systemPrompt = buildSystemPrompt(scriptureBlock);
+    const latestMessage = messages[messages.length - 1];
 
-    const openaiMessages: ChatCompletionMessageParam[] = [
-      { role: "system", content: systemPrompt },
-      ...messages.map((m) => ({
-        role: m.role as "user" | "assistant",
-        content: m.content,
-      })),
-    ];
-
-    const stream = await client.chat.completions.create({
+    const model = client.getGenerativeModel({
       model: getModel(),
-      messages: openaiMessages,
-      stream: true,
-      temperature: 0.75,
-      max_tokens: 2500,
-    }).catch((err) => {
-      throw new Error(formatOpenAIError(err));
+      systemInstruction: systemPrompt,
+      generationConfig: {
+        temperature: 0.75,
+        maxOutputTokens: 2500,
+      },
     });
+
+    const chat = model.startChat({
+      history: toGeminiHistory(messages),
+    });
+
+    const result = await chat
+      .sendMessageStream(latestMessage.content)
+      .catch((err) => {
+        throw new Error(formatAIError(err));
+      });
 
     const encoder = new TextEncoder();
 
@@ -115,8 +135,8 @@ export async function POST(request: Request) {
         );
 
         try {
-          for await (const chunk of stream) {
-            const text = chunk.choices[0]?.delta?.content ?? "";
+          for await (const chunk of result.stream) {
+            const text = chunk.text();
             if (text) {
               controller.enqueue(
                 encoder.encode(
@@ -129,7 +149,7 @@ export async function POST(request: Request) {
             encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`),
           );
         } catch (err) {
-          const message = formatOpenAIError(err);
+          const message = formatAIError(err);
           controller.enqueue(
             encoder.encode(
               `data: ${JSON.stringify({ type: "error", message })}\n\n`,
@@ -149,10 +169,10 @@ export async function POST(request: Request) {
       },
     });
   } catch (err) {
-    const message = formatOpenAIError(err);
+    const message = formatAIError(err);
     const status = message.includes("Invalid") || message.includes("Too many")
       ? 400
-      : message.includes("credits") || message.includes("rate limit")
+      : message.includes("quota")
         ? 402
         : 500;
     return Response.json({ error: message }, { status });

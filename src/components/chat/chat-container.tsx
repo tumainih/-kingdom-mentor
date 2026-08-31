@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { ChatHeader } from "./chat-header";
 import { ChatInput } from "./chat-input";
 import { MessageList } from "./message-list";
 import {
@@ -127,65 +127,82 @@ export function ChatContainer() {
     [isStreaming, messages],
   );
 
-  const showWelcome = messages.length === 0;
+  const hasMessages = messages.length > 0;
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col">
-      {showWelcome ? (
-        <div className="flex flex-1 flex-col items-center justify-center px-4 py-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-              What would a Kingdom-of-God response look like?
-            </h2>
-            <p className="mt-3 text-muted-foreground leading-relaxed">
-              Kingdom AI helps you think, decide, and live according to
-              Scripture. Every response is grounded in retrieved King James
-              Version passages — not invented verses.
-            </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-2">
+    <div className="flex h-full flex-col bg-canvas">
+      <ChatHeader />
+
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        {!hasMessages ? (
+          <div className="flex flex-1 flex-col items-center justify-center px-4 pb-8">
+            <div className="mb-10 text-center">
+              <h2 className="text-[32px] font-normal tracking-tight text-foreground sm:text-[36px]">
+                What would wisdom require?
+              </h2>
+              <p className="mt-3 max-w-md text-[15px] text-muted-foreground">
+                Biblical guidance grounded in retrieved KJV Scripture
+              </p>
+            </div>
+
+            <div className="mb-8 w-full flex justify-center">
+              <ChatInput
+                value={input}
+                onChange={setInput}
+                onSend={() => sendMessage(input)}
+                disabled={isStreaming}
+                centered
+                placeholder="Describe your situation or ask for guidance…"
+              />
+            </div>
+
+            <div className="grid w-full max-w-2xl grid-cols-1 gap-2 sm:grid-cols-2">
               {STARTER_PROMPTS.map((prompt) => (
-                <Button
+                <button
                   key={prompt}
-                  variant="outline"
-                  size="sm"
-                  className="h-auto whitespace-normal px-3 py-2 text-left text-xs leading-snug"
+                  type="button"
                   onClick={() => sendMessage(prompt)}
                   disabled={isStreaming}
+                  className="rounded-2xl border border-border/80 bg-background px-4 py-3 text-left text-sm leading-snug text-foreground/80 transition-colors hover:bg-accent disabled:opacity-50"
                 >
                   {prompt}
-                </Button>
+                </button>
               ))}
             </div>
           </div>
-        </div>
-      ) : (
-        <>
-          {scripture.length > 0 && (
-            <div className="border-b border-border bg-muted/40 px-4 py-2">
-              <p className="mx-auto max-w-3xl text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">
-                  Scripture context (KJV):
-                </span>{" "}
-                {scripture.map((p) => p.ref).join(" · ")}
-              </p>
-            </div>
-          )}
-          <MessageList messages={messages} isStreaming={isStreaming} />
-        </>
-      )}
+        ) : (
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <MessageList
+              messages={messages}
+              isStreaming={isStreaming}
+              scripture={scripture}
+            />
+          </div>
+        )}
+
+        {hasMessages && (
+          <div className="shrink-0 bg-gradient-to-t from-canvas from-60% to-transparent px-0 pb-5 pt-6">
+            <ChatInput
+              value={input}
+              onChange={setInput}
+              onSend={() => sendMessage(input)}
+              disabled={isStreaming}
+              placeholder="Message Kingdom AI…"
+            />
+          </div>
+        )}
+      </div>
 
       {error && (
-        <div className="border-t border-destructive/30 bg-destructive/10 px-4 py-2 text-center text-sm text-destructive">
+        <div className="absolute bottom-24 left-1/2 z-30 -translate-x-1/2 rounded-full border border-destructive/20 bg-background px-4 py-2 text-sm text-destructive shadow-lg">
           {error}
         </div>
       )}
 
-      <ChatInput
-        value={input}
-        onChange={setInput}
-        onSend={() => sendMessage(input)}
-        disabled={isStreaming}
-      />
+      <p className="shrink-0 pb-3 text-center text-[11px] text-muted-foreground/80">
+        Kingdom AI is not a replacement for God, pastoral care, or qualified
+        professionals. Guidance comes from retrieved Scripture only.
+      </p>
     </div>
   );
 }

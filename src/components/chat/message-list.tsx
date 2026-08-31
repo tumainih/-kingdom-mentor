@@ -1,16 +1,20 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageBubble } from "./message-bubble";
-import type { ChatMessage } from "./types";
+import type { ChatMessage, ScripturePassage } from "./types";
 
 interface MessageListProps {
   messages: ChatMessage[];
   isStreaming: boolean;
+  scripture: ScripturePassage[];
 }
 
-export function MessageList({ messages, isStreaming }: MessageListProps) {
+export function MessageList({
+  messages,
+  isStreaming,
+  scripture,
+}: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -18,8 +22,19 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
   }, [messages, isStreaming]);
 
   return (
-    <ScrollArea className="flex-1 px-4 py-6">
-      <div className="mx-auto flex max-w-3xl flex-col gap-4">
+    <div className="mx-auto w-full max-w-3xl px-4 py-6">
+      {scripture.length > 0 && (
+        <div className="mb-6 rounded-2xl border border-border/80 bg-background px-4 py-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Scripture context · KJV
+          </p>
+          <p className="mt-1.5 text-sm leading-relaxed text-foreground/80">
+            {scripture.map((p) => p.ref).join(" · ")}
+          </p>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-6">
         {messages.map((message, index) => (
           <MessageBubble
             key={`${message.id}-${index}`}
@@ -32,8 +47,8 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
             }
           />
         ))}
-        <div ref={bottomRef} />
       </div>
-    </ScrollArea>
+      <div ref={bottomRef} className="h-4" />
+    </div>
   );
 }

@@ -1,30 +1,24 @@
 import type { Metadata } from "next";
-import { Lora, Source_Sans_3 } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const sourceSans = Source_Sans_3({
+const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
 });
 
-const lora = Lora({
-  variable: "--font-heading",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Kingdom AI — Biblical Wisdom Mentor",
+  title: "Kingdom AI",
   description:
-    "Think, decide, and live according to the Kingdom of God with Scripture-grounded guidance from the King James Version.",
+    "Think, decide, and live according to the Kingdom of God with Scripture-grounded guidance.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${sourceSans.variable} ${lora.variable} h-full antialiased`}
-    >
-      <body className="flex min-h-full flex-col bg-background">{children}</body>
+    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+      <body className="h-full overflow-hidden bg-background text-foreground">
+        {children}
+      </body>
     </html>
   );
 }

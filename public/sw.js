@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build 9UudeM6gabe-vB0EylREg) */
-const CACHE = "kingdom-ai-9UudeM6gabe-vB0EylREg";
+/* Kingdom AI — offline-capable service worker (build 1rstaZbauPBdoiPikwhga) */
+const CACHE = "kingdom-ai-1rstaZbauPBdoiPikwhga";
 const PRECACHE = [
   "/",
   "/home",
@@ -10,9 +10,9 @@ const PRECACHE = [
   "/icon-512.png",
   "/data/hourly-en.json",
   "/data/hourly-sw.json",
-  "/_next/static/9UudeM6gabe-vB0EylREg/_buildManifest.js",
-  "/_next/static/9UudeM6gabe-vB0EylREg/_clientMiddlewareManifest.js",
-  "/_next/static/9UudeM6gabe-vB0EylREg/_ssgManifest.js",
+  "/_next/static/1rstaZbauPBdoiPikwhga/_buildManifest.js",
+  "/_next/static/1rstaZbauPBdoiPikwhga/_clientMiddlewareManifest.js",
+  "/_next/static/1rstaZbauPBdoiPikwhga/_ssgManifest.js",
   "/_next/static/chunks/00izapk6l813d.css",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
@@ -20,7 +20,7 @@ const PRECACHE = [
   "/_next/static/chunks/1z99mlp5cofct.js",
   "/_next/static/chunks/25055b8q_50pl.js",
   "/_next/static/chunks/2y1nd8vf7h77j.js",
-  "/_next/static/chunks/355ypq0vfo-7n.js",
+  "/_next/static/chunks/354giz9g--lj4.js",
   "/_next/static/chunks/3adwt13tezgym.js",
   "/_next/static/chunks/3niecic96oynk.js",
   "/_next/static/chunks/3q576hlfnuh0n.js",

@@ -29,8 +29,8 @@ const HOURLY = [
   { hour: 14, theme: "faith", ref: "Mark 11:22" },
   { hour: 15, theme: "courage", ref: "Joshua 1:9" },
   { hour: 16, theme: "forgiveness", ref: "Matthew 6:14" },
-  { hour: 17, theme: "security", ref: "Psalm 91:1" },
-  { hour: 18, theme: "guidance", ref: "Psalm 32:8" },
+  { hour: 17, theme: "security", ref: "Psalms 91:1" },
+  { hour: 18, theme: "guidance", ref: "Psalms 32:8" },
   { hour: 19, theme: "patience", ref: "Romans 12:12" },
   { hour: 20, theme: "peace", ref: "John 14:27" },
   { hour: 21, theme: "love", ref: "1 John 4:19" },
@@ -62,17 +62,29 @@ function loadIndex(locale) {
   return JSON.parse(readFileSync(path.join(dataDir, file), "utf8"));
 }
 
-function findVerse(verses, ref) {
-  const exact = verses.find((v) => v.ref === ref);
-  if (exact) return exact;
-  const normalized = ref.replace(/\s+/g, " ").trim();
-  return verses.find((v) => v.ref === normalized) ?? null;
+function normalizeScheduledRef(ref) {
+  return ref.replace(/^Psalm\b/, "Psalms").replace(/\s+/g, " ").trim();
+}
+
+function findVerse(verses, ref, locale) {
+  const normalized = normalizeScheduledRef(ref);
+
+  if (locale === "sw") {
+    const byEn = verses.find(
+      (v) => v.refEn === normalized || v.refEn === ref,
+    );
+    if (byEn) return byEn;
+  }
+
+  return (
+    verses.find((v) => v.ref === normalized || v.ref === ref) ?? null
+  );
 }
 
 for (const locale of ["en", "sw"]) {
   const verses = loadIndex(locale);
   const slots = HOURLY.map((slot) => {
-    const passage = findVerse(verses, slot.ref);
+    const passage = findVerse(verses, slot.ref, locale);
     return {
       hour: slot.hour,
       theme: slot.theme,

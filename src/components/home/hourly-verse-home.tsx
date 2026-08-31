@@ -68,7 +68,7 @@ export function HourlyVerseHome() {
         if (localRes.ok) {
           const slots = (await localRes.json()) as HourlyVersePayload[];
           const match = slots.find((s) => s.hour === hour);
-          if (match) {
+          if (match?.passage) {
             setVerse(match);
             return;
           }

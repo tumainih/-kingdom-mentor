@@ -17,8 +17,8 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
   }, [messages, isStreaming]);
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-6">
-      <div className="flex flex-col gap-6">
+    <div className="mx-auto w-full max-w-3xl px-3 py-4 sm:px-4 sm:py-5">
+      <div className="flex flex-col gap-4 sm:gap-5">
         {messages.map((message, index) => (
           <MessageBubble
             key={message.id}

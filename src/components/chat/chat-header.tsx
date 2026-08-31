@@ -17,25 +17,19 @@ export function ChatHeader({
   aiReady = true,
 }: ChatHeaderProps) {
   return (
-    <header className="sticky top-0 z-20 shrink-0 bg-background/90 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-3 px-4">
-        <div className="flex min-w-0 items-center gap-2.5">
+    <header className="sticky top-0 z-20 shrink-0 bg-background/95 backdrop-blur-md">
+      <div className="mx-auto flex h-12 max-w-3xl items-center justify-between gap-2 px-3 sm:h-14 sm:gap-3 sm:px-4">
+        <div className="flex min-w-0 items-center gap-2">
           <BrandLogo size="sm" />
           <BrandTitle size="md" />
-          <AiBadge variant="scripture" />
-          <AiBadge variant="model" className="hidden sm:inline-flex" />
+          <AiBadge variant="scripture" className="hidden min-[480px]:inline-flex" />
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {aiReady && (
-            <span className="hidden items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 sm:flex">
+            <span className="flex items-center gap-1 rounded-full border border-emerald-200/80 bg-emerald-50/90 px-1.5 py-0.5 text-[9px] font-medium text-emerald-800 sm:gap-1.5 sm:px-2 sm:text-[10px]">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              AI online
-            </span>
-          )}
-          {!aiReady && (
-            <span className="hidden rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 sm:inline">
-              AI key needed
+              Live
             </span>
           )}
           {showNewChat && onNewChat && (
@@ -43,16 +37,15 @@ export function ChatHeader({
               variant="outline"
               size="sm"
               onClick={onNewChat}
-              className="h-8 gap-1.5 border-brand/15 text-xs text-brand hover:bg-brand/5"
+              className="h-7 gap-1 border-brand/20 px-2 text-[11px] text-brand hover:bg-brand/5 sm:h-8 sm:px-3 sm:text-xs"
             >
               <Plus className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">New chat</span>
+              <span className="hidden sm:inline">New</span>
             </Button>
           )}
         </div>
       </div>
-      <div className="header-shine h-px w-full opacity-60" />
-      <div className="h-px bg-border/50" />
+      <div className="header-shine h-px w-full opacity-70" />
     </header>
   );
 }

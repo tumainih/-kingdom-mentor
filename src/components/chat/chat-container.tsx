@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { BookOpen, Sparkles } from "lucide-react";
 import { ChatHeader } from "./chat-header";
 import { ChatInput } from "./chat-input";
 import { MessageList } from "./message-list";
@@ -10,10 +10,7 @@ import { BrandLogo, BrandTitle } from "./brand";
 import { DecorativeBackground } from "./decorative-background";
 import { StarterPrompts } from "./starter-prompts";
 import { speakText } from "@/hooks/use-speech";
-import {
-  type ChatMessage,
-  type ScripturePassage,
-} from "./types";
+import { type ChatMessage, type ScripturePassage } from "./types";
 
 function createId() {
   return crypto.randomUUID();
@@ -47,10 +44,7 @@ export function ChatContainer() {
   }, []);
 
   const streamReply = useCallback(
-    async (
-      history: ChatMessage[],
-      assistantId: string,
-    ) => {
+    async (history: ChatMessage[], assistantId: string) => {
       setIsStreaming(true);
       setError(null);
 
@@ -181,8 +175,9 @@ export function ChatContainer() {
   const inputDisabled = isStreaming || !aiReady;
 
   return (
-    <div className="canvas-gradient relative flex h-full flex-col">
+    <div className="canvas-gradient relative flex h-full min-h-0 flex-col overflow-hidden">
       <DecorativeBackground />
+
       <ChatHeader
         onNewChat={handleNewChat}
         showNewChat={hasMessages}
@@ -190,99 +185,84 @@ export function ChatContainer() {
       />
 
       {mounted && !aiReady && (
-        <div className="border-b border-amber-200/60 bg-amber-50 px-4 py-3 text-center text-sm text-amber-900">
-          <strong>To talk with Kingdom AI,</strong> add your OpenAI key to{" "}
-          <code className="rounded bg-amber-100/80 px-1.5 py-0.5 text-xs">
-            .env.local
-          </code>
-          :{" "}
-          <code className="rounded bg-amber-100/80 px-1.5 py-0.5 text-xs">
-            OPENAI_API_KEY=sk-...
-          </code>{" "}
-          then restart the dev server. You can type or use the mic to talk.
+        <div className="shrink-0 border-b border-amber-200/60 bg-amber-50 px-3 py-2 text-center text-xs text-amber-900 sm:text-sm">
+          Add <code className="rounded bg-amber-100/80 px-1 text-[10px] sm:text-xs">OPENAI_API_KEY</code> to{" "}
+          <code className="rounded bg-amber-100/80 px-1 text-[10px] sm:text-xs">.env.local</code> to enable chat.
         </div>
       )}
 
-      <div className="relative flex min-h-0 flex-1 flex-col">
-        {!hasMessages ? (
-          <div className="flex flex-1 flex-col items-center justify-center px-4 pb-8">
-            <div className="relative mb-6">
-              <div className="absolute inset-0 scale-110 rounded-3xl bg-brand/10 blur-xl" />
-              <BrandLogo
-                size="lg"
-                className="logo-glow-ring relative rounded-2xl"
-              />
-            </div>
+      {/* Scrollable main area — fits remaining viewport height */}
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          {!hasMessages ? (
+            <div className="flex min-h-min flex-col items-center px-3 py-5 sm:px-4 sm:py-8">
+              <div className="relative mb-4 sm:mb-5">
+                <BrandLogo size="lg" className="logo-glow-ring relative rounded-2xl" />
+              </div>
 
-            <div className="mb-3">
               <BrandTitle size="lg" />
-            </div>
 
-            <div className="mb-10 text-center">
-              <h2 className="brand-gradient-text text-xl font-semibold sm:text-2xl">
-                Tell me what&apos;s on your heart
-              </h2>
-              <p className="mt-3 flex items-center justify-center gap-1.5 text-[15px] text-muted-foreground">
-                <Sparkles className="h-4 w-4 text-brand" />
-                Have a real conversation — type or tap the mic to talk
-              </p>
-            </div>
+              <div className="mt-4 max-w-md text-center sm:mt-5">
+                <h2 className="font-heading text-lg font-semibold brand-gradient-text sm:text-xl">
+                  Biblical wisdom for life&apos;s questions
+                </h2>
+                <p className="mt-2 flex items-center justify-center gap-1.5 text-xs text-muted-foreground sm:text-sm">
+                  <BookOpen className="h-3.5 w-3.5 text-brand-gold" />
+                  KJV Scripture · conversational guidance
+                </p>
+              </div>
 
-            <div className="mb-8 flex w-full justify-center">
-              <ChatInput
-                value={input}
-                onChange={setInput}
-                onSend={() => sendMessage(input)}
-                disabled={inputDisabled}
-                centered
-                placeholder="Share your situation — I'll walk through it with you…"
+              <div className="mt-5 w-full sm:mt-7">
+                <StarterPrompts onSelect={sendMessage} disabled={inputDisabled} />
+              </div>
+            </div>
+          ) : (
+            <>
+              <MessageList messages={messages} isStreaming={isStreaming} />
+              <AiThinking visible={isThinking} />
+            </>
+          )}
+        </div>
+
+        {/* Input always pinned to bottom — fits screen on mobile & desktop */}
+        <div className="shrink-0 border-t border-border/50 bg-composer/95 px-0 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-md sm:pt-3">
+          <ChatInput
+            value={input}
+            onChange={setInput}
+            onSend={() => sendMessage(input)}
+            disabled={inputDisabled}
+            placeholder={
+              hasMessages
+                ? "Continue the conversation…"
+                : "Share what's on your heart…"
+            }
+          />
+
+          <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 pt-1.5">
+            <label className="flex cursor-pointer items-center gap-1 text-[10px] text-muted-foreground sm:text-[11px]">
+              <input
+                type="checkbox"
+                checked={autoSpeak}
+                onChange={(e) => setAutoSpeak(e.target.checked)}
+                className="rounded border-border text-brand focus:ring-brand"
               />
-            </div>
-
-            <StarterPrompts onSelect={sendMessage} disabled={inputDisabled} />
+              Read aloud
+            </label>
+            <span className="hidden text-muted-foreground/30 sm:inline">·</span>
+            <p className="flex items-center gap-1 text-[10px] text-muted-foreground sm:text-[11px]">
+              <Sparkles className="h-3 w-3 text-brand-gold" />
+              <span className="font-medium text-brand">Kingdom AI</span>
+              remembers this thread
+            </p>
           </div>
-        ) : (
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            <MessageList messages={messages} isStreaming={isStreaming} />
-            <AiThinking visible={isThinking} />
-          </div>
-        )}
-
-        {hasMessages && (
-          <div className="shrink-0 bg-gradient-to-t from-[#f4f7fc] from-60% to-transparent px-0 pb-5 pt-6">
-            <ChatInput
-              value={input}
-              onChange={setInput}
-              onSend={() => sendMessage(input)}
-              disabled={inputDisabled}
-              placeholder="Continue the conversation…"
-            />
-          </div>
-        )}
+        </div>
       </div>
 
       {error && (
-        <div className="absolute bottom-24 left-1/2 z-30 max-w-md -translate-x-1/2 rounded-2xl border border-destructive/20 bg-white px-4 py-2 text-center text-sm text-destructive shadow-lg">
+        <div className="pointer-events-none absolute bottom-28 left-1/2 z-30 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 rounded-xl border border-destructive/20 bg-white px-3 py-2 text-center text-xs text-destructive shadow-lg sm:text-sm">
           {error}
         </div>
       )}
-
-      <div className="flex shrink-0 items-center justify-center gap-3 pb-3">
-        <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-muted-foreground">
-          <input
-            type="checkbox"
-            checked={autoSpeak}
-            onChange={(e) => setAutoSpeak(e.target.checked)}
-            className="rounded border-border text-brand focus:ring-brand"
-          />
-          AI reads replies aloud
-        </label>
-        <span className="text-muted-foreground/40">·</span>
-        <p className="text-[11px] text-muted-foreground/80">
-          <span className="font-medium text-brand">Kingdom AI</span> remembers
-          this conversation
-        </p>
-      </div>
     </div>
   );
 }

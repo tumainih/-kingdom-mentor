@@ -28,11 +28,11 @@ export function AiBadge({
     return (
       <span
         className={cn(
-          "rounded-full border border-brand/20 bg-brand/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand",
+          "rounded-full border border-brand-gold/25 bg-accent/80 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-accent-foreground sm:text-[10px]",
           className,
         )}
       >
-        Scripture AI
+        KJV Wisdom
       </span>
     );
   }

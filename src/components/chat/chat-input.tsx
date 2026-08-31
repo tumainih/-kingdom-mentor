@@ -77,7 +77,7 @@ export function ChatInput({
     >
       <div
         className={cn(
-          "flex items-end gap-2 rounded-[26px] border bg-composer px-4 py-3 shadow-[0_4px_24px_rgba(79,70,229,0.08)] transition-all focus-within:border-brand/30 focus-within:shadow-[0_6px_32px_rgba(79,70,229,0.14)]",
+          "flex items-end gap-1.5 rounded-[22px] border bg-composer px-3 py-2.5 shadow-[0_2px_16px_rgba(26,101,117,0.1)] transition-all focus-within:border-brand/35 focus-within:shadow-[0_4px_20px_rgba(26,101,117,0.14)] sm:gap-2 sm:rounded-[26px] sm:px-4 sm:py-3",
           isListening ? "border-brand ring-2 ring-brand/20" : "border-brand/15",
           disabled && "opacity-70",
         )}

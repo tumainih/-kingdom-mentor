@@ -25,7 +25,7 @@ export function MessageBubble({
   if (isUser) {
     return (
       <div className="flex w-full justify-end py-1">
-        <div className="max-w-[min(85%,640px)] rounded-[24px] border border-brand/15 bg-gradient-to-br from-secondary to-indigo-50 px-4 py-2.5 text-[15px] leading-relaxed text-foreground shadow-sm">
+        <div className="max-w-[min(90%,640px)] rounded-2xl border border-brand/20 bg-gradient-to-br from-secondary to-accent/40 px-3.5 py-2 text-sm leading-relaxed text-foreground shadow-sm sm:rounded-[20px] sm:px-4 sm:py-2.5 sm:text-[15px]">
           <p className="whitespace-pre-wrap">{content}</p>
         </div>
       </div>
@@ -53,9 +53,9 @@ export function MessageBubble({
         </div>
 
         {scripture && scripture.length > 0 && (
-          <div className="mb-3 rounded-xl border border-brand/10 bg-white/70 px-3 py-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-brand">
-              KJV passages for this reply
+          <div className="knowledge-card mb-2.5 rounded-xl px-3 py-2 sm:mb-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-gold">
+              KJV · Scripture context
             </p>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
               {scripture.map((p) => p.ref).join(" · ")}

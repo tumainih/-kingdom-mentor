@@ -29,6 +29,28 @@ npm run dev
 
 Open [http://localhost:43123](http://localhost:43123).
 
+## Deploy (Vercel)
+
+Production build:
+
+```bash
+npm run build
+npm start
+```
+
+Deploy to Vercel (requires [Vercel CLI](https://vercel.com/docs/cli)):
+
+```bash
+# Log in once, then deploy
+vercel login
+vercel deploy --prod
+```
+
+Set these environment variables in the Vercel project (Settings → Environment Variables):
+
+- `GEMINI_API_KEY` — required
+- `GEMINI_MODEL` — optional (default: `gemini-3.6-flash`)
+
 ### Talk with Kingdom AI
 
 - **Type** your message and press Enter, or tap the **send** button

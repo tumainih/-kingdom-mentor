@@ -4,7 +4,6 @@ import { useCallback, useRef, useState } from "react";
 import { BrandLogo, BrandTitle } from "./brand";
 import { MessageList } from "./message-list";
 import { AiThinking } from "./ai-badge";
-import { ExampleQuestions } from "./example-questions";
 import { ComposerBar } from "./composer-bar";
 import { speakText } from "@/hooks/use-speech";
 import { streamKingdomReply } from "@/lib/chat-stream";
@@ -117,30 +116,32 @@ export function ChatContainer({
     !lastMessage.content.trim();
 
   const inputDisabled = isStreaming || !aiReady;
-  const showExamples = messages.length === 0;
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        {messages.length === 0 ? (
-          <div className="flex h-full min-h-[120px] flex-col items-center justify-center px-4 py-8">
-            <BrandLogo size="lg" className="logo-glow-ring rounded-2xl" />
-            <BrandTitle size="lg" className="mt-4" />
-            <p className="mt-2 text-center text-sm text-muted-foreground">
-              KJV Scripture · wisdom for life
-            </p>
-          </div>
-        ) : (
-          <>
-            <MessageList messages={messages} isStreaming={isStreaming} />
-            <AiThinking visible={isThinking} />
-          </>
-        )}
-      </div>
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-2 pb-1 pt-2 sm:px-4 sm:pt-3">
+      <div className="chat-canvas mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden">
+        <span className="canvas-label">Canvas</span>
 
-      {showExamples && (
-        <ExampleQuestions onSelect={sendMessage} disabled={inputDisabled} />
-      )}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pt-10">
+          {messages.length === 0 ? (
+            <div className="flex h-full min-h-[160px] flex-col items-center justify-center px-6 py-10 text-center">
+              <BrandLogo size="lg" className="logo-glow-ring rounded-2xl" />
+              <BrandTitle size="lg" className="mt-5" />
+              <p className="mt-6 max-w-lg text-lg font-medium text-foreground/90 sm:text-xl">
+                Write what you feel or doubt
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                KJV Scripture · Kingdom AI listens here
+              </p>
+            </div>
+          ) : (
+            <>
+              <MessageList messages={messages} isStreaming={isStreaming} />
+              <AiThinking visible={isThinking} />
+            </>
+          )}
+        </div>
+      </div>
 
       <ComposerBar
         mode={mode}
@@ -149,7 +150,7 @@ export function ChatContainer({
         onChange={setInput}
         onSend={() => sendMessage(input)}
         disabled={inputDisabled}
-        placeholder="Message Kingdom AI…"
+        placeholder="Write what you feel or doubt…"
         autoSpeak={autoSpeak}
         onAutoSpeakChange={setAutoSpeak}
       />

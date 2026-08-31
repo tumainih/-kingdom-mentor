@@ -17,7 +17,7 @@ export function AppHeader({
 }: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-20 shrink-0 border-b border-border/50 bg-background/90 backdrop-blur-md">
-      <div className="mx-auto flex h-11 max-w-4xl items-center justify-between gap-2 px-3 sm:h-12 sm:px-4">
+      <div className="mx-auto flex h-11 max-w-6xl items-center justify-between gap-2 px-3 sm:h-12 sm:px-4">
         <div className="flex min-w-0 items-center gap-2">
           <BrandLogo size="sm" />
           <BrandTitle size="md" />

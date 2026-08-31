@@ -55,7 +55,7 @@ export function ComposerBar({
 
   return (
     <div className="composer-shell shrink-0 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 sm:px-4">
-      <div className="mx-auto w-full max-w-4xl">
+      <div className="mx-auto w-full max-w-6xl">
         <div
           className={cn(
             "flex items-end gap-2 rounded-[28px] border border-border/80 bg-composer px-2 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.35)] sm:gap-2.5 sm:px-3 sm:py-2.5",
@@ -143,7 +143,9 @@ export function ComposerBar({
           ) : (
             <>
               <p className="mb-1.5 flex-1 py-2 text-sm text-muted-foreground sm:text-[15px]">
-                {isListening ? "Listening… speak now" : "Tap the mic — Kingdom AI listens and replies"}
+                {isListening
+                  ? "Listening… speak now"
+                  : "Share what you feel or doubt — tap the mic"}
               </p>
               <button
                 type="button"

@@ -119,36 +119,40 @@ export function ConverseView({
         ? "Reflecting…"
         : phase === "speaking"
           ? "Speaking…"
-          : "Ready when you are";
+          : "Share what you feel or doubt";
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-6">
-        <BrandTitle size="lg" />
-        <p className="mt-3 text-sm font-medium text-brand">{status}</p>
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-2 pb-1 pt-2 sm:px-4 sm:pt-3">
+      <div className="chat-canvas mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden">
+        <span className="canvas-label">Canvas</span>
 
-        {(liveTranscript || lastUser || lastReply) && (
-          <div className="mt-6 w-full max-w-2xl space-y-3 rounded-2xl border border-border/60 bg-card/60 p-4 text-sm">
-            {liveTranscript && phase === "listening" && (
-              <p className="text-muted-foreground">
-                <span className="text-brand">You: </span>
-                {liveTranscript}
-              </p>
-            )}
-            {lastUser && phase !== "listening" && (
-              <p>
-                <span className="text-brand">You: </span>
-                {lastUser}
-              </p>
-            )}
-            {lastReply && (
-              <p className="text-foreground/90">
-                <span className="text-brand-light">Kingdom AI: </span>
-                {lastReply}
-              </p>
-            )}
-          </div>
-        )}
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-6 py-8 pt-12 text-center">
+          <BrandTitle size="lg" />
+          <p className="mt-4 text-lg font-medium text-brand sm:text-xl">{status}</p>
+
+          {(liveTranscript || lastUser || lastReply) && (
+            <div className="mt-8 w-full max-w-3xl space-y-3 rounded-xl border border-border/50 bg-background/40 p-4 text-left text-sm sm:p-5">
+              {liveTranscript && phase === "listening" && (
+                <p className="text-muted-foreground">
+                  <span className="text-brand">You: </span>
+                  {liveTranscript}
+                </p>
+              )}
+              {lastUser && phase !== "listening" && (
+                <p>
+                  <span className="text-brand">You: </span>
+                  {lastUser}
+                </p>
+              )}
+              {lastReply && (
+                <p className="text-foreground/90">
+                  <span className="text-brand-light">Kingdom AI: </span>
+                  {lastReply}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <ComposerBar

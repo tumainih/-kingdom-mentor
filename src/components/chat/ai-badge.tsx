@@ -57,7 +57,7 @@ export function AiThinking({ visible }: AiThinkingProps) {
   if (!visible) return null;
 
   return (
-    <div className="mx-auto flex max-w-4xl items-center gap-2 px-4 py-2">
+    <div className="mx-auto flex max-w-6xl items-center gap-2 px-6 py-2">
       <div className="flex gap-1">
         <span className="h-2 w-2 animate-bounce rounded-full bg-brand [animation-delay:0ms]" />
         <span className="h-2 w-2 animate-bounce rounded-full bg-brand [animation-delay:150ms]" />

@@ -107,6 +107,14 @@
     background: linear-gradient(180deg, transparent 0%, rgba(7, 16, 24, 0.85) 30%);
   }
 
+  .chat-canvas {
+    @apply relative rounded-2xl border-2 border-brand/25 bg-card/30 shadow-[inset_0_1px_0_rgba(34,197,94,0.08),0_4px_24px_rgba(0,0,0,0.25)];
+  }
+
+  .canvas-label {
+    @apply absolute left-4 top-3 z-10 rounded-md border border-brand/30 bg-background/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-brand sm:left-5 sm:text-[11px];
+  }
+
   .logo-glow-ring {
     box-shadow:
       0 0 0 4px rgba(34, 197, 94, 0.15),

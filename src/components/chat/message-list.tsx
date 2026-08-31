@@ -17,7 +17,7 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
   }, [messages, isStreaming]);
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-3 py-4 sm:px-4 sm:py-5">
+    <div className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-6 sm:py-5">
       <div className="flex flex-col gap-4 sm:gap-5">
         {messages.map((message, index) => (
           <MessageBubble

@@ -18,10 +18,6 @@ interface ConverseViewProps {
   onNewConversation?: () => void;
 }
 
-function createId() {
-  return crypto.randomUUID();
-}
-
 const phaseLabel: Record<Phase, string> = {
   idle: "Tap the mic and share what's on your heart",
   listening: "Listening… speak naturally",

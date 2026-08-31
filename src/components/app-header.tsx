@@ -16,6 +16,8 @@ interface AppHeaderProps {
   showNewChat?: boolean;
   onNewChat?: () => void;
   showNav?: boolean;
+  compactNav?: boolean;
+  hideStatusOnMobile?: boolean;
 }
 
 export function AppHeader({
@@ -24,46 +26,54 @@ export function AppHeader({
   showNewChat,
   onNewChat,
   showNav = false,
+  compactNav = false,
+  hideStatusOnMobile = false,
 }: AppHeaderProps) {
   const { locale, setLocale, t } = useLocale();
   const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-20 shrink-0 border-b border-border/50 bg-background/90 backdrop-blur-md">
-      <div className="mx-auto flex h-11 max-w-6xl items-center justify-between gap-2 px-3 sm:h-12 sm:px-4">
-        <div className="flex min-w-0 items-center gap-2">
-          <Link href="/home" className="flex min-w-0 items-center gap-2">
+      <div className="mx-auto flex h-10 max-w-6xl items-center justify-between gap-1 px-2 sm:h-12 sm:gap-2 sm:px-4">
+        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+          <Link href="/home" className="flex min-w-0 items-center gap-1.5 sm:gap-2">
             <BrandLogo size="sm" />
-            <BrandTitle size="md" />
+            <BrandTitle size="md" className="hidden min-[360px]:flex" />
           </Link>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
           {showNav && (
-            <nav className="mr-1 flex items-center rounded-lg border border-border/60 bg-muted/40 p-0.5">
+            <nav className="flex items-center rounded-lg border border-border/60 bg-muted/40 p-0.5">
               <Link
                 href="/home"
+                aria-label={t("navHome")}
                 className={cn(
-                  "flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold transition-colors sm:px-2.5 sm:text-[11px]",
+                  "flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-semibold transition-colors sm:px-2.5 sm:text-[11px]",
                   pathname === "/home"
                     ? "bg-brand text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Home className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                {t("navHome")}
+                <Home className="h-3.5 w-3.5" />
+                {!compactNav && (
+                  <span className="hidden min-[420px]:inline">{t("navHome")}</span>
+                )}
               </Link>
               <Link
                 href="/"
+                aria-label={t("navChat")}
                 className={cn(
-                  "flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold transition-colors sm:px-2.5 sm:text-[11px]",
+                  "flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-semibold transition-colors sm:px-2.5 sm:text-[11px]",
                   pathname === "/"
                     ? "bg-brand text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <MessageSquare className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                {t("navChat")}
+                <MessageSquare className="h-3.5 w-3.5" />
+                {!compactNav && (
+                  <span className="hidden min-[420px]:inline">{t("navChat")}</span>
+                )}
               </Link>
             </nav>
           )}
@@ -91,7 +101,12 @@ export function AppHeader({
           </div>
 
           {aiReady && (
-            <span className="hidden items-center gap-1 text-[10px] font-medium text-brand min-[400px]:flex sm:text-xs">
+            <span
+              className={cn(
+                "hidden items-center gap-1 text-[10px] font-medium text-brand sm:text-xs",
+                hideStatusOnMobile ? "min-[480px]:flex" : "min-[400px]:flex",
+              )}
+            >
               <span className="h-1.5 w-1.5 rounded-full bg-brand animate-pulse" />
               {guidanceMode === "gemini" ? t("aiLive") : t("aiOffline")}
             </span>

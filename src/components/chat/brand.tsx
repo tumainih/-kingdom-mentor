@@ -56,7 +56,7 @@ export function BrandTitle({ size = "md", className }: BrandTitleProps) {
     <div className={cn("flex items-center gap-2", className)}>
       <span
         className={cn(
-          "font-heading font-semibold tracking-tight text-brand-navy",
+          "font-heading font-semibold tracking-tight text-foreground",
           textSizes[size],
         )}
       >

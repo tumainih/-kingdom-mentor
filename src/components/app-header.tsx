@@ -57,7 +57,7 @@ export function AppHeader({
           {aiReady && (
             <span className="hidden items-center gap-1 text-[10px] font-medium text-brand min-[400px]:flex sm:text-xs">
               <span className="h-1.5 w-1.5 rounded-full bg-brand animate-pulse" />
-              {guidanceMode === "gemini" ? t("aiLive") : t("free")}
+              {guidanceMode === "gemini" ? t("aiLive") : t("aiOffline")}
             </span>
           )}
 

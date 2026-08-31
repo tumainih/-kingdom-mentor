@@ -9,11 +9,11 @@ export async function GET(request: Request) {
   const bible = await getBibleStats(locale);
 
   return Response.json({
-    aiReady: true,
-    mode: hasGemini ? "gemini" : "free",
-    provider: hasGemini ? "gemini" : "free-guidance",
-    model: hasGemini ? getModel() : "kjv-templates",
-    freeFallback: true,
+    aiReady: isAIConfigured(),
+    mode: hasGemini ? "gemini" : "unavailable",
+    provider: hasGemini ? "gemini" : "offline",
+    model: hasGemini ? getModel() : null,
+    verseLookup: true,
     locale,
     bible,
   });

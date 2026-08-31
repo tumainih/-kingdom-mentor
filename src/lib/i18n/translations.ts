@@ -10,6 +10,10 @@ export const translations = {
     live: "Live",
     free: "Free",
     aiLive: "AI Live",
+    aiOffline: "AI Offline",
+    aiBanner: "AI guidance · full Bible · {count} verses",
+    aiUnavailableBanner:
+      "AI offline — verse lookup still works (e.g. John 3:16)",
     canvas: "Canvas",
     freeBanner:
       "Free guidance — full Bible (KJV). No API key or payment needed.",
@@ -38,6 +42,10 @@ export const translations = {
     live: "Hai",
     free: "Bure",
     aiLive: "AI Hai",
+    aiOffline: "AI Haidhani",
+    aiBanner: "Mwongozo wa AI · Biblia kamili · mistari {count}",
+    aiUnavailableBanner:
+      "AI haipatikani — utafutaji wa mistari unafanya kazi (mf. Yohana 3:16)",
     canvas: "Ubao",
     freeBanner:
       "Mwongozo bure — Biblia kamili (SUV). Hakuna API wala malipo.",

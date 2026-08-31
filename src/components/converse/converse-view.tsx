@@ -28,6 +28,7 @@ export function ConverseView({ mode, onModeChange }: ConverseViewProps) {
   const [liveTranscript, setLiveTranscript] = useState("");
   const [lastUser, setLastUser] = useState("");
   const [lastReply, setLastReply] = useState("");
+  const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [phase, setPhase] = useState<"idle" | "listening" | "thinking" | "speaking">("idle");
 
@@ -106,6 +107,17 @@ export function ConverseView({ mode, onModeChange }: ConverseViewProps) {
   const talkDisabled = phase === "thinking" || phase === "speaking";
   const displayError = error ?? speechError;
 
+  const copyReply = useCallback(async () => {
+    if (!lastReply.trim()) return;
+    try {
+      await navigator.clipboard.writeText(lastReply);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard unavailable */
+    }
+  }, [lastReply]);
+
   const status =
     phase === "listening"
       ? t("talkListeningShort")
@@ -139,10 +151,26 @@ export function ConverseView({ mode, onModeChange }: ConverseViewProps) {
                 </p>
               )}
               {lastReply && (
-                <p className="text-foreground/90">
-                  <span className="text-brand-light">Kingdom AI: </span>
-                  {lastReply}
-                </p>
+                <div>
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <span className="text-brand-light">Kingdom AI: </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => void copyReply()}
+                      className="h-6 gap-1 px-1.5 text-[10px] text-muted-foreground"
+                    >
+                      {copied ? (
+                        <Check className="h-3 w-3 text-brand" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
+                      {copied ? t("copied") : t("copy")}
+                    </Button>
+                  </div>
+                  <p className="text-foreground/90">{lastReply}</p>
+                </div>
               )}
             </div>
           )}

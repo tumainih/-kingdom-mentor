@@ -1,4 +1,5 @@
 import {
+  aiUnavailableMessage,
   generateKingdomReply,
   getChunkText,
   prepareKingdomStream,
@@ -88,7 +89,13 @@ export async function POST(request: Request) {
     let streamResult;
     try {
       streamResult = await prepareKingdomStream(kingdomMessages, locale);
-    } catch {
+    } catch (prepErr) {
+      const message =
+        prepErr instanceof Error ? prepErr.message : String(prepErr);
+      if (message === "local-only" || message === "ai-unavailable") {
+        const reply = await generateKingdomReply(kingdomMessages, locale);
+        return streamJsonFallback(reply.text, reply.passages, reply.mode);
+      }
       const reply = await generateKingdomReply(kingdomMessages, locale);
       return streamJsonFallback(reply.text, reply.passages, reply.mode);
     }
@@ -128,10 +135,10 @@ export async function POST(request: Request) {
           );
         } catch (err) {
           if (isApiUnavailableError(err)) {
-            const fallback = await generateKingdomReply(kingdomMessages, locale);
+            const excuse = aiUnavailableMessage(locale);
             controller.enqueue(
               encoder.encode(
-                `data: ${JSON.stringify({ type: "content", text: fallback.text })}\n\n`,
+                `data: ${JSON.stringify({ type: "content", text: excuse })}\n\n`,
               ),
             );
             controller.enqueue(

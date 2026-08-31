@@ -1,5 +1,9 @@
 import { classifyQuestion } from "@/lib/question-classifier";
 import {
+  aiUnavailableMessage,
+  requiresAI,
+} from "@/lib/ai-unavailable";
+import {
   buildSystemPromptForKind,
   type PromptKind,
 } from "@/lib/prompts/kingdom-ai-system-prompt";
@@ -19,7 +23,7 @@ export interface KingdomMessage {
   content: string;
 }
 
-export type ReplyMode = "gemini" | "free";
+export type ReplyMode = "gemini" | "local" | "unavailable";
 
 export interface KingdomReply {
   text: string;
@@ -28,6 +32,8 @@ export interface KingdomReply {
   mode: ReplyMode;
   locale: BibleLocale;
 }
+
+export { aiUnavailableMessage, requiresAI };
 
 function sanitizeMessages(messages: KingdomMessage[]): KingdomMessage[] {
   return messages
@@ -47,6 +53,29 @@ function resolveQuestionKind(messages: KingdomMessage[]): PromptKind {
   }
 
   return kind;
+}
+
+export function analyzeKingdomRequest(messages: KingdomMessage[]) {
+  const sanitized = sanitizeMessages(messages);
+  if (sanitized.length === 0) {
+    throw new Error("At least one message is required.");
+  }
+  const questionKind = resolveQuestionKind(sanitized);
+  const latest = sanitized[sanitized.length - 1].content;
+  return { sanitized, questionKind, latest };
+}
+
+function unavailableReply(
+  questionKind: PromptKind,
+  locale: BibleLocale,
+): KingdomReply {
+  return {
+    text: aiUnavailableMessage(locale),
+    passages: [],
+    questionKind,
+    mode: "unavailable",
+    locale,
+  };
 }
 
 function generationConfigForKind(kind: PromptKind) {
@@ -146,24 +175,22 @@ export async function generateKingdomReply(
   messages: KingdomMessage[],
   locale: BibleLocale = "en",
 ): Promise<KingdomReply> {
-  const sanitized = sanitizeMessages(messages);
-  if (sanitized.length === 0) {
-    throw new Error("At least one message is required.");
+  const { sanitized, questionKind, latest } = analyzeKingdomRequest(messages);
+
+  if (!requiresAI(questionKind)) {
+    const local = await generateFreeFeedback(latest, locale);
+    return { ...local, mode: "local", locale };
   }
 
-  const latest = sanitized[sanitized.length - 1].content;
-
   if (!isAIConfigured()) {
-    const free = await generateFreeFeedback(latest, locale);
-    return { ...free, mode: "free", locale };
+    return unavailableReply(questionKind, locale);
   }
 
   try {
     return await generateWithGemini(sanitized, locale);
   } catch (err) {
     if (isApiUnavailableError(err)) {
-      const free = await generateFreeFeedback(latest, locale);
-      return { ...free, mode: "free", locale };
+      return unavailableReply(questionKind, locale);
     }
     throw new Error(formatAIError(err));
   }
@@ -190,16 +217,16 @@ export async function prepareKingdomStream(
   messages: KingdomMessage[],
   locale: BibleLocale = "en",
 ) {
+  const { sanitized, questionKind } = analyzeKingdomRequest(messages);
+
+  if (!requiresAI(questionKind)) {
+    throw new Error("local-only");
+  }
+
   if (!isAIConfigured()) {
-    throw new Error("free-mode");
+    throw new Error("ai-unavailable");
   }
 
-  const sanitized = sanitizeMessages(messages);
-  if (sanitized.length === 0) {
-    throw new Error("At least one message is required.");
-  }
-
-  const questionKind = resolveQuestionKind(sanitized);
   const retrievalQuery = buildRetrievalQueryFromMessages(sanitized);
 
   const { block: scriptureBlock, passages, narrative } =
@@ -207,7 +234,7 @@ export async function prepareKingdomStream(
 
   const client = getGeminiClient();
   if (!client) {
-    throw new Error("free-mode");
+    throw new Error("ai-unavailable");
   }
 
   const latestMessage = sanitized[sanitized.length - 1];

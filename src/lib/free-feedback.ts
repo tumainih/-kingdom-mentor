@@ -50,8 +50,8 @@ function practicalStep(question: string, locale: BibleLocale): string {
 
 function greetingReply(locale: BibleLocale): string {
   return locale === "sw"
-    ? "Amani iwe kwako. Mimi ni Kingdom AI katika **mwongozo bure** — Biblia kamili (SUV), bila malipo. Shiriki unachohisi au shaka yako."
-    : "Peace to you. I'm Kingdom AI in **free guidance mode** — full Bible (KJV), no payment needed. Share what you feel or doubt.";
+    ? "Amani iwe kwako. Mimi ni Kingdom AI — ninasaidia kupitia Biblia kamili (SUV). Shiriki unachohisi au shaka yako."
+    : "Peace to you. I'm Kingdom AI — I help through the full Bible (KJV). Share what you feel or doubt.";
 }
 
 function offTopicReply(locale: BibleLocale): string {

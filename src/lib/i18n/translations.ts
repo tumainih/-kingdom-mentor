@@ -17,11 +17,10 @@ export const translations = {
     canvas: "Canvas",
     freeBanner:
       "Free guidance — full Bible (KJV). No API key or payment needed.",
-    placeholder: "Write what you feel or doubt…",
+    placeholder: "Write the verse you need, ask whatever you feel or doubt…",
     placeholderContinue: "Continue the conversation…",
-    welcomeTitle: "Write what you feel or doubt",
-    welcomeSubtitle:
-      "Full Bible · English or Swahili · verses, stories, guidance (e.g. Moses / Musa)",
+    welcomeHint:
+      "Write the verse you need, ask whatever you feel or doubt.",
     talkHint: "Share what you feel or doubt — tap the mic",
     talkListening: "Listening… speak now",
     talkStatusIdle: "Share what you feel or doubt",
@@ -84,11 +83,10 @@ export const translations = {
     canvas: "Ubao",
     freeBanner:
       "Mwongozo bure — Biblia kamili (SUV). Hakuna API wala malipo.",
-    placeholder: "Andika unachohisi au shaka yako…",
+    placeholder: "Andika mstari unayohitaji, uliza unachohisi au shaka yako…",
     placeholderContinue: "Endelea mazungumzo…",
-    welcomeTitle: "Andika unachohisi au shaka yako",
-    welcomeSubtitle:
-      "Biblia kamili · Kiingereza au Kiswahili · mistari, hadithi, mwongozo (mf. Musa / Moses)",
+    welcomeHint:
+      "Andika mstari unayohitaji, uliza unachohisi au shaka yako.",
     talkHint: "Shiriki unachohisi — gusa kipaza sauti",
     talkListening: "Nasikiliza… sema sasa",
     talkStatusIdle: "Shiriki unachohisi au shaka yako",

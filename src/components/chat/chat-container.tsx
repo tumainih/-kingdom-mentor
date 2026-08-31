@@ -109,16 +109,13 @@ export function ChatContainer({ mode, onModeChange }: ChatContainerProps) {
       <div className="chat-canvas mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden">
         <span className="canvas-label">{t("canvas")}</span>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pt-10">
+        <div className="canvas-body overflow-y-auto overscroll-contain">
           {messages.length === 0 ? (
-            <div className="flex h-full min-h-[160px] flex-col items-center justify-center px-6 py-10 text-center">
+            <div className="flex h-full min-h-[140px] flex-col items-center justify-center px-4 py-6 text-center sm:px-6 sm:py-8">
               <BrandLogo size="lg" className="logo-glow-ring rounded-2xl" />
-              <BrandTitle size="lg" className="mt-5" />
-              <p className="mt-6 max-w-lg text-lg font-medium text-foreground/90 sm:text-xl">
-                {t("welcomeTitle")}
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {t("welcomeSubtitle")}
+              <BrandTitle size="lg" className="mt-4 sm:mt-5" />
+              <p className="mt-5 max-w-md text-base leading-relaxed text-foreground/90 sm:mt-6 sm:text-lg">
+                {t("welcomeHint")}
               </p>
             </div>
           ) : (

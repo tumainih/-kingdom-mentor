@@ -133,9 +133,14 @@ export function ConverseView({ mode, onModeChange }: ConverseViewProps) {
       <div className="chat-canvas mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden">
         <span className="canvas-label">{t("canvas")}</span>
 
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-6 py-8 pt-12 text-center">
+        <div className="canvas-body flex flex-col items-center justify-center px-4 py-6 text-center sm:px-6 sm:py-8">
           <BrandTitle size="lg" />
-          <p className="mt-4 text-lg font-medium text-brand sm:text-xl">{status}</p>
+          <p className="mt-4 max-w-md text-base leading-relaxed text-brand sm:text-lg">
+            {status}
+          </p>
+          <p className="mt-3 max-w-sm text-xs text-muted-foreground sm:text-sm">
+            {t("welcomeHint")}
+          </p>
 
           {(liveTranscript || lastUser || lastReply) && (
             <div className="mt-8 w-full max-w-3xl space-y-3 rounded-xl border border-border/50 bg-background/40 p-4 text-left text-sm sm:p-5">

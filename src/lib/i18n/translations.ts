@@ -66,6 +66,18 @@ export const translations = {
     homeSubtitle:
       "One Scripture each hour — love, hope, faith, security, forgiveness, and more. Changes when the hour changes.",
     homeGoChat: "Talk with Kingdom AI",
+    installTitle: "Install Kingdom AI",
+    installSubtitle: "Add to your home screen for quick access to hourly Scripture and chat.",
+    installButton: "Install app",
+    installWorking: "Installing…",
+    installDone: "App ready on your home screen.",
+    installOpenApp: "Open Kingdom AI",
+    installOpenBrowser: "Continue in browser",
+    installIosTitle: "Install on iPhone / iPad",
+    installIosStep1: "Tap the Share button in Safari (square with arrow).",
+    installIosStep2: 'Tap "Add to Home Screen", then Add.',
+    installAndroidHint:
+      "Open this page in Chrome, then tap Install — or use the menu → Add to Home screen.",
   },
   sw: {
     language: "Kiswahili",
@@ -133,6 +145,19 @@ export const translations = {
     homeSubtitle:
       "Mstari mmoja kila saa — upendo, matumaini, imani, usalama, msamaha, na zaidi. Hubadilika saa ikibadilika.",
     homeGoChat: "Ongea na Kingdom AI",
+    installTitle: "Sakinisha Kingdom AI",
+    installSubtitle:
+      "Ongeza kwenye skrini ya nyumbani — mistari ya kila saa na mazungumzo.",
+    installButton: "Sakinisha programu",
+    installWorking: "Inasakinisha…",
+    installDone: "Programu iko tayari kwenye skrini ya nyumbani.",
+    installOpenApp: "Fungua Kingdom AI",
+    installOpenBrowser: "Endelea kwenye kivinjari",
+    installIosTitle: "Sakinisha iPhone / iPad",
+    installIosStep1: "Gusa kitufe cha Share katika Safari (mraba na mshale).",
+    installIosStep2: 'Gusa "Add to Home Screen", kisha Add.',
+    installAndroidHint:
+      "Fungua ukurasa huu kwenye Chrome, kisha gusa Sakinisha — au menyu → Add to Home screen.",
   },
 } as const;
 

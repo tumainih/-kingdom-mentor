@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Lora } from "next/font/google";
 import { LocaleProvider } from "@/context/locale-context";
+import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import "./globals.css";
 
 const inter = Inter({
@@ -18,6 +19,18 @@ export const metadata: Metadata = {
   title: "Kingdom AI",
   description:
     "Scripture-grounded wisdom for life decisions — a conversational biblical mentor.",
+  applicationName: "Kingdom AI",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Kingdom AI",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    apple: [{ url: "/icon-192.png", sizes: "192x192", type: "image/png" }],
+  },
 };
 
 export const viewport: Viewport = {
@@ -34,6 +47,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${inter.variable} ${lora.variable} h-full antialiased`}
     >
       <body className="h-full overflow-hidden bg-background text-foreground">
+        <RegisterServiceWorker />
         <LocaleProvider>{children}</LocaleProvider>
       </body>
     </html>

@@ -23,11 +23,22 @@ const PROMPT_STYLES = [
 interface StarterPromptsProps {
   onSelect: (prompt: string) => void;
   disabled?: boolean;
+  compact?: boolean;
 }
 
-export function StarterPrompts({ onSelect, disabled }: StarterPromptsProps) {
+export function StarterPrompts({
+  onSelect,
+  disabled,
+  compact = false,
+}: StarterPromptsProps) {
   return (
-    <div className="grid w-full max-w-2xl grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-2.5">
+    <div
+      className={
+        compact
+          ? "flex flex-col gap-1.5"
+          : "grid w-full max-w-2xl grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-2.5"
+      }
+    >
       {STARTER_PROMPTS.map((prompt, index) => {
         const Icon = PROMPT_ICONS[index] ?? BookOpen;
         const style = PROMPT_STYLES[index] ?? PROMPT_STYLES[0];
@@ -38,14 +49,14 @@ export function StarterPrompts({ onSelect, disabled }: StarterPromptsProps) {
             type="button"
             onClick={() => onSelect(prompt)}
             disabled={disabled}
-            className={`group flex items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left shadow-sm transition-all hover:shadow-md disabled:opacity-50 sm:gap-3 sm:rounded-2xl sm:px-3.5 sm:py-3 ${style.card}`}
+            className={`group flex items-start gap-2 rounded-lg border px-2.5 py-2 text-left shadow-sm transition-all hover:shadow-md disabled:opacity-50 sm:gap-2.5 sm:rounded-xl sm:px-3 sm:py-2.5 ${style.card}`}
           >
             <span
-              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg sm:h-8 sm:w-8 sm:rounded-xl ${style.icon}`}
+              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md sm:h-7 sm:w-7 sm:rounded-lg ${style.icon}`}
             >
-              <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             </span>
-            <span className="text-xs leading-snug text-foreground/85 group-hover:text-foreground sm:text-sm">
+            <span className="text-xs leading-snug text-foreground/85 group-hover:text-foreground">
               {prompt}
             </span>
           </button>

@@ -1,5 +1,6 @@
 import { buildSystemPrompt } from "@/lib/prompts/kingdom-ai-system-prompt";
 import { retrieveAndFormat } from "@/lib/bible/retrieval";
+import { formatOpenAIError } from "@/lib/format-openai-error";
 import { getOpenAIClient, getModel } from "@/lib/openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 
@@ -99,6 +100,8 @@ export async function POST(request: Request) {
       stream: true,
       temperature: 0.75,
       max_tokens: 2500,
+    }).catch((err) => {
+      throw new Error(formatOpenAIError(err));
     });
 
     const encoder = new TextEncoder();
@@ -126,8 +129,7 @@ export async function POST(request: Request) {
             encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`),
           );
         } catch (err) {
-          const message =
-            err instanceof Error ? err.message : "Stream error occurred.";
+          const message = formatOpenAIError(err);
           controller.enqueue(
             encoder.encode(
               `data: ${JSON.stringify({ type: "error", message })}\n\n`,
@@ -147,11 +149,12 @@ export async function POST(request: Request) {
       },
     });
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "An unexpected error occurred.";
+    const message = formatOpenAIError(err);
     const status = message.includes("Invalid") || message.includes("Too many")
       ? 400
-      : 500;
+      : message.includes("credits") || message.includes("rate limit")
+        ? 402
+        : 500;
     return Response.json({ error: message }, { status });
   }
 }

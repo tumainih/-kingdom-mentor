@@ -26,6 +26,8 @@ export const translations = {
     passagesForQuestion: "Bible · passages for your question",
     storyContext: "Bible story",
     fullBible: "66 books · {count} verses",
+    copy: "Copy",
+    copied: "Copied",
   },
   sw: {
     language: "Kiswahili",
@@ -53,6 +55,8 @@ export const translations = {
     passagesForQuestion: "Biblia · mistari kwa swali lako",
     storyContext: "Hadithi ya Biblia",
     fullBible: "Vitabu 66 · mistari {count}",
+    copy: "Nakili",
+    copied: "Imenakiliwa",
   },
 } as const;
 

@@ -1,8 +1,11 @@
 "use client";
 
+import { useCallback, useState } from "react";
+import { Check, Copy } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { BrandLogo } from "./brand";
+import { Button } from "@/components/ui/button";
 import { useLocale } from "@/context/locale-context";
 import type { ScripturePassage } from "./types";
 
@@ -13,6 +16,26 @@ interface MessageBubbleProps {
   scripture?: ScripturePassage[];
 }
 
+function toPlainCopyText(content: string, scripture?: ScripturePassage[]): string {
+  const parts: string[] = [];
+  if (scripture?.length) {
+    for (const p of scripture) {
+      const label = p.refEn && p.refEn !== p.ref ? `${p.ref} (${p.refEn})` : p.ref;
+      parts.push(`${label}\n${p.text}`);
+    }
+    parts.push("");
+  }
+  parts.push(
+    content
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/\*(.*?)\*/g, "$1")
+      .replace(/`([^`]+)`/g, "$1")
+      .replace(/^#+\s+/gm, "")
+      .trim(),
+  );
+  return parts.join("\n").trim();
+}
+
 export function MessageBubble({
   role,
   content,
@@ -20,7 +43,20 @@ export function MessageBubble({
   scripture,
 }: MessageBubbleProps) {
   const { t } = useLocale();
+  const [copied, setCopied] = useState(false);
   const isUser = role === "user";
+
+  const handleCopy = useCallback(async () => {
+    const text = toPlainCopyText(content, scripture);
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard unavailable */
+    }
+  }, [content, scripture]);
 
   if (isUser) {
     return (
@@ -40,6 +76,23 @@ export function MessageBubble({
           <p className="text-[11px] font-medium uppercase tracking-wide text-brand">
             Kingdom AI
           </p>
+          {!isStreaming && content.trim() && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => void handleCopy()}
+              className="ml-auto h-7 gap-1 px-2 text-[10px] text-muted-foreground hover:text-foreground"
+              aria-label={t("copy")}
+            >
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-brand" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
+              {copied ? t("copied") : t("copy")}
+            </Button>
+          )}
         </div>
 
         {scripture && scripture.length > 0 && (

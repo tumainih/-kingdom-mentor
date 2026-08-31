@@ -454,7 +454,15 @@ Rules:
 4. Invite them to share something in that area.
 5. Do not invent Bible verses.`;
 
-export type PromptKind = "biblical" | "off-topic" | "greeting";
+export type PromptKind = "biblical" | "off-topic" | "greeting" | "verse";
+
+const VERSE_LOOKUP_PROMPT = `The user requested a specific Bible reference.
+
+Rules:
+1. Quote the PROVIDED SCRIPTURE text **exactly** — do not paraphrase the verse wording.
+2. Reply in **1–3 short sentences** maximum.
+3. Do not add long commentary unless the user asked for explanation.
+4. Do not invent verses.`;
 
 export function buildSystemPromptForKind(
   kind: PromptKind,
@@ -481,6 +489,22 @@ export function buildSystemPromptForKind(
     return locale === "sw"
       ? `Wewe ni Kingdom AI. Swali si la imani/ maisha/ Biblia.\nJibu **sentensi 2-3** tu kwa Kiswahili: sema kwa upole kwamba unasaidia kupitia Biblia kamili kwa imani, shaka, mahusiano, na maamuzi. Usijibu swali la nje kwa undani.${languageRule}`
       : `${OFF_TOPIC_SYSTEM_PROMPT}${languageRule}`;
+  }
+
+  if (kind === "verse") {
+    const verseBase = locale === "sw"
+      ? `Wewe ni Kingdom AI. Mtumiaji ameomba mstari maalum wa Biblia.\n${VERSE_LOOKUP_PROMPT}${languageRule}`
+      : `${VERSE_LOOKUP_PROMPT}${languageRule}`;
+
+    if (!scriptureBlock.trim()) {
+      return `${verseBase}\n\nNo passage was retrieved. Say you could not find that reference and suggest format like John 3:16.`;
+    }
+
+    return `${verseBase}
+
+## PROVIDED SCRIPTURE
+
+${scriptureBlock}`;
   }
 
   const base = `${KINGDOM_AI_SYSTEM_PROMPT}

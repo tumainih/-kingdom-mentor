@@ -55,6 +55,8 @@ function generationConfigForKind(kind: PromptKind) {
       return { temperature: 0.6, maxOutputTokens: 220 };
     case "off-topic":
       return { temperature: 0.5, maxOutputTokens: 260 };
+    case "verse":
+      return { temperature: 0.4, maxOutputTokens: 600 };
     default:
       return { temperature: 0.65, maxOutputTokens: 1000 };
   }

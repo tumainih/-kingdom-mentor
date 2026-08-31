@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Check, Copy } from "lucide-react";
 import { BrandTitle } from "@/components/chat/brand";
 import { ComposerBar } from "@/components/chat/composer-bar";
+import { Button } from "@/components/ui/button";
 import { fetchKingdomReply, type StreamMessage } from "@/lib/chat-stream";
 import type { AppMode } from "@/components/app-shell";
 import { useLocale } from "@/context/locale-context";

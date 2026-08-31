@@ -1,6 +1,10 @@
 import { retrieveScripture, formatScriptureBlock } from "@/lib/bible/retrieval";
 import type { BibleLocale } from "@/lib/bible/locale";
 import { detectNarrative, narrativeTitle } from "@/lib/bible/narratives";
+import {
+  formatVerseLookupBlock,
+  lookupVerseReference,
+} from "@/lib/bible/verse-lookup";
 import { classifyQuestion, type QuestionKind } from "@/lib/question-classifier";
 import type { RetrievedPassage } from "@/lib/bible/types";
 
@@ -52,8 +56,39 @@ function greetingReply(locale: BibleLocale): string {
 
 function offTopicReply(locale: BibleLocale): string {
   return locale === "sw"
-    ? "Ninasaidia kupitia **Biblia kamili** kwa imani, shaka, mahusiano, na maamuzi — si maswali ya nje kama hali ya hewa au code. Unachohisi au shaka gani leo?"
-    : "I help through the **full Bible** for faith, doubt, relationships, and decisions — not off-topic questions. What's on your heart?";
+    ? "Swali hilo ni nje ya Biblia na maisha ya imani. Jaribu swali kuhusu imani, shaka, mahusiano, maamuzi, au andika mstari (mf. Yohana 3:16)."
+    : "That question is outside Bible and faith-life guidance. Try faith, doubt, relationships, decisions — or type a verse (e.g. John 3:16).";
+}
+
+async function verseLookupReply(
+  question: string,
+  locale: BibleLocale,
+): Promise<{ text: string; passages: RetrievedPassage[] }> {
+  const { passages } = await lookupVerseReference(question, locale);
+  if (passages.length === 0) {
+    return {
+      passages: [],
+      text:
+        locale === "sw"
+          ? "Sikupata mstari huo. Jaribu muundo: **Yohana 3:16** au **Zaburi 23:1**."
+          : "I couldn't find that reference. Try: **John 3:16** or **Psalm 23:1**.",
+    };
+  }
+
+  const block = formatVerseLookupBlock(passages, locale);
+  const intro =
+    locale === "sw"
+      ? passages.length === 1
+        ? "Huu ndio mstari kutoka Biblia kamili:"
+        : "Hii ndio mistari kutoka Biblia kamili:"
+      : passages.length === 1
+        ? "Here is the verse from the full Bible:"
+        : "Here are the verses from the full Bible:";
+
+  return {
+    passages,
+    text: `${intro}\n\n${block}`,
+  };
 }
 
 async function biblicalReply(
@@ -126,6 +161,11 @@ export async function generateFreeFeedback(
 
   if (kind === "off-topic") {
     return { text: offTopicReply(locale), passages: [], questionKind: kind };
+  }
+
+  if (kind === "verse") {
+    const verse = await verseLookupReply(userText, locale);
+    return { ...verse, questionKind: kind };
   }
 
   const biblical = await biblicalReply(userText, locale);

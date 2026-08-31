@@ -8,6 +8,7 @@ import {
   narrativeTitle,
 } from "./narratives";
 import type { BibleVerse, RetrievedPassage } from "./types";
+import { lookupVerseReference } from "./verse-lookup";
 
 export type { BibleLocale };
 
@@ -154,6 +155,11 @@ export async function retrieveScripture(
   limit = 8,
   locale: BibleLocale = "en",
 ): Promise<RetrievedPassage[]> {
+  const verseLookup = await lookupVerseReference(userText, locale);
+  if (verseLookup.passages.length > 0) {
+    return verseLookup.passages;
+  }
+
   const allVerses = await loadVerses(locale);
 
   const narrative = detectNarrative(userText, locale);
@@ -213,7 +219,16 @@ export function formatScriptureBlock(
 export async function retrieveAndFormat(
   userText: string,
   locale: BibleLocale = "en",
-): Promise<{ passages: RetrievedPassage[]; block: string; narrative?: string }> {
+): Promise<{ passages: RetrievedPassage[]; block: string; narrative?: string; verseLookup?: boolean }> {
+  const verseLookup = await lookupVerseReference(userText, locale);
+  if (verseLookup.passages.length > 0) {
+    return {
+      passages: verseLookup.passages,
+      block: formatScriptureBlock(verseLookup.passages, locale),
+      verseLookup: true,
+    };
+  }
+
   const narrative = detectNarrative(userText, locale);
   const passages = await retrieveScripture(userText, narrative ? 18 : 8, locale);
   return {

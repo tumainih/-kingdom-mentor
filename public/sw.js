@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build oR148Lfis40kz-jALNqn5) */
-const CACHE = "kingdom-ai-oR148Lfis40kz-jALNqn5";
+/* Kingdom AI — offline-capable service worker (build 9UudeM6gabe-vB0EylREg) */
+const CACHE = "kingdom-ai-9UudeM6gabe-vB0EylREg";
 const PRECACHE = [
   "/",
   "/home",
@@ -10,6 +10,9 @@ const PRECACHE = [
   "/icon-512.png",
   "/data/hourly-en.json",
   "/data/hourly-sw.json",
+  "/_next/static/9UudeM6gabe-vB0EylREg/_buildManifest.js",
+  "/_next/static/9UudeM6gabe-vB0EylREg/_clientMiddlewareManifest.js",
+  "/_next/static/9UudeM6gabe-vB0EylREg/_ssgManifest.js",
   "/_next/static/chunks/00izapk6l813d.css",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
@@ -38,10 +41,7 @@ const PRECACHE = [
   "/_next/static/media/e7150917543fc9da-s.0mybutugvu-lq.woff2",
   "/_next/static/media/e9457141811d41ae-s.02frcczqg7k-8.woff2",
   "/_next/static/media/favicon.2vob68tjqpejf.ico",
-  "/_next/static/media/icon.1v5cwft9ue97g.svg",
-  "/_next/static/oR148Lfis40kz-jALNqn5/_buildManifest.js",
-  "/_next/static/oR148Lfis40kz-jALNqn5/_clientMiddlewareManifest.js",
-  "/_next/static/oR148Lfis40kz-jALNqn5/_ssgManifest.js"
+  "/_next/static/media/icon.1v5cwft9ue97g.svg"
 ];
 
 self.addEventListener("install", (event) => {

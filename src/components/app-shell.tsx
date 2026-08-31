@@ -47,6 +47,7 @@ export function AppShell() {
         aiReady={mounted}
         guidanceMode={guidanceMode}
         showNewChat
+        showNav
         onNewChat={handleNewChat}
       />
 

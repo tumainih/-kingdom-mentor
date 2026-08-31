@@ -1,0 +1,21 @@
+import { getHourlyVerse } from "@/lib/bible/get-hourly-verse";
+import { parseLocale } from "@/lib/bible/locale";
+
+export const runtime = "nodejs";
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const locale = parseLocale(searchParams.get("locale") ?? "en");
+  const hourParam = searchParams.get("hour");
+  const hour =
+    hourParam !== null && hourParam !== ""
+      ? Number.parseInt(hourParam, 10)
+      : undefined;
+
+  if (hour !== undefined && (Number.isNaN(hour) || hour < 0 || hour > 23)) {
+    return Response.json({ error: "Hour must be 0–23." }, { status: 400 });
+  }
+
+  const result = await getHourlyVerse(locale, hour);
+  return Response.json(result);
+}

@@ -58,6 +58,15 @@ export const translations = {
       "Ask: What would love require? Humility? Integrity before God?",
     aiUnavailable:
       "I can't reach the AI right now, so I can't give the thoughtful guidance this question deserves. Please try again in a moment.\n\nYou can still type a Bible reference in English or Swahili (e.g. **John 3:16** or **Yohana 3:16**).",
+    navHome: "Home",
+    navChat: "Chat",
+    homeHourLabel: "Hour {hour} · verse for this hour",
+    homeLoading: "Loading this hour's verse…",
+    homeChangesAt: "New verse at {hour}:00",
+    homeVerseUnavailable: "Verse unavailable for this hour. Try again shortly.",
+    homeSubtitle:
+      "One Scripture each hour — love, hope, faith, security, forgiveness, and more. Changes when the hour changes.",
+    homeGoChat: "Talk with Kingdom AI",
   },
   sw: {
     language: "Kiswahili",
@@ -117,6 +126,15 @@ export const translations = {
       "Jiulize: Upendo unahitaji nini? Unyenyekevu unahitaji nini? Uaminifu unahitaji nini mbele za Mungu?",
     aiUnavailable:
       "Siwezi kufikia AI kwa sasa, kwa hivyo siwezi kutoa mwongozo wa kina unaostahili swali hili. Tafadhali jaribu tena baada ya muda mfupi.\n\nUnaweza bado kuandika mstari kwa Kiingereza au Kiswahili (mf. **Yohana 3:16** au **John 3:16**).",
+    navHome: "Nyumbani",
+    navChat: "Maandishi",
+    homeHourLabel: "Saa {hour} · mstari wa saa hii",
+    homeLoading: "Inapakia mstari wa saa hii…",
+    homeChangesAt: "Mstari mpya saa {hour}:00",
+    homeVerseUnavailable: "Mstari haupatikani kwa saa hii. Jaribu tena.",
+    homeSubtitle:
+      "Mstari mmoja kila saa — upendo, matumaini, imani, usalama, msamaha, na zaidi. Hubadilika saa ikibadilika.",
+    homeGoChat: "Ongea na Kingdom AI",
   },
 } as const;
 

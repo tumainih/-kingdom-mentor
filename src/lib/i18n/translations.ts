@@ -67,17 +67,30 @@ export const translations = {
       "One Scripture each hour — love, hope, faith, security, forgiveness, and more. Changes when the hour changes.",
     homeGoChat: "Talk with Kingdom AI",
     installTitle: "Install Kingdom AI",
-    installSubtitle: "Add to your home screen for quick access to hourly Scripture and chat.",
+    installSubtitle:
+      "One link for iPhone and Android — add to your home screen for hourly Scripture and chat.",
+    installOneLink: "Same link for every phone",
+    installCopyLink: "Copy link",
+    installShareLink: "Share link",
+    installShareText: "Install Kingdom AI — Scripture and biblical guidance on your phone.",
     installButton: "Install app",
     installWorking: "Installing…",
     installDone: "App ready on your home screen.",
     installOpenApp: "Open Kingdom AI",
     installOpenBrowser: "Continue in browser",
-    installIosTitle: "Install on iPhone / iPad",
-    installIosStep1: "Tap the Share button in Safari (square with arrow).",
-    installIosStep2: 'Tap "Add to Home Screen", then Add.',
-    installAndroidHint:
-      "Open this page in Chrome, then tap Install — or use the menu → Add to Home screen.",
+    installIosTitle: "iPhone / iPad",
+    installIosSafariRequired: "Open this link in Safari to add Kingdom AI to your home screen.",
+    installIosOpenSafari: "Copy the link above, open Safari, paste it in the address bar, and go.",
+    installIosStep1: "Tap Share in Safari (square with arrow at the bottom).",
+    installIosStep2: 'Scroll and tap "Add to Home Screen", then tap Add.',
+    installAndroidTitle: "Android",
+    installAndroidTapButton: "Tap the Install app button above.",
+    installAndroidStep1: "Open this link in Chrome (or Samsung Internet / Edge).",
+    installAndroidStep2: 'Tap Install — or menu (⋮) → "Install app" / "Add to Home screen".',
+    installAndroidStep3: "Confirm — Kingdom AI opens from your home screen like an app.",
+    installDesktopTitle: "On your computer",
+    installDesktopHint:
+      "Send this link to your phone, or scan it from another device. Works on iPhone (Safari) and Android (Chrome).",
   },
   sw: {
     language: "Kiswahili",
@@ -147,17 +160,33 @@ export const translations = {
     homeGoChat: "Ongea na Kingdom AI",
     installTitle: "Sakinisha Kingdom AI",
     installSubtitle:
-      "Ongeza kwenye skrini ya nyumbani — mistari ya kila saa na mazungumzo.",
+      "Kiungo kimoja kwa iPhone na Android — ongeza kwenye skrini ya nyumbani.",
+    installOneLink: "Kiungo kimoja kwa kila simu",
+    installCopyLink: "Nakili kiungo",
+    installShareLink: "Shiriki kiungo",
+    installShareText: "Sakinisha Kingdom AI — Biblia na mwongozo kwenye simu yako.",
     installButton: "Sakinisha programu",
     installWorking: "Inasakinisha…",
     installDone: "Programu iko tayari kwenye skrini ya nyumbani.",
     installOpenApp: "Fungua Kingdom AI",
     installOpenBrowser: "Endelea kwenye kivinjari",
-    installIosTitle: "Sakinisha iPhone / iPad",
-    installIosStep1: "Gusa kitufe cha Share katika Safari (mraba na mshale).",
-    installIosStep2: 'Gusa "Add to Home Screen", kisha Add.',
-    installAndroidHint:
-      "Fungua ukurasa huu kwenye Chrome, kisha gusa Sakinisha — au menyu → Add to Home screen.",
+    installIosTitle: "iPhone / iPad",
+    installIosSafariRequired:
+      "Fungua kiungo hiki kwenye Safari ili kuongeza Kingdom AI kwenye skrini ya nyumbani.",
+    installIosOpenSafari:
+      "Nakili kiungo hapo juu, fungua Safari, bandika kwenye anwani, kisha nenda.",
+    installIosStep1: "Gusa Share katika Safari (mraba na mshale chini).",
+    installIosStep2: 'Sogeza chini na gusa "Add to Home Screen", kisha Add.',
+    installAndroidTitle: "Android",
+    installAndroidTapButton: "Gusa kitufe cha Sakinisha programu hapo juu.",
+    installAndroidStep1: "Fungua kiungo hiki kwenye Chrome (au Samsung Internet / Edge).",
+    installAndroidStep2:
+      'Gusa Sakinisha — au menyu (⋮) → "Install app" / "Add to Home screen".',
+    installAndroidStep3:
+      "Thibitisha — Kingdom AI itafunguka kutoka skrini ya nyumbani kama programu.",
+    installDesktopTitle: "Kwenye kompyuta",
+    installDesktopHint:
+      "Tuma kiungo hiki kwenye simu yako. Kinafanya kazi iPhone (Safari) na Android (Chrome).",
   },
 } as const;
 

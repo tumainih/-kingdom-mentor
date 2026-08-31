@@ -1,4 +1,8 @@
-import { buildSystemPrompt } from "@/lib/prompts/kingdom-ai-system-prompt";
+import { classifyQuestion } from "@/lib/question-classifier";
+import {
+  buildSystemPromptForKind,
+  type PromptKind,
+} from "@/lib/prompts/kingdom-ai-system-prompt";
 import {
   buildRetrievalQueryFromMessages,
   retrieveAndFormat,
@@ -63,9 +67,35 @@ function buildRetrievalQuery(messages: ChatMessage[]): string {
   return buildRetrievalQueryFromMessages(messages);
 }
 
+function resolveQuestionKind(messages: ChatMessage[]): PromptKind {
+  const latest = messages[messages.length - 1].content;
+  let kind = classifyQuestion(latest);
+
+  if (kind === "off-topic" && messages.length > 1) {
+    const priorUser = messages.filter((m) => m.role === "user").slice(0, -1);
+    if (priorUser.some((m) => classifyQuestion(m.content) === "biblical")) {
+      kind = "biblical";
+    }
+  }
+
+  return kind;
+}
+
+function generationConfigForKind(kind: PromptKind) {
+  switch (kind) {
+    case "greeting":
+      return { temperature: 0.6, maxOutputTokens: 180 };
+    case "off-topic":
+      return { temperature: 0.5, maxOutputTokens: 220 };
+    default:
+      return { temperature: 0.65, maxOutputTokens: 900 };
+  }
+}
+
 /** Gemini requires history to start with a user turn and alternate roles. */
 function toGeminiHistory(messages: ChatMessage[]) {
-  const history = messages.slice(0, -1).map((m) => ({
+  const recent = messages.slice(-8);
+  const history = recent.slice(0, -1).map((m) => ({
     role: m.role === "assistant" ? ("model" as const) : ("user" as const),
     parts: [{ text: m.content }],
   }));
@@ -99,21 +129,28 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const messages = validateMessages(body.messages);
+    const questionKind = resolveQuestionKind(messages);
     const retrievalQuery = buildRetrievalQuery(messages);
 
-    const { block: scriptureBlock, passages } =
-      await retrieveAndFormat(retrievalQuery);
+    let scriptureBlock = "";
+    let passages: { ref: string; text: string }[] = [];
 
-    const systemPrompt = buildSystemPrompt(scriptureBlock);
+    if (questionKind === "biblical") {
+      const retrieved = await retrieveAndFormat(retrievalQuery);
+      scriptureBlock = retrieved.block;
+      passages = retrieved.passages;
+    }
+
+    const systemPrompt = buildSystemPromptForKind(
+      questionKind,
+      scriptureBlock,
+    );
     const latestMessage = messages[messages.length - 1];
 
     const model = client.getGenerativeModel({
       model: getModel(),
       systemInstruction: systemPrompt,
-      generationConfig: {
-        temperature: 0.75,
-        maxOutputTokens: 2500,
-      },
+      generationConfig: generationConfigForKind(questionKind),
     });
 
     const chat = model.startChat({

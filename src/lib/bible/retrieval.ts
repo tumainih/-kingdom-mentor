@@ -193,7 +193,7 @@ function extractSearchQueries(userText: string): string[] {
     queries.add(refMatch[0]);
   }
 
-  return [...queries].slice(0, 8);
+  return [...queries].slice(0, 6);
 }
 
 function dedupeByRef(verses: BibleVerse[]): BibleVerse[] {
@@ -225,7 +225,7 @@ const FALLBACK_MAX_SCORE = 0.38;
 
 export async function retrieveScripture(
   userText: string,
-  limit = 8,
+  limit = 5,
 ): Promise<RetrievedPassage[]> {
   const fuse = await getFuse();
   const queries = extractSearchQueries(userText);

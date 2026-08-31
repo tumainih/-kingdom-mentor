@@ -1,3 +1,4 @@
+import "@/lib/bible/init-server";
 import { getModel, isAIConfigured } from "@/lib/gemini";
 import { getBibleStats } from "@/lib/bible/retrieval";
 import { parseLocale } from "@/lib/bible/locale";

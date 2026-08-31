@@ -64,6 +64,16 @@ export function HourlyVerseHome() {
     async (hour: number) => {
       setLoading(true);
       try {
+        const localRes = await fetch(`/data/hourly-${locale}.json`);
+        if (localRes.ok) {
+          const slots = (await localRes.json()) as HourlyVersePayload[];
+          const match = slots.find((s) => s.hour === hour);
+          if (match) {
+            setVerse(match);
+            return;
+          }
+        }
+
         const res = await fetch(
           `/api/hourly-verse?locale=${locale}&hour=${hour}`,
         );

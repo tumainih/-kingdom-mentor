@@ -1,7 +1,6 @@
 import Fuse from "fuse.js";
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import type { BibleLocale } from "./locale";
+import { loadVerses } from "./verse-lookup";
 import {
   detectNarrative,
   retrieveNarrativePassages,
@@ -48,21 +47,7 @@ const STOP_WORDS = new Set([
   "kama", "pia", "sana", "tu", "bado", "hapa", "na", "ya", "wa", "ni",
 ]);
 
-const verseCache = new Map<BibleLocale, BibleVerse[]>();
 const fuseCache = new Map<BibleLocale, Fuse<BibleVerse>>();
-
-async function loadVerses(locale: BibleLocale): Promise<BibleVerse[]> {
-  const cached = verseCache.get(locale);
-  if (cached) return cached;
-
-  const file =
-    locale === "sw" ? "swahili-index.json" : "kjv-index.json";
-  const indexPath = path.join(process.cwd(), "data", file);
-  const raw = await readFile(indexPath, "utf8");
-  const verses = JSON.parse(raw) as BibleVerse[];
-  verseCache.set(locale, verses);
-  return verses;
-}
 
 async function getFuse(locale: BibleLocale): Promise<Fuse<BibleVerse>> {
   const cached = fuseCache.get(locale);

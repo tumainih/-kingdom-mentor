@@ -1,6 +1,28 @@
-/* Kingdom AI — offline-capable service worker (build oR148Lfis40kz-jALNqn5) */
-const CACHE = "kingdom-ai-oR148Lfis40kz-jALNqn5";
-const PRECACHE = [
+import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import path from "node:path";
+
+const root = process.cwd();
+const nextDir = path.join(root, ".next");
+const buildId = readFileSync(path.join(nextDir, "BUILD_ID"), "utf8").trim();
+const staticDir = path.join(nextDir, "static");
+
+function walk(dir, base = "") {
+  const entries = [];
+  for (const name of readdirSync(dir)) {
+    const full = path.join(dir, name);
+    const rel = `${base}/${name}`;
+    if (statSync(full).isDirectory()) {
+      entries.push(...walk(full, rel));
+    } else {
+      entries.push(`/_next/static${rel}`);
+    }
+  }
+  return entries;
+}
+
+const staticAssets = walk(staticDir);
+
+const precache = [
   "/",
   "/home",
   "/install",
@@ -10,39 +32,12 @@ const PRECACHE = [
   "/icon-512.png",
   "/data/hourly-en.json",
   "/data/hourly-sw.json",
-  "/_next/static/chunks/00izapk6l813d.css",
-  "/_next/static/chunks/0cz1d0mv5g_q7.js",
-  "/_next/static/chunks/0ehjiuuxbbhq9.js",
-  "/_next/static/chunks/1npistqcifhdm.js",
-  "/_next/static/chunks/1z99mlp5cofct.js",
-  "/_next/static/chunks/25055b8q_50pl.js",
-  "/_next/static/chunks/2y1nd8vf7h77j.js",
-  "/_next/static/chunks/355ypq0vfo-7n.js",
-  "/_next/static/chunks/3adwt13tezgym.js",
-  "/_next/static/chunks/3niecic96oynk.js",
-  "/_next/static/chunks/3q576hlfnuh0n.js",
-  "/_next/static/chunks/40_-th3l4iag_.js",
-  "/_next/static/chunks/turbopack-0snm50y8kpj5e.js",
-  "/_next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2",
-  "/_next/static/media/2bbe8d2671613f1f-s.0k62hbripvv8p.woff2",
-  "/_next/static/media/2c55a0e60120577a-s.0-dom-5bn10r2.woff2",
-  "/_next/static/media/507a47c1876d4ec2-s.2qdkzeru_ecot.woff2",
-  "/_next/static/media/5476f68d60460930-s.2uwcyprjm3xu3.woff2",
-  "/_next/static/media/71fbf9c08529c2a5-s.2fpqrm51ez0iq.woff2",
-  "/_next/static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
-  "/_next/static/media/8c2eb9ceedecfc8e-s.p.23aeddxv5enbo.woff2",
-  "/_next/static/media/9c72aa0f40e4eef8-s.1y4-pdgsjb-pw.woff2",
-  "/_next/static/media/ac34884600cd8d5d-s.2936i88_6qsfd.woff2",
-  "/_next/static/media/ad66f9afd8947f86-s.3lvt2whj97whp.woff2",
-  "/_next/static/media/e1ccd2766b08c828-s.15gdzqknx46iu.woff2",
-  "/_next/static/media/e7150917543fc9da-s.0mybutugvu-lq.woff2",
-  "/_next/static/media/e9457141811d41ae-s.02frcczqg7k-8.woff2",
-  "/_next/static/media/favicon.2vob68tjqpejf.ico",
-  "/_next/static/media/icon.1v5cwft9ue97g.svg",
-  "/_next/static/oR148Lfis40kz-jALNqn5/_buildManifest.js",
-  "/_next/static/oR148Lfis40kz-jALNqn5/_clientMiddlewareManifest.js",
-  "/_next/static/oR148Lfis40kz-jALNqn5/_ssgManifest.js"
+  ...staticAssets,
 ];
+
+const sw = `/* Kingdom AI — offline-capable service worker (build ${buildId}) */
+const CACHE = "kingdom-ai-${buildId}";
+const PRECACHE = ${JSON.stringify(precache, null, 2)};
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -124,3 +119,7 @@ self.addEventListener("fetch", (event) => {
 self.addEventListener("message", (event) => {
   if (event.data === "skipWaiting") self.skipWaiting();
 });
+`;
+
+writeFileSync(path.join(root, "public", "sw.js"), sw);
+console.log(`Generated public/sw.js (${precache.length} precache entries, build ${buildId})`);

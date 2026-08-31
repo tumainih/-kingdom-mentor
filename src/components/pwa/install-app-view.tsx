@@ -11,6 +11,7 @@ import {
   Link2,
   Share2,
   Smartphone,
+  WifiOff,
 } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import {
   type InstallPlatform,
 } from "@/lib/pwa/platform";
 import { RegisterServiceWorker } from "./register-sw";
+import { warmOfflineCache } from "@/lib/offline/client-reply";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -69,6 +71,8 @@ export function InstallAppView() {
   const [installing, setInstalling] = useState(false);
   const [copied, setCopied] = useState(false);
   const [installUrl, setInstallUrl] = useState("/install");
+  const [offlineReady, setOfflineReady] = useState(false);
+  const [offlinePreparing, setOfflinePreparing] = useState(false);
 
   useEffect(() => {
     setPlatform(detectInstallPlatform());
@@ -82,6 +86,15 @@ export function InstallAppView() {
 
     window.addEventListener("beforeinstallprompt", onBip);
     return () => window.removeEventListener("beforeinstallprompt", onBip);
+  }, []);
+
+  useEffect(() => {
+    if (!navigator.onLine) return;
+    setOfflinePreparing(true);
+    void warmOfflineCache().finally(() => {
+      setOfflinePreparing(false);
+      setOfflineReady(true);
+    });
   }, []);
 
   const install = useCallback(async () => {
@@ -157,6 +170,24 @@ export function InstallAppView() {
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             {t("installSubtitle")}
           </p>
+
+          <div className="mt-4 rounded-lg border border-brand/25 bg-brand/5 px-3 py-2.5 text-left">
+            <p className="flex items-center gap-2 text-xs font-semibold text-brand-light">
+              <WifiOff className="h-3.5 w-3.5 shrink-0" />
+              {t("installOfflineTitle")}
+            </p>
+            <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground sm:text-xs">
+              {t("installOfflineHint")}
+            </p>
+            {offlinePreparing ? (
+              <p className="mt-2 text-[10px] text-muted-foreground">{t("installOfflinePreparing")}</p>
+            ) : offlineReady ? (
+              <p className="mt-2 flex items-center gap-1 text-[10px] text-brand-light">
+                <Check className="h-3 w-3" />
+                {t("installOfflineReady")}
+              </p>
+            ) : null}
+          </div>
 
           <div className="mt-4 rounded-lg border border-border/40 bg-muted/30 px-3 py-2">
             <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">

@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 43123 --hostname 0.0.0.0",
+    "dev": "npm run prepare-offline && next dev --port 43123 --hostname 0.0.0.0",
     "prepare-bible": "node scripts/prepare-bible.mjs",
     "prepare-swahili": "node scripts/prepare-swahili.mjs",
+    "prepare-offline": "node scripts/prepare-offline.mjs",
     "prepare-pwa-icons": "node scripts/generate-pwa-icons.mjs",
-    "build": "next build",
+    "build": "npm run prepare-offline && next build && node scripts/generate-sw.mjs",
     "start": "next start",
     "deploy": "vercel deploy --prod",
     "lint": "eslint"

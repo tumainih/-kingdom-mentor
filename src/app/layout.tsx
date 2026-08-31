@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Lora } from "next/font/google";
 import { LocaleProvider } from "@/context/locale-context";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
+import { OfflineBanner } from "@/components/pwa/offline-banner";
 import "./globals.css";
 
 const inter = Inter({
@@ -52,7 +53,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="h-full overflow-hidden bg-background text-foreground">
         <RegisterServiceWorker />
-        <LocaleProvider>{children}</LocaleProvider>
+        <LocaleProvider>
+          <OfflineBanner />
+          {children}
+        </LocaleProvider>
       </body>
     </html>
   );

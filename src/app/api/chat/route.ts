@@ -1,3 +1,4 @@
+import "@/lib/bible/init-server";
 import {
   aiUnavailableMessage,
   generateKingdomReply,

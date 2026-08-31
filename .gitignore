@@ -31,6 +31,9 @@ next-env.d.ts
 # Bible source downloads (index is committed)
 /data/source/
 
+# Generated offline assets (copied at build)
+/public/data/
+
 # Vercel
 .vercel
 

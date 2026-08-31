@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Kingdom AI",
     short_name: "Kingdom AI",
     description:
-      "Scripture-grounded wisdom — verses, stories, and biblical guidance.",
+      "Scripture-grounded wisdom — verses, stories, and biblical guidance. Works offline after install.",
     start_url: "/home",
     scope: "/",
     display: "standalone",

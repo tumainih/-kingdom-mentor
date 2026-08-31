@@ -91,6 +91,12 @@ export const translations = {
     installDesktopTitle: "On your computer",
     installDesktopHint:
       "Send this link to your phone, or scan it from another device. Works on iPhone (Safari) and Android (Chrome).",
+    installOfflineTitle: "Works offline",
+    installOfflineHint:
+      "After one visit online, hourly Scripture, verse lookup, and Bible guidance work without internet.",
+    installOfflinePreparing: "Preparing offline Bible…",
+    installOfflineReady: "Offline Bible ready",
+    offlineBanner: "Offline — hourly verses, Bible lookup, and guidance still work.",
   },
   sw: {
     language: "Kiswahili",
@@ -187,6 +193,13 @@ export const translations = {
     installDesktopTitle: "Kwenye kompyuta",
     installDesktopHint:
       "Tuma kiungo hiki kwenye simu yako. Kinafanya kazi iPhone (Safari) na Android (Chrome).",
+    installOfflineTitle: "Inafanya kazi bila mtandao",
+    installOfflineHint:
+      "Baada ya kutembelea mara moja ukiwa mtandaoni, mistari ya kila saa, utafutaji wa mistari, na mwongozo unafanya kazi bila intaneti.",
+    installOfflinePreparing: "Inaandaa Biblia ya nje ya mtandao…",
+    installOfflineReady: "Biblia ya nje ya mtandao iko tayari",
+    offlineBanner:
+      "Nje ya mtandao — mistari ya kila saa, utafutaji wa mistari, na mwongozo bado vinafanya kazi.",
   },
 } as const;
 

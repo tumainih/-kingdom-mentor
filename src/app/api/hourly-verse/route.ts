@@ -1,3 +1,4 @@
+import "@/lib/bible/init-server";
 import { getHourlyVerse } from "@/lib/bible/get-hourly-verse";
 import { parseLocale } from "@/lib/bible/locale";
 

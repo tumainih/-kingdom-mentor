@@ -1,5 +1,3 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import type { BibleLocale } from "./locale";
 import type { BibleVerse, RetrievedPassage } from "./types";
 
@@ -10,7 +8,26 @@ export interface ParsedReference {
   verseEnd?: number;
 }
 
+type VerseLoader = (locale: BibleLocale) => Promise<BibleVerse[]>;
+
+let verseLoader: VerseLoader | null = null;
 const verseCache = new Map<BibleLocale, BibleVerse[]>();
+
+export function setVerseLoader(loader: VerseLoader): void {
+  verseLoader = loader;
+}
+
+export async function loadVerses(locale: BibleLocale): Promise<BibleVerse[]> {
+  const cached = verseCache.get(locale);
+  if (cached) return cached;
+  if (!verseLoader) {
+    throw new Error("Bible loader not initialized.");
+  }
+  const verses = await verseLoader(locale);
+  verseCache.set(locale, verses);
+  return verses;
+}
+
 const bookAliasCache = new Map<BibleLocale, Map<string, string>>();
 const sortedAliasCache = new Map<
   BibleLocale,
@@ -36,17 +53,6 @@ async function loadCrossBookPairs(): Promise<Array<{ en: string; sw: string }>> 
 
 const LEADING_FILLER_RE =
   /^(?:(?:please|kindly|can you|could you|would you|show me|tell me|read|quote|give me|what is|what does|what's|find|lookup|get|share|the book of|book of|from|in|about|verse|mstari|nipe|nisomee|nisome|onyesha|tafuta|eleza|ni|kwa|nipe mstari wa|nisomee mstari|tafadhali)\s+)+/i;
-
-async function loadVerses(locale: BibleLocale): Promise<BibleVerse[]> {
-  const cached = verseCache.get(locale);
-  if (cached) return cached;
-  const file = locale === "sw" ? "swahili-index.json" : "kjv-index.json";
-  const indexPath = path.join(process.cwd(), "data", file);
-  const raw = await readFile(indexPath, "utf8");
-  const verses = JSON.parse(raw) as BibleVerse[];
-  verseCache.set(locale, verses);
-  return verses;
-}
 
 function normalizeAlias(value: string): string {
   return value

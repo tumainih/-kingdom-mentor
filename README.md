@@ -16,6 +16,16 @@ Kingdom AI is an AI assistant, **not** God, Jesus, the Holy Spirit, a prophet, o
 - Free guidance mode — works without an API key or payment
 - Optional Google Gemini for richer replies when `GEMINI_API_KEY` is set
 - Streaming responses with visible Scripture references
+- **Offline PWA** — install on iPhone or Android from one link; hourly Scripture, verse lookup, and Bible guidance work without internet after the first online visit
+
+## Install on your phone (one link)
+
+Open **`/install`** on your deployed site (e.g. `https://your-app.vercel.app/install`). Same URL for iPhone and Android:
+
+- **iPhone / iPad** — open in Safari → Share → Add to Home Screen
+- **Android** — open in Chrome → Install app (or menu → Add to Home screen)
+
+After one visit online, the app caches the full Bible locally and works offline for hourly verses, reference lookup (e.g. John 3:16), and Scripture-based guidance.
 
 ## Prerequisites
 

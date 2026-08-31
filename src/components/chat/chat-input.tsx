@@ -82,26 +82,29 @@ export function ChatInput({
           disabled && "opacity-70",
         )}
       >
-        {isSupported && (
-          <button
-            type="button"
-            onClick={toggleMic}
-            disabled={disabled}
-            aria-label={isListening ? "Stop listening" : "Talk to Kingdom AI"}
-            className={cn(
-              "mb-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors",
-              isListening
-                ? "bg-red-100 text-red-600 animate-pulse"
-                : "text-muted-foreground hover:bg-brand/10 hover:text-brand",
-            )}
-          >
-            {isListening ? (
-              <MicOff className="h-4 w-4" />
-            ) : (
-              <Mic className="h-4 w-4" />
-            )}
-          </button>
-        )}
+        {/* Fixed slot prevents layout shift when mic mounts after hydration */}
+        <div className="mb-0.5 flex h-8 w-8 shrink-0 items-center justify-center">
+          {isSupported ? (
+            <button
+              type="button"
+              onClick={toggleMic}
+              disabled={disabled}
+              aria-label={isListening ? "Stop listening" : "Talk to Kingdom AI"}
+              className={cn(
+                "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
+                isListening
+                  ? "bg-red-100 text-red-600 animate-pulse"
+                  : "text-muted-foreground hover:bg-brand/10 hover:text-brand",
+              )}
+            >
+              {isListening ? (
+                <MicOff className="h-4 w-4" />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
+            </button>
+          ) : null}
+        </div>
 
         <textarea
           ref={textareaRef}
@@ -113,6 +116,7 @@ export function ChatInput({
           }
           disabled={disabled}
           rows={1}
+          suppressHydrationWarning
           className="max-h-[200px] min-h-[24px] flex-1 resize-none bg-transparent text-[15px] leading-6 text-foreground outline-none placeholder:text-muted-foreground"
         />
 

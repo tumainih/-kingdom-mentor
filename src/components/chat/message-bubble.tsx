@@ -25,7 +25,7 @@ export function MessageBubble({
   if (isUser) {
     return (
       <div className="flex w-full justify-end py-1">
-        <div className="max-w-[min(85%,640px)] rounded-[24px] border border-brand/10 bg-secondary px-4 py-2.5 text-[15px] leading-relaxed text-foreground">
+        <div className="max-w-[min(85%,640px)] rounded-[24px] border border-brand/15 bg-gradient-to-br from-secondary to-indigo-50 px-4 py-2.5 text-[15px] leading-relaxed text-foreground shadow-sm">
           <p className="whitespace-pre-wrap">{content}</p>
         </div>
       </div>

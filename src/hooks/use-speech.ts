@@ -40,13 +40,18 @@ export function useSpeechRecognition(
 ): UseSpeechRecognitionResult {
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSupported, setIsSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const onResultRef = useRef(onResult);
   onResultRef.current = onResult;
 
-  const isSupported = Boolean(getSpeechRecognitionCtor());
+  useEffect(() => {
+    setIsSupported(Boolean(getSpeechRecognitionCtor()));
+  }, []);
 
   useEffect(() => {
+    if (!isSupported) return;
+
     const Ctor = getSpeechRecognitionCtor();
     if (!Ctor) return;
 
@@ -76,7 +81,7 @@ export function useSpeechRecognition(
     return () => {
       recognition.abort();
     };
-  }, []);
+  }, [isSupported]);
 
   const startListening = useCallback(() => {
     if (!recognitionRef.current) return;

@@ -7,9 +7,10 @@ import { ChatInput } from "./chat-input";
 import { MessageList } from "./message-list";
 import { AiThinking } from "./ai-badge";
 import { BrandLogo, BrandTitle } from "./brand";
+import { DecorativeBackground } from "./decorative-background";
+import { StarterPrompts } from "./starter-prompts";
 import { speakText } from "@/hooks/use-speech";
 import {
-  STARTER_PROMPTS,
   type ChatMessage,
   type ScripturePassage,
 } from "./types";
@@ -25,11 +26,13 @@ export function ChatContainer() {
   const [error, setError] = useState<string | null>(null);
   const [aiReady, setAiReady] = useState(false);
   const [autoSpeak, setAutoSpeak] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const messagesRef = useRef<ChatMessage[]>([]);
 
   messagesRef.current = messages;
 
   useEffect(() => {
+    setMounted(true);
     fetch("/api/status")
       .then((r) => r.json())
       .then((data: { aiReady?: boolean }) => setAiReady(data.aiReady ?? false))
@@ -178,14 +181,15 @@ export function ChatContainer() {
   const inputDisabled = isStreaming || !aiReady;
 
   return (
-    <div className="canvas-gradient flex h-full flex-col">
+    <div className="canvas-gradient relative flex h-full flex-col">
+      <DecorativeBackground />
       <ChatHeader
         onNewChat={handleNewChat}
         showNewChat={hasMessages}
-        aiReady={aiReady}
+        aiReady={mounted && aiReady}
       />
 
-      {!aiReady && (
+      {mounted && !aiReady && (
         <div className="border-b border-amber-200/60 bg-amber-50 px-4 py-3 text-center text-sm text-amber-900">
           <strong>To talk with Kingdom AI,</strong> add your OpenAI key to{" "}
           <code className="rounded bg-amber-100/80 px-1.5 py-0.5 text-xs">
@@ -202,17 +206,20 @@ export function ChatContainer() {
       <div className="relative flex min-h-0 flex-1 flex-col">
         {!hasMessages ? (
           <div className="flex flex-1 flex-col items-center justify-center px-4 pb-8">
-            <BrandLogo
-              size="lg"
-              className="mb-6 rounded-2xl shadow-lg shadow-brand/20"
-            />
+            <div className="relative mb-6">
+              <div className="absolute inset-0 scale-110 rounded-3xl bg-brand/10 blur-xl" />
+              <BrandLogo
+                size="lg"
+                className="logo-glow-ring relative rounded-2xl"
+              />
+            </div>
 
             <div className="mb-3">
               <BrandTitle size="lg" />
             </div>
 
             <div className="mb-10 text-center">
-              <h2 className="text-xl font-medium text-brand-navy sm:text-2xl">
+              <h2 className="brand-gradient-text text-xl font-semibold sm:text-2xl">
                 Tell me what&apos;s on your heart
               </h2>
               <p className="mt-3 flex items-center justify-center gap-1.5 text-[15px] text-muted-foreground">
@@ -232,19 +239,7 @@ export function ChatContainer() {
               />
             </div>
 
-            <div className="grid w-full max-w-2xl grid-cols-1 gap-2 sm:grid-cols-2">
-              {STARTER_PROMPTS.map((prompt) => (
-                <button
-                  key={prompt}
-                  type="button"
-                  onClick={() => sendMessage(prompt)}
-                  disabled={inputDisabled}
-                  className="rounded-2xl border border-brand/10 bg-white/80 px-4 py-3 text-left text-sm leading-snug text-foreground/80 shadow-sm transition-all hover:border-brand/25 hover:bg-white hover:shadow-md disabled:opacity-50"
-                >
-                  {prompt}
-                </button>
-              ))}
-            </div>
+            <StarterPrompts onSelect={sendMessage} disabled={inputDisabled} />
           </div>
         ) : (
           <div className="min-h-0 flex-1 overflow-y-auto">

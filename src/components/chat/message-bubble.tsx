@@ -55,11 +55,22 @@ export function MessageBubble({
         {scripture && scripture.length > 0 && (
           <div className="knowledge-card mb-2.5 rounded-xl px-3 py-2 sm:mb-3">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-gold">
-              KJV · Scripture context
+              KJV · passages for your question
             </p>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              {scripture.map((p) => p.ref).join(" · ")}
-            </p>
+            <ul className="mt-1.5 space-y-1.5 text-xs leading-relaxed text-muted-foreground">
+              {scripture.slice(0, 5).map((p) => (
+                <li key={p.ref}>
+                  <span className="font-medium text-brand-light">{p.ref}</span>
+                  {" — "}
+                  {p.text.length > 120 ? `${p.text.slice(0, 117)}…` : p.text}
+                </li>
+              ))}
+            </ul>
+            {scripture.length > 5 && (
+              <p className="mt-1.5 text-[10px] text-muted-foreground/80">
+                +{scripture.length - 5} more in context
+              </p>
+            )}
           </div>
         )}
 

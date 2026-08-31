@@ -1,5 +1,8 @@
 import { buildSystemPrompt } from "@/lib/prompts/kingdom-ai-system-prompt";
-import { retrieveAndFormat } from "@/lib/bible/retrieval";
+import {
+  buildRetrievalQueryFromMessages,
+  retrieveAndFormat,
+} from "@/lib/bible/retrieval";
 import { formatAIError } from "@/lib/format-ai-error";
 import { getGeminiClient, getModel, isAIConfigured } from "@/lib/gemini";
 
@@ -57,8 +60,7 @@ function validateMessages(messages: unknown): ChatMessage[] {
 }
 
 function buildRetrievalQuery(messages: ChatMessage[]): string {
-  const recent = messages.slice(-10);
-  return recent.map((m) => `${m.role}: ${m.content}`).join("\n");
+  return buildRetrievalQueryFromMessages(messages);
 }
 
 /** Gemini requires history to start with a user turn and alternate roles. */

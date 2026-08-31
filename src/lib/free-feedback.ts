@@ -70,8 +70,8 @@ async function verseLookupReply(
       passages: [],
       text:
         locale === "sw"
-          ? "Sikupata mstari huo. Jaribu muundo: **Yohana 3:16** au **Zaburi 23:1**."
-          : "I couldn't find that reference. Try: **John 3:16** or **Psalm 23:1**.",
+          ? "Sikupata mstari huo. Jaribu: **Yohana 3:16**, **Zaburi 23:1**, au **Mwanzo 1:1** (unaweza pia kuandika *nisomee Yohana 3:16*)."
+          : "I couldn't find that reference. Try: **John 3:16**, **Psalm 23:1**, or **Genesis 1:1** (you can also write *please read John 3:16*).",
     };
   }
 

@@ -1,4 +1,4 @@
-/** True when we should silently use free local guidance instead of showing an API error. */
+/** True when Gemini cannot be used — return an unavailable excuse instead of faking a reply. */
 export function isApiUnavailableError(err: unknown): boolean {
   const raw = err instanceof Error ? err.message : String(err);
   const lower = raw.toLowerCase();

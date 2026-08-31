@@ -16,12 +16,21 @@ type SpeechRecognitionInstance = {
   onerror: ((event: { error: string }) => void) | null;
 };
 
+interface UseSpeechRecognitionOptions {
+  /** Called as the user speaks (interim + final). */
+  onResult?: (transcript: string) => void;
+  /** Called when recognition ends with the best final transcript. */
+  onUtteranceComplete?: (transcript: string) => void;
+  continuous?: boolean;
+}
+
 interface UseSpeechRecognitionResult {
   isListening: boolean;
   isSupported: boolean;
   startListening: () => void;
   stopListening: () => void;
   error: string | null;
+  clearError: () => void;
 }
 
 function getSpeechRecognitionCtor():
@@ -36,14 +45,21 @@ function getSpeechRecognitionCtor():
 }
 
 export function useSpeechRecognition(
-  onResult: (transcript: string) => void,
+  options: UseSpeechRecognitionOptions | ((transcript: string) => void) = {},
 ): UseSpeechRecognitionResult {
+  const opts =
+    typeof options === "function" ? { onResult: options } : options;
+
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSupported, setIsSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
-  const onResultRef = useRef(onResult);
-  onResultRef.current = onResult;
+  const onResultRef = useRef(opts.onResult);
+  const onUtteranceCompleteRef = useRef(opts.onUtteranceComplete);
+  const transcriptRef = useRef("");
+
+  onResultRef.current = opts.onResult;
+  onUtteranceCompleteRef.current = opts.onUtteranceComplete;
 
   useEffect(() => {
     setIsSupported(Boolean(getSpeechRecognitionCtor()));
@@ -56,21 +72,29 @@ export function useSpeechRecognition(
     if (!Ctor) return;
 
     const recognition = new Ctor();
-    recognition.continuous = false;
+    recognition.continuous = opts.continuous ?? false;
     recognition.interimResults = true;
     recognition.lang = "en-US";
 
     recognition.onresult = (event) => {
       let transcript = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      for (let i = 0; i < event.results.length; i++) {
         transcript += event.results[i][0]?.transcript ?? "";
       }
-      if (transcript.trim()) onResultRef.current(transcript.trim());
+      transcriptRef.current = transcript.trim();
+      if (transcriptRef.current) onResultRef.current?.(transcriptRef.current);
     };
 
-    recognition.onend = () => setIsListening(false);
+    recognition.onend = () => {
+      setIsListening(false);
+      const final = transcriptRef.current.trim();
+      transcriptRef.current = "";
+      if (final) onUtteranceCompleteRef.current?.(final);
+    };
+
     recognition.onerror = (event) => {
       setIsListening(false);
+      transcriptRef.current = "";
       if (event.error !== "aborted") {
         setError("Could not hear you. Check your microphone and try again.");
       }
@@ -81,11 +105,12 @@ export function useSpeechRecognition(
     return () => {
       recognition.abort();
     };
-  }, [isSupported]);
+  }, [isSupported, opts.continuous]);
 
   const startListening = useCallback(() => {
     if (!recognitionRef.current) return;
     setError(null);
+    transcriptRef.current = "";
     try {
       recognitionRef.current.start();
       setIsListening(true);
@@ -99,11 +124,26 @@ export function useSpeechRecognition(
     setIsListening(false);
   }, []);
 
-  return { isListening, isSupported, startListening, stopListening, error };
+  const clearError = useCallback(() => setError(null), []);
+
+  return {
+    isListening,
+    isSupported,
+    startListening,
+    stopListening,
+    error,
+    clearError,
+  };
 }
 
 export function speakText(text: string): void {
-  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  void speakTextAsync(text);
+}
+
+export function speakTextAsync(text: string): Promise<void> {
+  if (typeof window === "undefined" || !window.speechSynthesis) {
+    return Promise.resolve();
+  }
 
   window.speechSynthesis.cancel();
 
@@ -112,13 +152,17 @@ export function speakText(text: string): void {
     .replace(/\[(.*?)\]\(.*?\)/g, "$1")
     .trim();
 
-  if (!plain) return;
+  if (!plain) return Promise.resolve();
 
-  const utterance = new SpeechSynthesisUtterance(plain);
-  utterance.rate = 0.95;
-  utterance.pitch = 1;
-  utterance.lang = "en-US";
-  window.speechSynthesis.speak(utterance);
+  return new Promise((resolve) => {
+    const utterance = new SpeechSynthesisUtterance(plain);
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+    utterance.lang = "en-US";
+    utterance.onend = () => resolve();
+    utterance.onerror = () => resolve();
+    window.speechSynthesis.speak(utterance);
+  });
 }
 
 export function stopSpeaking(): void {

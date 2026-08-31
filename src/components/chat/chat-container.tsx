@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { ChatHeader } from "./chat-header";
 import { ChatInput } from "./chat-input";
 import { MessageList } from "./message-list";
+import { AiThinking } from "./ai-badge";
 import { BrandLogo, BrandTitle } from "./brand";
 import {
   STARTER_PROMPTS,
@@ -22,6 +23,22 @@ export function ChatContainer() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scripture, setScripture] = useState<ScripturePassage[]>([]);
+  const [aiReady, setAiReady] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/status")
+      .then((r) => r.json())
+      .then((data: { aiReady?: boolean }) => setAiReady(data.aiReady ?? false))
+      .catch(() => setAiReady(false));
+  }, []);
+
+  const handleNewChat = useCallback(() => {
+    setMessages([]);
+    setInput("");
+    setError(null);
+    setScripture([]);
+    setIsStreaming(false);
+  }, []);
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -130,10 +147,30 @@ export function ChatContainer() {
   );
 
   const hasMessages = messages.length > 0;
+  const lastMessage = messages[messages.length - 1];
+  const isThinking =
+    isStreaming &&
+    lastMessage?.role === "assistant" &&
+    !lastMessage.content.trim();
 
   return (
     <div className="canvas-gradient flex h-full flex-col">
-      <ChatHeader />
+      <ChatHeader
+        onNewChat={handleNewChat}
+        showNewChat={hasMessages}
+        aiReady={aiReady}
+      />
+
+      {!aiReady && (
+        <div className="border-b border-amber-200/60 bg-amber-50 px-4 py-2.5 text-center text-sm text-amber-900">
+          Add your{" "}
+          <code className="rounded bg-amber-100/80 px-1.5 py-0.5 text-xs">
+            OPENAI_API_KEY
+          </code>{" "}
+          to <code className="rounded bg-amber-100/80 px-1.5 py-0.5 text-xs">.env.local</code>{" "}
+          to enable Kingdom AI responses.
+        </div>
+      )}
 
       <div className="relative flex min-h-0 flex-1 flex-col">
         {!hasMessages ? (
@@ -186,6 +223,7 @@ export function ChatContainer() {
               isStreaming={isStreaming}
               scripture={scripture}
             />
+            <AiThinking visible={isThinking} />
           </div>
         )}
 
@@ -209,8 +247,9 @@ export function ChatContainer() {
       )}
 
       <p className="shrink-0 pb-3 text-center text-[11px] text-muted-foreground/80">
-        <span className="font-medium text-brand">Kingdom AI</span> is not a
-        replacement for God, pastoral care, or qualified professionals.
+        <span className="font-medium text-brand">Kingdom AI</span> · Powered by
+        OpenAI · Not a replacement for God, pastoral care, or qualified
+        professionals.
       </p>
     </div>
   );

@@ -7,6 +7,7 @@
     "prepare-bible": "node scripts/prepare-bible.mjs",
     "build": "next build",
     "start": "next start",
+    "deploy": "vercel deploy --prod",
     "lint": "eslint"
   },
   "dependencies": {

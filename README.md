@@ -29,6 +29,15 @@ npm run dev
 
 Open [http://localhost:43123](http://localhost:43123).
 
+### Talk with Kingdom AI
+
+- **Type** your message and press Enter, or tap the **send** button
+- **Speak** by tapping the **microphone** icon in the input bar (Chrome/Edge recommended)
+- **Listen** — enable "AI reads replies aloud" or tap the speaker icon on any reply
+- **Continue the conversation** — Kingdom AI remembers the full thread and stays focused on your issue
+
+You need a valid `OPENAI_API_KEY` in `.env.local` for AI responses to work.
+
 ### Rebuild the Bible index (optional)
 
 The KJV search index is included at `data/kjv-index.json`. To regenerate it from source:

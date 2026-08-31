@@ -1,12 +1,13 @@
+export interface ScripturePassage {
+  ref: string;
+  text: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
-}
-
-export interface ScripturePassage {
-  ref: string;
-  text: string;
+  scripture?: ScripturePassage[];
 }
 
 export const STARTER_PROMPTS = [

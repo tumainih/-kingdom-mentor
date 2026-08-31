@@ -56,11 +56,11 @@ function validateMessages(messages: unknown): ChatMessage[] {
   });
 }
 
-function getLatestUserMessage(messages: ChatMessage[]): string {
-  for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i].role === "user") return messages[i].content;
-  }
-  return messages[messages.length - 1].content;
+
+/** Build retrieval query from full conversation so follow-ups stay on topic. */
+function buildRetrievalQuery(messages: ChatMessage[]): string {
+  const recent = messages.slice(-10);
+  return recent.map((m) => `${m.role}: ${m.content}`).join("\n");
 }
 
 export async function POST(request: Request) {
@@ -78,10 +78,10 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const messages = validateMessages(body.messages);
-    const latestUserMessage = getLatestUserMessage(messages);
+    const retrievalQuery = buildRetrievalQuery(messages);
 
     const { block: scriptureBlock, passages } =
-      await retrieveAndFormat(latestUserMessage);
+      await retrieveAndFormat(retrievalQuery);
 
     const systemPrompt = buildSystemPrompt(scriptureBlock);
 
@@ -97,8 +97,8 @@ export async function POST(request: Request) {
       model: getModel(),
       messages: openaiMessages,
       stream: true,
-      temperature: 0.7,
-      max_tokens: 2000,
+      temperature: 0.75,
+      max_tokens: 2500,
     });
 
     const encoder = new TextEncoder();

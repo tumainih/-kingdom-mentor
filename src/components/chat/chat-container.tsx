@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { ChatHeader } from "./chat-header";
 import { ChatInput } from "./chat-input";
 import { MessageList } from "./message-list";
 import { AiThinking } from "./ai-badge";
 import { BrandLogo, BrandTitle } from "./brand";
+import { speakText } from "@/hooks/use-speech";
 import {
   STARTER_PROMPTS,
   type ChatMessage,
@@ -22,8 +23,11 @@ export function ChatContainer() {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [scripture, setScripture] = useState<ScripturePassage[]>([]);
-  const [aiReady, setAiReady] = useState(true);
+  const [aiReady, setAiReady] = useState(false);
+  const [autoSpeak, setAutoSpeak] = useState(true);
+  const messagesRef = useRef<ChatMessage[]>([]);
+
+  messagesRef.current = messages;
 
   useEffect(() => {
     fetch("/api/status")
@@ -36,41 +40,23 @@ export function ChatContainer() {
     setMessages([]);
     setInput("");
     setError(null);
-    setScripture([]);
     setIsStreaming(false);
   }, []);
 
-  const sendMessage = useCallback(
-    async (text: string) => {
-      const trimmed = text.trim();
-      if (!trimmed || isStreaming) return;
-
-      setError(null);
-      const userMessage: ChatMessage = {
-        id: createId(),
-        role: "user",
-        content: trimmed,
-      };
-      const assistantId = createId();
-      const nextMessages = [
-        ...messages,
-        userMessage,
-        { id: assistantId, role: "assistant" as const, content: "" },
-      ];
-
-      setMessages(nextMessages);
-      setInput("");
+  const streamReply = useCallback(
+    async (
+      history: ChatMessage[],
+      assistantId: string,
+    ) => {
       setIsStreaming(true);
-      setScripture([]);
+      setError(null);
 
       try {
         const response = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            messages: nextMessages
-              .slice(0, -1)
-              .map(({ role, content }) => ({ role, content })),
+            messages: history.map(({ role, content }) => ({ role, content })),
           }),
         });
 
@@ -88,6 +74,7 @@ export function ChatContainer() {
         const decoder = new TextDecoder();
         let buffer = "";
         let accumulated = "";
+        let passages: ScripturePassage[] = [];
 
         while (true) {
           const { done, value } = await reader.read();
@@ -107,12 +94,14 @@ export function ChatContainer() {
             };
 
             if (payload.type === "scripture" && payload.passages) {
-              setScripture(payload.passages);
+              passages = payload.passages;
             } else if (payload.type === "content" && payload.text) {
               accumulated += payload.text;
               setMessages((prev) =>
                 prev.map((m) =>
-                  m.id === assistantId ? { ...m, content: accumulated } : m,
+                  m.id === assistantId
+                    ? { ...m, content: accumulated, scripture: passages }
+                    : m,
                 ),
               );
             } else if (payload.type === "error") {
@@ -133,6 +122,8 @@ export function ChatContainer() {
                 : m,
             ),
           );
+        } else if (autoSpeak) {
+          speakText(accumulated);
         }
       } catch (err) {
         const message =
@@ -143,7 +134,38 @@ export function ChatContainer() {
         setIsStreaming(false);
       }
     },
-    [isStreaming, messages],
+    [autoSpeak],
+  );
+
+  const sendMessage = useCallback(
+    async (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed || isStreaming) return;
+
+      if (!aiReady) {
+        setError(
+          "Add OPENAI_API_KEY to .env.local to start conversing with Kingdom AI.",
+        );
+        return;
+      }
+
+      const userMessage: ChatMessage = {
+        id: createId(),
+        role: "user",
+        content: trimmed,
+      };
+      const assistantId = createId();
+      const history = [...messagesRef.current, userMessage];
+
+      setMessages([
+        ...history,
+        { id: assistantId, role: "assistant", content: "" },
+      ]);
+      setInput("");
+
+      await streamReply(history, assistantId);
+    },
+    [aiReady, isStreaming, streamReply],
   );
 
   const hasMessages = messages.length > 0;
@@ -152,6 +174,8 @@ export function ChatContainer() {
     isStreaming &&
     lastMessage?.role === "assistant" &&
     !lastMessage.content.trim();
+
+  const inputDisabled = isStreaming || !aiReady;
 
   return (
     <div className="canvas-gradient flex h-full flex-col">
@@ -162,20 +186,26 @@ export function ChatContainer() {
       />
 
       {!aiReady && (
-        <div className="border-b border-amber-200/60 bg-amber-50 px-4 py-2.5 text-center text-sm text-amber-900">
-          Add your{" "}
+        <div className="border-b border-amber-200/60 bg-amber-50 px-4 py-3 text-center text-sm text-amber-900">
+          <strong>To talk with Kingdom AI,</strong> add your OpenAI key to{" "}
           <code className="rounded bg-amber-100/80 px-1.5 py-0.5 text-xs">
-            OPENAI_API_KEY
+            .env.local
+          </code>
+          :{" "}
+          <code className="rounded bg-amber-100/80 px-1.5 py-0.5 text-xs">
+            OPENAI_API_KEY=sk-...
           </code>{" "}
-          to <code className="rounded bg-amber-100/80 px-1.5 py-0.5 text-xs">.env.local</code>{" "}
-          to enable Kingdom AI responses.
+          then restart the dev server. You can type or use the mic to talk.
         </div>
       )}
 
       <div className="relative flex min-h-0 flex-1 flex-col">
         {!hasMessages ? (
           <div className="flex flex-1 flex-col items-center justify-center px-4 pb-8">
-            <BrandLogo size="lg" className="mb-6 rounded-2xl shadow-lg shadow-brand/20" />
+            <BrandLogo
+              size="lg"
+              className="mb-6 rounded-2xl shadow-lg shadow-brand/20"
+            />
 
             <div className="mb-3">
               <BrandTitle size="lg" />
@@ -183,11 +213,11 @@ export function ChatContainer() {
 
             <div className="mb-10 text-center">
               <h2 className="text-xl font-medium text-brand-navy sm:text-2xl">
-                What would wisdom require?
+                Tell me what&apos;s on your heart
               </h2>
               <p className="mt-3 flex items-center justify-center gap-1.5 text-[15px] text-muted-foreground">
                 <Sparkles className="h-4 w-4 text-brand" />
-                Scripture-grounded AI guidance from the King James Version
+                Have a real conversation — type or tap the mic to talk
               </p>
             </div>
 
@@ -196,9 +226,9 @@ export function ChatContainer() {
                 value={input}
                 onChange={setInput}
                 onSend={() => sendMessage(input)}
-                disabled={isStreaming}
+                disabled={inputDisabled}
                 centered
-                placeholder="Describe your situation or ask Kingdom AI…"
+                placeholder="Share your situation — I'll walk through it with you…"
               />
             </div>
 
@@ -208,7 +238,7 @@ export function ChatContainer() {
                   key={prompt}
                   type="button"
                   onClick={() => sendMessage(prompt)}
-                  disabled={isStreaming}
+                  disabled={inputDisabled}
                   className="rounded-2xl border border-brand/10 bg-white/80 px-4 py-3 text-left text-sm leading-snug text-foreground/80 shadow-sm transition-all hover:border-brand/25 hover:bg-white hover:shadow-md disabled:opacity-50"
                 >
                   {prompt}
@@ -218,11 +248,7 @@ export function ChatContainer() {
           </div>
         ) : (
           <div className="min-h-0 flex-1 overflow-y-auto">
-            <MessageList
-              messages={messages}
-              isStreaming={isStreaming}
-              scripture={scripture}
-            />
+            <MessageList messages={messages} isStreaming={isStreaming} />
             <AiThinking visible={isThinking} />
           </div>
         )}
@@ -233,24 +259,35 @@ export function ChatContainer() {
               value={input}
               onChange={setInput}
               onSend={() => sendMessage(input)}
-              disabled={isStreaming}
-              placeholder="Message Kingdom AI…"
+              disabled={inputDisabled}
+              placeholder="Continue the conversation…"
             />
           </div>
         )}
       </div>
 
       {error && (
-        <div className="absolute bottom-24 left-1/2 z-30 -translate-x-1/2 rounded-full border border-destructive/20 bg-white px-4 py-2 text-sm text-destructive shadow-lg">
+        <div className="absolute bottom-24 left-1/2 z-30 max-w-md -translate-x-1/2 rounded-2xl border border-destructive/20 bg-white px-4 py-2 text-center text-sm text-destructive shadow-lg">
           {error}
         </div>
       )}
 
-      <p className="shrink-0 pb-3 text-center text-[11px] text-muted-foreground/80">
-        <span className="font-medium text-brand">Kingdom AI</span> · Powered by
-        OpenAI · Not a replacement for God, pastoral care, or qualified
-        professionals.
-      </p>
+      <div className="flex shrink-0 items-center justify-center gap-3 pb-3">
+        <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={autoSpeak}
+            onChange={(e) => setAutoSpeak(e.target.checked)}
+            className="rounded border-border text-brand focus:ring-brand"
+          />
+          AI reads replies aloud
+        </label>
+        <span className="text-muted-foreground/40">·</span>
+        <p className="text-[11px] text-muted-foreground/80">
+          <span className="font-medium text-brand">Kingdom AI</span> remembers
+          this conversation
+        </p>
+      </div>
     </div>
   );
 }

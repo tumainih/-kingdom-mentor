@@ -73,11 +73,13 @@ export function InstallAppView() {
   const [installUrl, setInstallUrl] = useState("/install");
   const [offlineReady, setOfflineReady] = useState(false);
   const [offlinePreparing, setOfflinePreparing] = useState(false);
+  const [canShare, setCanShare] = useState(false);
 
   useEffect(() => {
     setPlatform(detectInstallPlatform());
     setInstalled(isStandaloneApp());
     setInstallUrl(getInstallPageUrl());
+    setCanShare(typeof navigator !== "undefined" && typeof navigator.share === "function");
 
     const onBip = (e: Event) => {
       e.preventDefault();

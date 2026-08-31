@@ -94,9 +94,11 @@ export function HourlyVerseHome() {
     return () => window.clearInterval(tick);
   }, []);
 
-  const currentHour = now?.getHours() ?? new Date().getHours();
+  // Only use client clock after mount — avoids SSR timezone hydration mismatch.
+  const currentHour = now?.getHours() ?? null;
 
   useEffect(() => {
+    if (currentHour === null) return;
     void fetchVerse(currentHour);
   }, [currentHour, fetchVerse]);
 
@@ -149,7 +151,9 @@ export function HourlyVerseHome() {
           </div>
 
           <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
-            {t("homeHourLabel", { hour: currentHour })}
+            {currentHour !== null
+              ? t("homeHourLabel", { hour: currentHour })
+              : "\u00a0"}
           </p>
         </div>
 
@@ -197,9 +201,11 @@ export function HourlyVerseHome() {
                 </p>
 
                 <p className="mt-3 text-[10px] text-muted-foreground sm:mt-4 sm:text-[11px]">
-                  {t("homeChangesAt", {
-                    hour: pad((currentHour + 1) % 24),
-                  })}
+                  {currentHour !== null
+                    ? t("homeChangesAt", {
+                        hour: pad((currentHour + 1) % 24),
+                      })
+                    : null}
                 </p>
               </div>
             ) : (

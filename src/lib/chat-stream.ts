@@ -5,6 +5,39 @@ export interface StreamMessage {
   content: string;
 }
 
+export async function fetchKingdomReply(
+  history: StreamMessage[],
+): Promise<{ text: string; passages: ScripturePassage[] }> {
+  const response = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      stream: false,
+      messages: history.map(({ role, content }) => ({ role, content })),
+    }),
+  });
+
+  const data = (await response.json().catch(() => ({}))) as {
+    content?: string;
+    passages?: ScripturePassage[];
+    error?: string;
+  };
+
+  if (!response.ok) {
+    throw new Error(data.error ?? `Request failed (${response.status})`);
+  }
+
+  const text = data.content?.trim() ?? "";
+  if (!text) {
+    throw new Error("Kingdom AI returned an empty response. Please try again.");
+  }
+
+  return {
+    text,
+    passages: data.passages ?? [],
+  };
+}
+
 export async function streamKingdomReply(
   history: StreamMessage[],
   handlers: {
@@ -17,6 +50,7 @@ export async function streamKingdomReply(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
+      stream: true,
       messages: history.map(({ role, content }) => ({ role, content })),
     }),
   });

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BrandTitle } from "@/components/chat/brand";
 import { ComposerBar } from "@/components/chat/composer-bar";
-import { streamKingdomReply, type StreamMessage } from "@/lib/chat-stream";
+import { fetchKingdomReply, type StreamMessage } from "@/lib/chat-stream";
 import type { AppMode } from "@/components/app-shell";
 import {
   speakTextAsync,
@@ -48,17 +48,13 @@ export function ConverseView({
       historyRef.current = history;
 
       try {
-        const reply = await streamKingdomReply(history, {
-          onText: (_chunk, accumulated) => setLastReply(accumulated),
-          onError: (message) => setLastReply(message),
-        });
+        const { text: reply } = await fetchKingdomReply(history);
+        setLastReply(reply);
 
         historyRef.current = [...history, { role: "assistant", content: reply }];
 
-        if (reply.trim()) {
-          setPhase("speaking");
-          await speakTextAsync(reply);
-        }
+        setPhase("speaking");
+        await speakTextAsync(reply);
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Something went wrong.";

@@ -1,14 +1,11 @@
-import { classifyQuestion } from "@/lib/question-classifier";
 import {
-  buildSystemPromptForKind,
-  type PromptKind,
-} from "@/lib/prompts/kingdom-ai-system-prompt";
-import {
-  buildRetrievalQueryFromMessages,
-  retrieveAndFormat,
-} from "@/lib/bible/retrieval";
+  generateKingdomReply,
+  getChunkText,
+  prepareKingdomStream,
+  type KingdomMessage,
+} from "@/lib/generate-kingdom-reply";
 import { formatAIError } from "@/lib/format-ai-error";
-import { getGeminiClient, getModel, isAIConfigured } from "@/lib/gemini";
+import { isAIConfigured } from "@/lib/gemini";
 
 export const runtime = "nodejs";
 
@@ -63,50 +60,6 @@ function validateMessages(messages: unknown): ChatMessage[] {
   });
 }
 
-function buildRetrievalQuery(messages: ChatMessage[]): string {
-  return buildRetrievalQueryFromMessages(messages);
-}
-
-function resolveQuestionKind(messages: ChatMessage[]): PromptKind {
-  const latest = messages[messages.length - 1].content;
-  let kind = classifyQuestion(latest);
-
-  if (kind === "off-topic" && messages.length > 1) {
-    const priorUser = messages.filter((m) => m.role === "user").slice(0, -1);
-    if (priorUser.some((m) => classifyQuestion(m.content) === "biblical")) {
-      kind = "biblical";
-    }
-  }
-
-  return kind;
-}
-
-function generationConfigForKind(kind: PromptKind) {
-  switch (kind) {
-    case "greeting":
-      return { temperature: 0.6, maxOutputTokens: 180 };
-    case "off-topic":
-      return { temperature: 0.5, maxOutputTokens: 220 };
-    default:
-      return { temperature: 0.65, maxOutputTokens: 900 };
-  }
-}
-
-/** Gemini requires history to start with a user turn and alternate roles. */
-function toGeminiHistory(messages: ChatMessage[]) {
-  const recent = messages.slice(-8);
-  const history = recent.slice(0, -1).map((m) => ({
-    role: m.role === "assistant" ? ("model" as const) : ("user" as const),
-    parts: [{ text: m.content }],
-  }));
-
-  while (history.length > 0 && history[0].role === "model") {
-    history.shift();
-  }
-
-  return history;
-}
-
 export async function POST(request: Request) {
   try {
     if (!isAIConfigured()) {
@@ -119,50 +72,32 @@ export async function POST(request: Request) {
       );
     }
 
-    const client = getGeminiClient();
-    if (!client) {
-      return Response.json(
-        { error: "Gemini client failed to initialize." },
-        { status: 503 },
-      );
-    }
+    const body = (await request.json()) as {
+      messages?: unknown;
+      stream?: boolean;
+    };
 
-    const body = await request.json();
     const messages = validateMessages(body.messages);
-    const questionKind = resolveQuestionKind(messages);
-    const retrievalQuery = buildRetrievalQuery(messages);
+    const kingdomMessages: KingdomMessage[] = messages;
+    const useStream = body.stream !== false;
 
-    let scriptureBlock = "";
-    let passages: { ref: string; text: string }[] = [];
-
-    if (questionKind === "biblical") {
-      const retrieved = await retrieveAndFormat(retrievalQuery);
-      scriptureBlock = retrieved.block;
-      passages = retrieved.passages;
+    if (!useStream) {
+      const reply = await generateKingdomReply(kingdomMessages);
+      return Response.json({
+        content: reply.text,
+        passages: reply.passages,
+      });
     }
 
-    const systemPrompt = buildSystemPromptForKind(
-      questionKind,
-      scriptureBlock,
-    );
-    const latestMessage = messages[messages.length - 1];
+    let streamResult;
+    try {
+      streamResult = await prepareKingdomStream(kingdomMessages);
+    } catch (err) {
+      const reply = await generateKingdomReply(kingdomMessages);
+      return streamJsonFallback(reply.text, reply.passages);
+    }
 
-    const model = client.getGenerativeModel({
-      model: getModel(),
-      systemInstruction: systemPrompt,
-      generationConfig: generationConfigForKind(questionKind),
-    });
-
-    const chat = model.startChat({
-      history: toGeminiHistory(messages),
-    });
-
-    const result = await chat
-      .sendMessageStream(latestMessage.content)
-      .catch((err) => {
-        throw new Error(formatAIError(err));
-      });
-
+    const { result, passages } = streamResult;
     const encoder = new TextEncoder();
 
     const readable = new ReadableStream({
@@ -173,10 +108,13 @@ export async function POST(request: Request) {
           ),
         );
 
+        let accumulated = "";
+
         try {
           for await (const chunk of result.stream) {
-            const text = chunk.text();
+            const text = getChunkText(chunk);
             if (text) {
+              accumulated += text;
               controller.enqueue(
                 encoder.encode(
                   `data: ${JSON.stringify({ type: "content", text })}\n\n`,
@@ -184,14 +122,44 @@ export async function POST(request: Request) {
               );
             }
           }
+
+          if (!accumulated.trim()) {
+            throw new Error("Empty stream");
+          }
+
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`),
           );
-        } catch (err) {
-          const message = formatAIError(err);
+        } catch {
+          try {
+            const fallback = await generateKingdomReply(kingdomMessages);
+            if (fallback.text) {
+              controller.enqueue(
+                encoder.encode(
+                  `data: ${JSON.stringify({ type: "content", text: fallback.text })}\n\n`,
+                ),
+              );
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`),
+              );
+              return;
+            }
+          } catch (fallbackErr) {
+            const message = formatAIError(fallbackErr);
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ type: "error", message })}\n\n`,
+              ),
+            );
+            return;
+          }
+
           controller.enqueue(
             encoder.encode(
-              `data: ${JSON.stringify({ type: "error", message })}\n\n`,
+              `data: ${JSON.stringify({
+                type: "error",
+                message: "Could not get a response. Please try again.",
+              })}\n\n`,
             ),
           );
         } finally {
@@ -216,4 +184,21 @@ export async function POST(request: Request) {
         : 500;
     return Response.json({ error: message }, { status });
   }
+}
+
+function streamJsonFallback(content: string, passages: unknown[]) {
+  const encoder = new TextEncoder();
+  const body = [
+    `data: ${JSON.stringify({ type: "scripture", passages })}\n\n`,
+    `data: ${JSON.stringify({ type: "content", text: content })}\n\n`,
+    `data: ${JSON.stringify({ type: "done" })}\n\n`,
+  ].join("");
+
+  return new Response(encoder.encode(body), {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
 }

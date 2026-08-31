@@ -10,6 +10,9 @@ export function formatAIError(err: unknown): string {
   if (raw.includes("404") || raw.includes("not found")) {
     return "Gemini model not found. Try GEMINI_MODEL=gemini-3.6-flash in .env.local";
   }
+  if (raw.includes("Failed to parse stream") || raw.includes("parse stream")) {
+    return "Connection interrupted while Kingdom AI was responding. Tap the mic and try again.";
+  }
 
   return raw.length > 220 ? `${raw.slice(0, 220)}…` : raw;
 }

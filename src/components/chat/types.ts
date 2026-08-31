@@ -1,6 +1,7 @@
 export interface ScripturePassage {
   ref: string;
   text: string;
+  refEn?: string;
 }
 
 export interface ChatMessage {

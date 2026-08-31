@@ -459,9 +459,29 @@ export type PromptKind = "biblical" | "off-topic" | "greeting";
 export function buildSystemPromptForKind(
   kind: PromptKind,
   scriptureBlock: string,
+  locale: "en" | "sw" = "en",
+  narrativeTitle?: string,
 ): string {
-  if (kind === "greeting") return GREETING_SYSTEM_PROMPT;
-  if (kind === "off-topic") return OFF_TOPIC_SYSTEM_PROMPT;
+  const languageRule =
+    locale === "sw"
+      ? `\n\n## LANGUAGE (MANDATORY)\nRespond in **Kiswahili** (Swahili). Scripture quotations must use the PROVIDED SCRIPTURE text exactly as given.\n`
+      : `\n\n## LANGUAGE (MANDATORY)\nRespond in **English**. Scripture quotations must use the PROVIDED KJV text exactly as given.\n`;
+
+  const storyRule = narrativeTitle
+    ? `\n\n## BIBLE STORY MODE\nThe user asked about the story of **${narrativeTitle}**. Summarize the narrative clearly using ONLY the PROVIDED SCRIPTURE passages — birth/call, key events, and outcome. Keep it readable like telling a story.\n`
+    : "";
+
+  if (kind === "greeting") {
+    return locale === "sw"
+      ? `Wewe ni Kingdom AI, mshauri wa hekima ya Kibiblia (Biblia kamili SUV).\nMtumiaji amesalimia. Jibu kwa **sentensi 1-2** kwa Kiswahili. Mwalike ashare anachohisi au shaka yake.${languageRule}`
+      : `${GREETING_SYSTEM_PROMPT}${languageRule}`;
+  }
+
+  if (kind === "off-topic") {
+    return locale === "sw"
+      ? `Wewe ni Kingdom AI. Swali si la imani/ maisha/ Biblia.\nJibu **sentensi 2-3** tu kwa Kiswahili: sema kwa upole kwamba unasaidia kupitia Biblia kamili kwa imani, shaka, mahusiano, na maamuzi. Usijibu swali la nje kwa undani.${languageRule}`
+      : `${OFF_TOPIC_SYSTEM_PROMPT}${languageRule}`;
+  }
 
   const base = `${KINGDOM_AI_SYSTEM_PROMPT}
 
@@ -469,26 +489,26 @@ ${CONVERSATION_APPENDIX}
 
 ${FAST_RESPONSE_APPENDIX}
 
-${BIBLE_CONTEXT_APPENDIX}`;
+${BIBLE_CONTEXT_APPENDIX}${languageRule}${storyRule}`;
 
   if (!scriptureBlock.trim()) {
     return `${base}
 
-## PROVIDED SCRIPTURE (KJV)
+## PROVIDED SCRIPTURE
 
-No relevant passages were retrieved. Say honestly that retrieved Scripture does not clearly address this yet; share what you can from any provided passages, or ask one clarifying question. Keep it brief.`;
+No relevant passages were retrieved. Say honestly that retrieved Scripture does not clearly address this yet; ask one clarifying question. Keep it brief.`;
   }
 
   return `${base}
 
-## PROVIDED SCRIPTURE (KJV)
+## PROVIDED SCRIPTURE
 
-The following passages are your ONLY authorized Scripture source for this response:
+The following passages are your ONLY authorized Scripture source for this response (full Bible corpus — ${locale === "sw" ? "SUV Kiswahili" : "KJV English"}):
 
 ${scriptureBlock}`;
 }
 
 /** @deprecated Use buildSystemPromptForKind */
 export function buildSystemPrompt(scriptureBlock: string): string {
-  return buildSystemPromptForKind("biblical", scriptureBlock);
+  return buildSystemPromptForKind("biblical", scriptureBlock, "en");
 }

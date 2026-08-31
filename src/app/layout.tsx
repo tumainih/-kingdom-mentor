@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Lora } from "next/font/google";
+import { LocaleProvider } from "@/context/locale-context";
 import "./globals.css";
 
 const inter = Inter({
@@ -33,7 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${inter.variable} ${lora.variable} h-full antialiased`}
     >
       <body className="h-full overflow-hidden bg-background text-foreground">
-        {children}
+        <LocaleProvider>{children}</LocaleProvider>
       </body>
     </html>
   );

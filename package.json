@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --port 43123 --hostname 0.0.0.0",
     "prepare-bible": "node scripts/prepare-bible.mjs",
+    "prepare-swahili": "node scripts/prepare-swahili.mjs",
     "build": "next build",
     "start": "next start",
     "deploy": "vercel deploy --prod",

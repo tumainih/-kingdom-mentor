@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { ArrowUp, MessageSquare, Mic, MicOff } from "lucide-react";
 import type { AppMode } from "@/components/app-shell";
+import { useLocale } from "@/context/locale-context";
 import { cn } from "@/lib/utils";
 
 interface ComposerBarProps {
@@ -30,6 +31,7 @@ export function ComposerBar({
   onTalkToggle,
   talkDisabled,
 }: ComposerBarProps) {
+  const { t } = useLocale();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -76,7 +78,7 @@ export function ComposerBar({
               )}
             >
               <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Chat
+              {t("chat")}
             </button>
             <button
               type="button"
@@ -91,7 +93,7 @@ export function ComposerBar({
               )}
             >
               <Mic className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Talk
+              {t("talk")}
             </button>
           </div>
 
@@ -125,9 +127,7 @@ export function ComposerBar({
           ) : (
             <>
               <p className="mb-1.5 flex-1 py-2 text-sm text-muted-foreground sm:text-[15px]">
-                {isListening
-                  ? "Listening… speak now"
-                  : "Share what you feel or doubt — tap the mic"}
+                {isListening ? t("talkListening") : t("talkHint")}
               </p>
               <button
                 type="button"

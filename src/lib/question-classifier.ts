@@ -7,7 +7,10 @@ const OFF_TOPIC_RE =
   /\b(weather|forecast|temperature|recipe|cook|ingredient|score|football|basketball|soccer|nba|nfl|stock|crypto|bitcoin|python|javascript|typescript|code|program|debug|sql|capital of|population|who won|movie|netflix|spotify|game cheat|homework|calculate|math problem|2\+2|translate this|write an essay|email template|resume|cover letter)\b/i;
 
 const GREETING_RE =
-  /^(hi|hello|hey|good morning|good evening|good afternoon|thanks|thank you|ok|okay|yes|no|bye|goodbye)[\s!.?,]*$/i;
+  /^(hi|hello|hey|habari|jambo|hujambo|good morning|good evening|asante|thanks|thank you|ok|okay|yes|no|bye|goodbye|kwaheri)[\s!.?,]*$/i;
+
+const STORY_OR_BIBLE_RE =
+  /\b(story|stories|tell me|hadithi|simulia|moses|musa|david|daudi|noah|nuhu|jesus|yesu|jonah|yona|daniel|danieli|joseph|yusufu|bible|biblia|scripture|maandiko)\b/i;
 
 export function classifyQuestion(text: string): QuestionKind {
   const trimmed = text.trim();
@@ -15,6 +18,7 @@ export function classifyQuestion(text: string): QuestionKind {
 
   if (GREETING_RE.test(trimmed)) return "greeting";
   if (OFF_TOPIC_RE.test(trimmed)) return "off-topic";
+  if (STORY_OR_BIBLE_RE.test(trimmed)) return "biblical";
   if (BIBLICAL_RE.test(trimmed)) return "biblical";
 
   // Life/emotional phrasing → biblical mentor territory

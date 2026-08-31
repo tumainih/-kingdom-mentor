@@ -1,4 +1,5 @@
 import type { ScripturePassage } from "@/components/chat/types";
+import type { AppLocale } from "@/lib/i18n/translations";
 
 export interface StreamMessage {
   role: "user" | "assistant";
@@ -7,12 +8,14 @@ export interface StreamMessage {
 
 export async function fetchKingdomReply(
   history: StreamMessage[],
+  locale: AppLocale = "en",
 ): Promise<{ text: string; passages: ScripturePassage[] }> {
   const response = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       stream: false,
+      locale,
       messages: history.map(({ role, content }) => ({ role, content })),
     }),
   });
@@ -45,12 +48,14 @@ export async function streamKingdomReply(
     onText: (chunk: string, accumulated: string) => void;
     onError: (message: string) => void;
   },
+  locale: AppLocale = "en",
 ): Promise<string> {
   const response = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       stream: true,
+      locale,
       messages: history.map(({ role, content }) => ({ role, content })),
     }),
   });

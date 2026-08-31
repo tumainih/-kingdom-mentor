@@ -6,6 +6,7 @@ import {
 import {
   buildRetrievalQueryFromMessages,
   retrieveAndFormat,
+  type BibleLocale,
 } from "@/lib/bible/retrieval";
 import { formatAIError } from "@/lib/format-ai-error";
 import { generateFreeFeedback } from "@/lib/free-feedback";
@@ -25,6 +26,7 @@ export interface KingdomReply {
   passages: RetrievedPassage[];
   questionKind: PromptKind;
   mode: ReplyMode;
+  locale: BibleLocale;
 }
 
 function sanitizeMessages(messages: KingdomMessage[]): KingdomMessage[] {
@@ -50,11 +52,11 @@ function resolveQuestionKind(messages: KingdomMessage[]): PromptKind {
 function generationConfigForKind(kind: PromptKind) {
   switch (kind) {
     case "greeting":
-      return { temperature: 0.6, maxOutputTokens: 180 };
+      return { temperature: 0.6, maxOutputTokens: 220 };
     case "off-topic":
-      return { temperature: 0.5, maxOutputTokens: 220 };
+      return { temperature: 0.5, maxOutputTokens: 260 };
     default:
-      return { temperature: 0.65, maxOutputTokens: 900 };
+      return { temperature: 0.65, maxOutputTokens: 1000 };
   }
 }
 
@@ -99,6 +101,7 @@ function extractTextFromResponse(response: {
 
 async function generateWithGemini(
   messages: KingdomMessage[],
+  locale: BibleLocale,
 ): Promise<KingdomReply> {
   const client = getGeminiClient();
   if (!client) {
@@ -109,19 +112,18 @@ async function generateWithGemini(
   const questionKind = resolveQuestionKind(sanitized);
   const retrievalQuery = buildRetrievalQueryFromMessages(sanitized);
 
-  let scriptureBlock = "";
-  let passages: RetrievedPassage[] = [];
-
-  if (questionKind === "biblical") {
-    const retrieved = await retrieveAndFormat(retrievalQuery);
-    scriptureBlock = retrieved.block;
-    passages = retrieved.passages;
-  }
+  const { block: scriptureBlock, passages, narrative } =
+    await retrieveAndFormat(retrievalQuery, locale);
 
   const latestMessage = sanitized[sanitized.length - 1];
   const model = client.getGenerativeModel({
     model: getModel(),
-    systemInstruction: buildSystemPromptForKind(questionKind, scriptureBlock),
+    systemInstruction: buildSystemPromptForKind(
+      questionKind,
+      scriptureBlock,
+      locale,
+      narrative,
+    ),
     generationConfig: generationConfigForKind(questionKind),
   });
 
@@ -135,11 +137,12 @@ async function generateWithGemini(
     throw new Error("Kingdom AI returned an empty response.");
   }
 
-  return { text, passages, questionKind, mode: "gemini" };
+  return { text, passages, questionKind, mode: "gemini", locale };
 }
 
 export async function generateKingdomReply(
   messages: KingdomMessage[],
+  locale: BibleLocale = "en",
 ): Promise<KingdomReply> {
   const sanitized = sanitizeMessages(messages);
   if (sanitized.length === 0) {
@@ -149,16 +152,16 @@ export async function generateKingdomReply(
   const latest = sanitized[sanitized.length - 1].content;
 
   if (!isAIConfigured()) {
-    const free = await generateFreeFeedback(latest);
-    return { ...free, mode: "free" };
+    const free = await generateFreeFeedback(latest, locale);
+    return { ...free, mode: "free", locale };
   }
 
   try {
-    return await generateWithGemini(sanitized);
+    return await generateWithGemini(sanitized, locale);
   } catch (err) {
     if (isApiUnavailableError(err)) {
-      const free = await generateFreeFeedback(latest);
-      return { ...free, mode: "free" };
+      const free = await generateFreeFeedback(latest, locale);
+      return { ...free, mode: "free", locale };
     }
     throw new Error(formatAIError(err));
   }
@@ -181,7 +184,10 @@ export function getChunkText(chunk: {
   }
 }
 
-export async function prepareKingdomStream(messages: KingdomMessage[]) {
+export async function prepareKingdomStream(
+  messages: KingdomMessage[],
+  locale: BibleLocale = "en",
+) {
   if (!isAIConfigured()) {
     throw new Error("free-mode");
   }
@@ -194,14 +200,8 @@ export async function prepareKingdomStream(messages: KingdomMessage[]) {
   const questionKind = resolveQuestionKind(sanitized);
   const retrievalQuery = buildRetrievalQueryFromMessages(sanitized);
 
-  let scriptureBlock = "";
-  let passages: RetrievedPassage[] = [];
-
-  if (questionKind === "biblical") {
-    const retrieved = await retrieveAndFormat(retrievalQuery);
-    scriptureBlock = retrieved.block;
-    passages = retrieved.passages;
-  }
+  const { block: scriptureBlock, passages, narrative } =
+    await retrieveAndFormat(retrievalQuery, locale);
 
   const client = getGeminiClient();
   if (!client) {
@@ -211,7 +211,12 @@ export async function prepareKingdomStream(messages: KingdomMessage[]) {
   const latestMessage = sanitized[sanitized.length - 1];
   const model = client.getGenerativeModel({
     model: getModel(),
-    systemInstruction: buildSystemPromptForKind(questionKind, scriptureBlock),
+    systemInstruction: buildSystemPromptForKind(
+      questionKind,
+      scriptureBlock,
+      locale,
+      narrative,
+    ),
     generationConfig: generationConfigForKind(questionKind),
   });
 

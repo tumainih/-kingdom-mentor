@@ -4,6 +4,8 @@ import {
   prepareKingdomStream,
   type KingdomMessage,
 } from "@/lib/generate-kingdom-reply";
+import { parseLocale } from "@/lib/bible/locale";
+import { getBibleStats } from "@/lib/bible/retrieval";
 import { formatAIError } from "@/lib/format-ai-error";
 import { isApiUnavailableError } from "@/lib/is-api-unavailable-error";
 
@@ -65,26 +67,29 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       messages?: unknown;
       stream?: boolean;
+      locale?: unknown;
     };
 
     const messages = validateMessages(body.messages);
     const kingdomMessages: KingdomMessage[] = messages;
+    const locale = parseLocale(body.locale);
     const useStream = body.stream !== false;
 
     if (!useStream) {
-      const reply = await generateKingdomReply(kingdomMessages);
+      const reply = await generateKingdomReply(kingdomMessages, locale);
       return Response.json({
         content: reply.text,
         passages: reply.passages,
         mode: reply.mode,
+        locale: reply.locale,
       });
     }
 
     let streamResult;
     try {
-      streamResult = await prepareKingdomStream(kingdomMessages);
+      streamResult = await prepareKingdomStream(kingdomMessages, locale);
     } catch {
-      const reply = await generateKingdomReply(kingdomMessages);
+      const reply = await generateKingdomReply(kingdomMessages, locale);
       return streamJsonFallback(reply.text, reply.passages, reply.mode);
     }
 
@@ -95,7 +100,7 @@ export async function POST(request: Request) {
       async start(controller) {
         controller.enqueue(
           encoder.encode(
-            `data: ${JSON.stringify({ type: "scripture", passages })}\n\n`,
+            `data: ${JSON.stringify({ type: "scripture", passages, locale })}\n\n`,
           ),
         );
 
@@ -123,7 +128,7 @@ export async function POST(request: Request) {
           );
         } catch (err) {
           if (isApiUnavailableError(err)) {
-            const fallback = await generateKingdomReply(kingdomMessages);
+            const fallback = await generateKingdomReply(kingdomMessages, locale);
             controller.enqueue(
               encoder.encode(
                 `data: ${JSON.stringify({ type: "content", text: fallback.text })}\n\n`,
@@ -136,7 +141,7 @@ export async function POST(request: Request) {
           }
 
           try {
-            const fallback = await generateKingdomReply(kingdomMessages);
+            const fallback = await generateKingdomReply(kingdomMessages, locale);
             if (fallback.text) {
               controller.enqueue(
                 encoder.encode(

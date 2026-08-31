@@ -3,6 +3,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { BrandLogo } from "./brand";
+import { useLocale } from "@/context/locale-context";
 import type { ScripturePassage } from "./types";
 
 interface MessageBubbleProps {
@@ -18,6 +19,7 @@ export function MessageBubble({
   isStreaming,
   scripture,
 }: MessageBubbleProps) {
+  const { t } = useLocale();
   const isUser = role === "user";
 
   if (isUser) {
@@ -43,12 +45,17 @@ export function MessageBubble({
         {scripture && scripture.length > 0 && (
           <div className="knowledge-card mb-2.5 rounded-xl px-3 py-2 sm:mb-3">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-brand-gold">
-              KJV · passages for your question
+              {t("passagesForQuestion")}
             </p>
             <ul className="mt-1.5 space-y-1.5 text-xs leading-relaxed text-muted-foreground">
               {scripture.slice(0, 5).map((p) => (
                 <li key={p.ref}>
-                  <span className="font-medium text-brand-light">{p.ref}</span>
+                  <span className="font-medium text-brand-light">
+                    {p.ref}
+                    {p.refEn && p.refEn !== p.ref ? (
+                      <span className="text-muted-foreground/70"> ({p.refEn})</span>
+                    ) : null}
+                  </span>
                   {" — "}
                   {p.text.length > 120 ? `${p.text.slice(0, 117)}…` : p.text}
                 </li>

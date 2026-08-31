@@ -5,11 +5,16 @@ import { BrandTitle } from "@/components/chat/brand";
 import { ComposerBar } from "@/components/chat/composer-bar";
 import { fetchKingdomReply, type StreamMessage } from "@/lib/chat-stream";
 import type { AppMode } from "@/components/app-shell";
+import { useLocale } from "@/context/locale-context";
 import {
   speakTextAsync,
   stopSpeaking,
   useSpeechRecognition,
 } from "@/hooks/use-speech";
+
+function speechLang(locale: "en" | "sw") {
+  return locale === "sw" ? "sw-KE" : "en-US";
+}
 
 interface ConverseViewProps {
   mode: AppMode;
@@ -17,6 +22,7 @@ interface ConverseViewProps {
 }
 
 export function ConverseView({ mode, onModeChange }: ConverseViewProps) {
+  const { locale, t } = useLocale();
   const [liveTranscript, setLiveTranscript] = useState("");
   const [lastUser, setLastUser] = useState("");
   const [lastReply, setLastReply] = useState("");
@@ -42,13 +48,13 @@ export function ConverseView({ mode, onModeChange }: ConverseViewProps) {
     historyRef.current = history;
 
     try {
-      const { text: reply } = await fetchKingdomReply(history);
+      const { text: reply } = await fetchKingdomReply(history, locale);
       setLastReply(reply);
 
       historyRef.current = [...history, { role: "assistant", content: reply }];
 
       setPhase("speaking");
-      await speakTextAsync(reply);
+      await speakTextAsync(reply, speechLang(locale));
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Something went wrong.";
@@ -59,7 +65,7 @@ export function ConverseView({ mode, onModeChange }: ConverseViewProps) {
       setPhase("idle");
       setLiveTranscript("");
     }
-  }, []);
+  }, [locale]);
 
   const {
     isListening,
@@ -67,13 +73,16 @@ export function ConverseView({ mode, onModeChange }: ConverseViewProps) {
     stopListening,
     error: speechError,
     clearError,
-  } = useSpeechRecognition({
-    onResult: setLiveTranscript,
-    onUtteranceComplete: (transcript) => {
-      if (!transcript.trim() || busyRef.current) return;
-      void askKingdom(transcript.trim());
+  } = useSpeechRecognition(
+    {
+      onResult: setLiveTranscript,
+      onUtteranceComplete: (transcript) => {
+        if (!transcript.trim() || busyRef.current) return;
+        void askKingdom(transcript.trim());
+      },
     },
-  });
+    speechLang(locale),
+  );
 
   useEffect(() => {
     if (isListening) setPhase("listening");
@@ -97,17 +106,17 @@ export function ConverseView({ mode, onModeChange }: ConverseViewProps) {
 
   const status =
     phase === "listening"
-      ? "Listening…"
+      ? t("talkListeningShort")
       : phase === "thinking"
-        ? "Reflecting…"
+        ? t("talkReflecting")
         : phase === "speaking"
-          ? "Speaking…"
-          : "Share what you feel or doubt";
+          ? t("talkSpeaking")
+          : t("talkStatusIdle");
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-2 pb-1 pt-2 sm:px-4 sm:pt-3">
       <div className="chat-canvas mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden">
-        <span className="canvas-label">Canvas</span>
+        <span className="canvas-label">{t("canvas")}</span>
 
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-6 py-8 pt-12 text-center">
           <BrandTitle size="lg" />

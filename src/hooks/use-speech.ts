@@ -46,6 +46,7 @@ function getSpeechRecognitionCtor():
 
 export function useSpeechRecognition(
   options: UseSpeechRecognitionOptions | ((transcript: string) => void) = {},
+  lang = "en-US",
 ): UseSpeechRecognitionResult {
   const opts =
     typeof options === "function" ? { onResult: options } : options;
@@ -74,7 +75,7 @@ export function useSpeechRecognition(
     const recognition = new Ctor();
     recognition.continuous = opts.continuous ?? false;
     recognition.interimResults = true;
-    recognition.lang = "en-US";
+    recognition.lang = lang;
 
     recognition.onresult = (event) => {
       let transcript = "";
@@ -105,7 +106,7 @@ export function useSpeechRecognition(
     return () => {
       recognition.abort();
     };
-  }, [isSupported, opts.continuous]);
+  }, [isSupported, opts.continuous, lang]);
 
   const startListening = useCallback(() => {
     if (!recognitionRef.current) return;
@@ -136,11 +137,11 @@ export function useSpeechRecognition(
   };
 }
 
-export function speakText(text: string): void {
-  void speakTextAsync(text);
+export function speakText(text: string, lang = "en-US"): void {
+  void speakTextAsync(text, lang);
 }
 
-export function speakTextAsync(text: string): Promise<void> {
+export function speakTextAsync(text: string, lang = "en-US"): Promise<void> {
   if (typeof window === "undefined" || !window.speechSynthesis) {
     return Promise.resolve();
   }
@@ -158,7 +159,7 @@ export function speakTextAsync(text: string): Promise<void> {
     const utterance = new SpeechSynthesisUtterance(plain);
     utterance.rate = 0.95;
     utterance.pitch = 1;
-    utterance.lang = "en-US";
+    utterance.lang = lang;
     utterance.onend = () => resolve();
     utterance.onerror = () => resolve();
     window.speechSynthesis.speak(utterance);

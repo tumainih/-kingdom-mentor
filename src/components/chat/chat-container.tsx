@@ -6,6 +6,7 @@ import { MessageList } from "./message-list";
 import { AiThinking } from "./ai-badge";
 import { ComposerBar } from "./composer-bar";
 import { streamKingdomReply } from "@/lib/chat-stream";
+import { useLocale } from "@/context/locale-context";
 import type { AppMode } from "@/components/app-shell";
 import { type ChatMessage, type ScripturePassage } from "./types";
 
@@ -18,10 +19,8 @@ interface ChatContainerProps {
   onModeChange: (mode: AppMode) => void;
 }
 
-export function ChatContainer({
-  mode,
-  onModeChange,
-}: ChatContainerProps) {
+export function ChatContainer({ mode, onModeChange }: ChatContainerProps) {
+  const { locale, t } = useLocale();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -60,6 +59,7 @@ export function ChatContainer({
               );
             },
           },
+          locale,
         );
       } catch (err) {
         const message =
@@ -70,7 +70,7 @@ export function ChatContainer({
         setIsStreaming(false);
       }
     },
-    [],
+    [locale],
   );
 
   const sendMessage = useCallback(
@@ -104,12 +104,10 @@ export function ChatContainer({
     lastMessage?.role === "assistant" &&
     !lastMessage.content.trim();
 
-  const inputDisabled = isStreaming;
-
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-2 pb-1 pt-2 sm:px-4 sm:pt-3">
       <div className="chat-canvas mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden">
-        <span className="canvas-label">Canvas</span>
+        <span className="canvas-label">{t("canvas")}</span>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pt-10">
           {messages.length === 0 ? (
@@ -117,10 +115,10 @@ export function ChatContainer({
               <BrandLogo size="lg" className="logo-glow-ring rounded-2xl" />
               <BrandTitle size="lg" className="mt-5" />
               <p className="mt-6 max-w-lg text-lg font-medium text-foreground/90 sm:text-xl">
-                Write what you feel or doubt
+                {t("welcomeTitle")}
               </p>
               <p className="mt-2 text-sm text-muted-foreground">
-                KJV Scripture · Kingdom AI listens here
+                {t("welcomeSubtitle")}
               </p>
             </div>
           ) : (
@@ -138,8 +136,10 @@ export function ChatContainer({
         value={input}
         onChange={setInput}
         onSend={() => sendMessage(input)}
-        disabled={inputDisabled}
-        placeholder="Write what you feel or doubt…"
+        disabled={isStreaming}
+        placeholder={
+          messages.length ? t("placeholderContinue") : t("placeholder")
+        }
       />
 
       {error && (

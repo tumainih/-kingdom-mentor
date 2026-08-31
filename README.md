@@ -1,6 +1,6 @@
 # Kingdom AI
 
-Kingdom AI is a Christian wisdom mentor that helps you think, respond, decide, and live according to the **Kingdom of God**. Every response is grounded in **retrieved King James Version (KJV) Scripture** — the app does not rely on the model's memory for Bible content.
+Kingdom AI is a Christian wisdom mentor that helps you think, respond, decide, and live according to the **Kingdom of God**. Every response is grounded in **retrieved Scripture** from a bundled local Bible — the app does not rely on the model's memory for Bible content.
 
 Kingdom AI is an AI assistant, **not** God, Jesus, the Holy Spirit, a prophet, or a replacement for a pastor, church, or qualified professional.
 
@@ -8,97 +8,90 @@ Kingdom AI is an AI assistant, **not** God, Jesus, the Holy Spirit, a prophet, o
 
 ## Features
 
-- Scripture-grounded chat using a bundled local KJV corpus
-- Full Kingdom AI master system prompt (wisdom, correction, decision guidance, prayer, daily reflection)
-- Streaming responses with visible Scripture references used for each reply
-- Prompt-only mode detection (Decision, Correction, Reflection, Prayer inferred from your words)
+- **Full Bible** — 66 books, 31,102 verses in English (KJV) and Swahili (SUV)
+- **Language switcher** — toggle **EN / SW** in the header; UI, Scripture, and voice follow your choice
+- **Bible stories** — ask e.g. *"tell me the story of Moses"* or *"simulia hadithi ya Musa"*
+- Scripture-grounded chat using local search over the bundled corpus
+- **Chat** (text) and **Talk** (voice in/out) modes
+- Free guidance mode — works without an API key or payment
+- Optional Google Gemini for richer replies when `GEMINI_API_KEY` is set
+- Streaming responses with visible Scripture references
 
 ## Prerequisites
 
 - Node.js 18+
-- A [Google Gemini API key](https://aistudio.google.com/apikey)
+- Optional: [Google Gemini API key](https://aistudio.google.com/apikey)
 
 ## Setup
 
 ```bash
 npm install
 cp .env.example .env.local
-# Add your GEMINI_API_KEY to .env.local
+# Optional: add GEMINI_API_KEY to .env.local
 npm run dev
 ```
 
 Open [http://localhost:43123](http://localhost:43123).
 
-## Deploy (Vercel)
+## Language & Bible
 
-Production build:
+| Language | Translation | Index file |
+|----------|-------------|------------|
+| English  | KJV         | `data/kjv-index.json` |
+| Swahili  | SUV         | `data/swahili-index.json` |
+
+Use the **EN / SW** toggle in the header. Your choice is saved in the browser and applies to Chat, Talk, Scripture retrieval, and speech (Swahili uses `sw-KE` for mic/TTS where supported).
+
+### Bible story questions
+
+Examples:
+
+- English: *Tell me the story of Moses*, *Who was David?*, *Story of Noah*
+- Swahili: *Simulia hadithi ya Musa*, *Hadithi ya Daudi*, *Eleza kuhusu Nuhu*
+
+Stories pull chapter ranges and key verses across the full 66-book canon.
+
+## Chat vs Talk
+
+- **Chat** — type messages; replies stream as text only (no speech)
+- **Talk** — tap the mic to speak; Kingdom AI listens and **reads replies aloud**
+
+## Deploy (Vercel)
 
 ```bash
 npm run build
 npm start
 ```
 
-Deploy to Vercel (requires [Vercel CLI](https://vercel.com/docs/cli)):
+Or with Vercel CLI:
 
 ```bash
-# Log in once, then deploy
 vercel login
 vercel deploy --prod
 ```
 
-Set these environment variables in the Vercel project (Settings → Environment Variables):
+Optional environment variables:
 
-- `GEMINI_API_KEY` — required
+- `GEMINI_API_KEY` — enables Gemini when quota allows; otherwise free mode
 - `GEMINI_MODEL` — optional (default: `gemini-3.6-flash`)
 
-### Talk with Kingdom AI
+## Rebuild Bible indexes (optional)
 
-- **Type** your message and press Enter, or tap the **send** button
-- **Speak** by tapping the **microphone** icon in the input bar (Chrome/Edge recommended)
-- **Listen** — enable "AI reads replies aloud" or tap the speaker icon on any reply
-- **Continue the conversation** — Kingdom AI remembers the full thread and stays focused on your issue
-
-You need a valid `GEMINI_API_KEY` in `.env.local` for AI responses to work.
-
-### Rebuild the Bible index (optional)
-
-The KJV search index is included at `data/kjv-index.json`. To regenerate it from source:
+Indexes are included in `data/`. To regenerate:
 
 ```bash
-npm run prepare-bible
+npm run prepare-bible    # English KJV
+npm run prepare-swahili  # Swahili SUV
 ```
 
-## Get the repository (Windows)
-
-Origin CLI runs on macOS, Linux, and **WSL only** — not in PowerShell. Use a WSL terminal:
-
-```bash
-# Run in WSL (Origin CLI is not available in PowerShell)
-# Install the Origin CLI
-curl -fsSL https://downloads.cursor.com/origin/install.sh | sh
-
-# Sign in (also sets up git credentials)
-origin auth login
-
-# Clone the repository
-origin repo clone hoseatumaini4/kingdom-mentor
-```
-
-If `origin` is not found after install:
-
-```bash
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
-```
-
-**Origin CLI docs:** [https://cursor.com/docs/origin/cli](https://cursor.com/docs/origin/cli)
+Swahili source: [shemmjunior/swahili-bible-edition](https://github.com/shemmjunior/swahili-bible-edition) (MIT).
 
 ## How Scripture grounding works
 
-1. Your message is searched against a local KJV index (~31,000 verses).
-2. The most relevant passages are injected into the AI context.
-3. The model is instructed to derive **100% of biblical guidance** from those passages only.
-4. Retrieved references are shown above each response.
+1. Your message is searched against the local Bible index for the active language (~31,000 verses).
+2. Story requests match named narratives (Moses, David, Jesus, etc.) and pull relevant chapters.
+3. The most relevant passages are injected into the AI context (or used directly in free mode).
+4. Retrieved references are shown above each Chat reply.
 
 ## Important boundaries
 
@@ -109,9 +102,9 @@ source ~/.bashrc
 ## Tech stack
 
 - Next.js 16, TypeScript, Tailwind CSS, shadcn/ui
-- Google Gemini API (streaming)
-- Fuse.js full-text search over bundled KJV JSON
+- Google Gemini API (optional, streaming)
+- Fuse.js full-text search over bundled KJV + SUV JSON
 
 ## License
 
-Bible text (KJV) is public domain. Application code is provided as-is for the kingdom-mentor project.
+KJV and SUV Bible text used under their respective public/open licenses. Application code is provided as-is for the kingdom-mentor project.

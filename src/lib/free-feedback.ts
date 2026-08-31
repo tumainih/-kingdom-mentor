@@ -1,111 +1,133 @@
-import { retrieveScripture } from "@/lib/bible/retrieval";
+import { retrieveScripture, formatScriptureBlock } from "@/lib/bible/retrieval";
+import type { BibleLocale } from "@/lib/bible/locale";
+import { detectNarrative, narrativeTitle } from "@/lib/bible/narratives";
 import { classifyQuestion, type QuestionKind } from "@/lib/question-classifier";
 import type { RetrievedPassage } from "@/lib/bible/types";
 
-const TOPIC_STEPS: Array<{ re: RegExp; step: string }> = [
+const TOPIC_STEPS_EN: Array<{ re: RegExp; step: string }> = [
   {
-    re: /\b(forgive|forgiveness|hurt|betray|offend)\b/i,
-    step: "Forgiveness does not mean pretending the wound didn't happen — it means you refuse to carry revenge in your heart. Start with honest prayer and one small act of release.",
+    re: /\b(forgive|forgiveness|hurt|betray)\b/i,
+    step: "Forgiveness does not mean pretending the wound didn't happen — it means refusing to carry revenge. Start with honest prayer.",
   },
   {
-    re: /\b(anxiet|worry|fear|afraid|future|tomorrow)\b/i,
-    step: "Anxiety often grows when we try to control what we cannot. Focus on today's duty — one faithful step — and bring tomorrow to God in prayer.",
+    re: /\b(anxiet|worry|fear|afraid)\b/i,
+    step: "Focus on today's faithful step rather than tomorrow's unknown. Bring your fear to God in prayer.",
   },
   {
-    re: /\b(marriage|husband|wife|divorce|partner)\b/i,
-    step: "In conflict, seek understanding before defending yourself. Speak truth in love, and consider wise counsel from someone who knows you both.",
-  },
-  {
-    re: /\b(guilt|shame|sin|repent|wrong)\b/i,
-    step: "Bring this honestly to God — confess, receive mercy, and make amends where you can. Shame hides; repentance moves toward light and repair.",
-  },
-  {
-    re: /\b(anger|wrath|bitter|resent)\b/i,
-    step: "Pause before you speak or act. Ask what wound is driving the anger, and what a slow, righteous response would look like.",
-  },
-  {
-    re: /\b(lonely|alone|isolat|depress|sad)\b/i,
-    step: "You were not meant to carry everything alone. Reach out to one trusted person — and keep praying through the heaviness.",
-  },
-  {
-    re: /\b(decision|choose|job|offer|should i)\b/i,
-    step: "List what you know, what you fear, and what integrity requires. Seek counsel, pray for clarity, and avoid rushing a decision driven by fear or pride.",
-  },
-  {
-    re: /\b(pray|prayer)\b/i,
-    step: "Pray simply and honestly — tell God what you feel, ask for wisdom, and wait with an open heart to obey what is clear.",
+    re: /\b(marriage|husband|wife)\b/i,
+    step: "Seek understanding before defending yourself. Speak truth in love.",
   },
 ];
 
-function practicalStep(question: string): string {
-  for (const { re, step } of TOPIC_STEPS) {
+const TOPIC_STEPS_SW: Array<{ re: RegExp; step: string }> = [
+  {
+    re: /\b(msamaha|samehe|umewaumiza)\b/i,
+    step: "Msamaha si kufanya kama hukuumizwa — ni kuacha kulipa kisasi moyoni. Anza kwa sala ya uaminifu.",
+  },
+  {
+    re: /\b(wasiwasi|ogopa|hofu|waswas)\b/i,
+    step: "Zingatia hatua ya leo badala ya kesho isiyojulikana. Mlete Mungu katika sala.",
+  },
+  {
+    re: /\b(ndoa|mume|mke)\b/i,
+    step: "Tafuta kuelewa kabla ya kujitetea. Sema ukweli kwa upendo.",
+  },
+];
+
+function practicalStep(question: string, locale: BibleLocale): string {
+  const steps = locale === "sw" ? TOPIC_STEPS_SW : TOPIC_STEPS_EN;
+  for (const { re, step } of steps) {
     if (re.test(question)) return step;
   }
-  return "Ask yourself: What would love require? What would humility require? What would integrity require before God?";
+  return locale === "sw"
+    ? "Jiulize: Upendo unahitaji nini? Unyenyekevu unahitaji nini? Uaminifu unahitaji nini mbele za Mungu?"
+    : "Ask: What would love require? Humility? Integrity before God?";
 }
 
-function formatPassages(passages: RetrievedPassage[]): string {
-  if (passages.length === 0) return "";
-  return passages
-    .slice(0, 3)
-    .map((p) => `**${p.ref}** — "${p.text}"`)
-    .join("\n\n");
+function greetingReply(locale: BibleLocale): string {
+  return locale === "sw"
+    ? "Amani iwe kwako. Mimi ni Kingdom AI katika **mwongozo bure** — Biblia kamili (SUV), bila malipo. Shiriki unachohisi au shaka yako."
+    : "Peace to you. I'm Kingdom AI in **free guidance mode** — full Bible (KJV), no payment needed. Share what you feel or doubt.";
 }
 
-function greetingReply(): string {
-  return "Peace to you. I'm Kingdom AI in **free guidance mode** — no paid API needed. Share what you feel or doubt, and I'll respond with wisdom from retrieved KJV Scripture.";
+function offTopicReply(locale: BibleLocale): string {
+  return locale === "sw"
+    ? "Ninasaidia kupitia **Biblia kamili** kwa imani, shaka, mahusiano, na maamuzi — si maswali ya nje kama hali ya hewa au code. Unachohisi au shaka gani leo?"
+    : "I help through the **full Bible** for faith, doubt, relationships, and decisions — not off-topic questions. What's on your heart?";
 }
 
-function offTopicReply(): string {
-  return "I'm here for **faith, doubt, relationships, and life decisions** through KJV Scripture — that's my focus in free guidance mode. What's weighing on your heart that you'd like biblical wisdom for?";
-}
+async function biblicalReply(
+  question: string,
+  locale: BibleLocale,
+): Promise<{ text: string; passages: RetrievedPassage[] }> {
+  const narrative = detectNarrative(question, locale);
+  const limit = narrative ? 18 : 8;
+  const passages = await retrieveScripture(question, limit, locale);
+  const scripture = formatScriptureBlock(passages, locale);
+  const step = practicalStep(question, locale);
 
-async function biblicalReply(question: string): Promise<{
-  text: string;
-  passages: RetrievedPassage[];
-}> {
-  const passages = await retrieveScripture(question, 5);
-  const scripture = formatPassages(passages);
-  const step = practicalStep(question);
+  if (narrative && passages.length > 0) {
+    const title = narrativeTitle(narrative, locale);
+    const intro =
+      locale === "sw"
+        ? `Hii ni muhtasari wa hadithi ya **${title}** kutoka mistari iliyopatikana katika Biblia kamili:`
+        : `Here is the story of **${title}** from passages across the full Bible:`;
+
+    return {
+      passages,
+      text: `${intro}
+
+${scripture}
+
+**${locale === "sw" ? "Hatua ya kiroho" : "Kingdom step"}:** ${step}`,
+    };
+  }
 
   if (!scripture) {
     return {
       passages: [],
-      text: `Thank you for sharing. I hear you're working through something important.
+      text:
+        locale === "sw"
+          ? `Asante kwa kushiriki. Bado sijapata mistari wazi — jaribu kuuliza kwa jina (mf. Musa, Daudi, Yesu) au mada (msamaha, wasiwasi).
 
-I couldn't match clear KJV passages to this yet — try naming it more specifically (forgiveness, anxiety, marriage, guilt, a decision).
+${step}`
+          : `Thank you for sharing. I couldn't match clear passages yet — try a name (Moses, David, Jesus) or topic (forgiveness, anxiety).
 
-Meanwhile: ${step}
-
-What part of this feels heaviest right now?`,
+${step}`,
     };
   }
 
   return {
     passages,
-    text: `I hear you. Here is free biblical guidance from retrieved KJV Scripture:
+    text:
+      locale === "sw"
+        ? `Nimekusikia. Hii ni mwongozo kutoka Biblia kamili:
 
 ${scripture}
 
-**A Kingdom-minded step:** ${step}
+**Hatua:** ${step}`
+        : `I hear you. Guidance from the full Bible:
 
-What would help most — going deeper on the Scripture, or thinking through your next action?`,
+${scripture}
+
+**Kingdom step:** ${step}`,
   };
 }
 
 export async function generateFreeFeedback(
   userText: string,
+  locale: BibleLocale = "en",
 ): Promise<{ text: string; passages: RetrievedPassage[]; questionKind: QuestionKind }> {
   const kind = classifyQuestion(userText);
 
   if (kind === "greeting") {
-    return { text: greetingReply(), passages: [], questionKind: kind };
+    return { text: greetingReply(locale), passages: [], questionKind: kind };
   }
 
   if (kind === "off-topic") {
-    return { text: offTopicReply(), passages: [], questionKind: kind };
+    return { text: offTopicReply(locale), passages: [], questionKind: kind };
   }
 
-  const biblical = await biblicalReply(userText);
+  const biblical = await biblicalReply(userText, locale);
   return { ...biblical, questionKind: "biblical" };
 }

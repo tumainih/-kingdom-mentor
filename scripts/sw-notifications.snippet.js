@@ -78,7 +78,7 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours) {
     renotify: true,
     silent: false,
     vibrate: [180, 90, 180],
-    data: { url: "/history?hour=" + hour, locale, hour },
+    data: { url: "/notifications", locale, hour },
   });
   return true;
 }
@@ -149,7 +149,7 @@ async function resumeHourlyNotifications() {
 }
 
 self.addEventListener("push", (event) => {
-  let payload = { title: "Kingdom AI", body: "Scripture for this hour.", url: "/history" };
+  let payload = { title: "Kingdom AI", body: "Scripture for this hour.", url: "/notifications" };
   try {
     if (event.data) payload = { ...payload, ...event.data.json() };
   } catch {
@@ -165,14 +165,14 @@ self.addEventListener("push", (event) => {
       renotify: true,
       silent: false,
       vibrate: [180, 90, 180],
-      data: { url: payload.url || "/history", hour: payload.hour, locale: payload.locale },
+      data: { url: payload.url || "/notifications", hour: payload.hour, locale: payload.locale },
     }),
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = event.notification.data?.url || "/history";
+  const target = event.notification.data?.url || "/notifications";
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {

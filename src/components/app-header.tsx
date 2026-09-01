@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, History, MessageSquare, Plus } from "lucide-react";
+import { Home, History, Bell, MessageSquare, Plus } from "lucide-react";
 import { BrandLogo, BrandTitle } from "@/components/chat/brand";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -44,7 +44,7 @@ export function AppHeader({
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
           {showNav && (
-            <nav className="flex items-center rounded-lg border border-border/60 bg-muted/40 p-0.5">
+            <nav className="flex max-w-[min(100%,13.5rem)] items-center overflow-x-auto rounded-lg border border-border/60 bg-muted/40 p-0.5 sm:max-w-none">
               <Link
                 href="/home"
                 aria-label={t("navHome")}
@@ -73,6 +73,21 @@ export function AppHeader({
                 <History className="h-3.5 w-3.5" />
                 {!compactNav && (
                   <span className="hidden min-[420px]:inline">{t("navHistory")}</span>
+                )}
+              </Link>
+              <Link
+                href="/notifications"
+                aria-label={t("navAlerts")}
+                className={cn(
+                  "flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-semibold transition-colors sm:px-2.5 sm:text-[11px]",
+                  pathname === "/notifications"
+                    ? "bg-brand text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Bell className="h-3.5 w-3.5" />
+                {!compactNav && (
+                  <span className="hidden min-[480px]:inline">{t("navAlerts")}</span>
                 )}
               </Link>
               <Link

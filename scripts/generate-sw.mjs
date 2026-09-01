@@ -30,6 +30,7 @@ const precache = [
   "/",
   "/home",
   "/history",
+  "/notifications",
   "/install",
   "/manifest.webmanifest",
   "/apple-touch-icon.png",

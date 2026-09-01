@@ -1,9 +1,10 @@
-/* Kingdom AI — offline-capable service worker (build aOqUW8D-2tFKOBpN70dWZ) */
-const CACHE = "kingdom-ai-aOqUW8D-2tFKOBpN70dWZ";
+/* Kingdom AI — offline-capable service worker (build S8eBaQTKJdY_Chj4QKR4G) */
+const CACHE = "kingdom-ai-S8eBaQTKJdY_Chj4QKR4G";
 const PRECACHE = [
   "/",
   "/home",
   "/history",
+  "/notifications",
   "/install",
   "/manifest.webmanifest",
   "/apple-touch-icon.png",
@@ -11,21 +12,23 @@ const PRECACHE = [
   "/icon-512.png",
   "/data/hourly-en.json",
   "/data/hourly-sw.json",
-  "/_next/static/aOqUW8D-2tFKOBpN70dWZ/_buildManifest.js",
-  "/_next/static/aOqUW8D-2tFKOBpN70dWZ/_clientMiddlewareManifest.js",
-  "/_next/static/aOqUW8D-2tFKOBpN70dWZ/_ssgManifest.js",
-  "/_next/static/chunks/07xzbkzzk3jq9.js",
+  "/_next/static/S8eBaQTKJdY_Chj4QKR4G/_buildManifest.js",
+  "/_next/static/S8eBaQTKJdY_Chj4QKR4G/_clientMiddlewareManifest.js",
+  "/_next/static/S8eBaQTKJdY_Chj4QKR4G/_ssgManifest.js",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
-  "/_next/static/chunks/1049adzs_4gk2.js",
-  "/_next/static/chunks/15u-h4l6ott78.js",
+  "/_next/static/chunks/0u-2edh8m05zc.js",
+  "/_next/static/chunks/1ha3d4buospca.js",
+  "/_next/static/chunks/1v7kwkh6qox1x.js",
   "/_next/static/chunks/1z99mlp5cofct.js",
+  "/_next/static/chunks/24t7crwozt_yd.js",
+  "/_next/static/chunks/2g8-9zqrngitm.js",
+  "/_next/static/chunks/2usf06h1uchme.css",
   "/_next/static/chunks/2y1nd8vf7h77j.js",
-  "/_next/static/chunks/33xpuduy7ro9l.js",
+  "/_next/static/chunks/3_qcxdfi4zlnd.js",
   "/_next/static/chunks/3adwt13tezgym.js",
-  "/_next/static/chunks/3bwsbywkvjc9k.css",
+  "/_next/static/chunks/3hhai1xccupwp.js",
   "/_next/static/chunks/3q576hlfnuh0n.js",
-  "/_next/static/chunks/3qwowb4zsj5ll.js",
   "/_next/static/chunks/40_-th3l4iag_.js",
   "/_next/static/chunks/turbopack-0snm50y8kpj5e.js",
   "/_next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2",
@@ -203,7 +206,7 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours) {
     renotify: true,
     silent: false,
     vibrate: [180, 90, 180],
-    data: { url: "/history?hour=" + hour, locale, hour },
+    data: { url: "/notifications", locale, hour },
   });
   return true;
 }
@@ -274,7 +277,7 @@ async function resumeHourlyNotifications() {
 }
 
 self.addEventListener("push", (event) => {
-  let payload = { title: "Kingdom AI", body: "Scripture for this hour.", url: "/history" };
+  let payload = { title: "Kingdom AI", body: "Scripture for this hour.", url: "/notifications" };
   try {
     if (event.data) payload = { ...payload, ...event.data.json() };
   } catch {
@@ -290,14 +293,14 @@ self.addEventListener("push", (event) => {
       renotify: true,
       silent: false,
       vibrate: [180, 90, 180],
-      data: { url: payload.url || "/history", hour: payload.hour, locale: payload.locale },
+      data: { url: payload.url || "/notifications", hour: payload.hour, locale: payload.locale },
     }),
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = event.notification.data?.url || "/history";
+  const target = event.notification.data?.url || "/notifications";
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {

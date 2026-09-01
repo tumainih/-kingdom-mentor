@@ -33,7 +33,7 @@ export async function buildHourlyPushPayload(
   return {
     title: "Kingdom AI",
     body: `${title}\n\n${text}`,
-    url: `/history?hour=${hour}`,
+    url: `/notifications?hour=${hour}`,
     hour,
     locale,
   };

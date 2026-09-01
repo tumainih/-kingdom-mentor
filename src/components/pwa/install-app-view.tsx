@@ -9,6 +9,7 @@ import {
   ExternalLink,
   Home,
   Link2,
+  Bell,
   Share2,
   Smartphone,
   WifiOff,
@@ -24,7 +25,6 @@ import {
 } from "@/lib/pwa/platform";
 import { RegisterServiceWorker } from "./register-sw";
 import { warmOfflineCache } from "@/lib/offline/client-reply";
-import { VerseNotificationsToggle } from "./verse-notifications-toggle";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -192,7 +192,13 @@ export function InstallAppView() {
             ) : null}
           </div>
 
-          <VerseNotificationsToggle />
+          <Link
+            href="/notifications"
+            className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-brand/30 bg-brand/5 px-3 py-2.5 text-xs font-medium text-brand-light transition-colors hover:bg-brand/10"
+          >
+            <Bell className="h-4 w-4 shrink-0" />
+            {t("notifyInstallLink")}
+          </Link>
 
           <div className="mt-4 rounded-lg border border-border/40 bg-muted/30 px-3 py-2">
             <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">

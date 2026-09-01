@@ -60,6 +60,7 @@ export const translations = {
     navHome: "Home",
     navChat: "Chat",
     navHistory: "History",
+    navAlerts: "Alerts",
     homeHourLabel: "Hour {hour} · verse for this hour",
     homeLoading: "Loading this hour's verse…",
     homeChangesAt: "New verse at {hour}:00",
@@ -106,6 +107,12 @@ export const translations = {
     notifyWorking: "Updating…",
     notifyActive: "Hourly notifications are on for your selected hours.",
     notifyDenied: "Notifications blocked. Allow them in your browser or phone settings.",
+    notifyPageTitle: "Verse alerts",
+    notifyPageSubtitle:
+      "Choose the hours you want a Scripture notification — works when the app is closed after install.",
+    notifyPresetPrayer: "6 · 9 · 12 · 15 · 18",
+    notifyPresetAll: "Every hour",
+    notifyInstallLink: "Set up hourly alerts",
     historyTitle: "Verse by date & hour",
     historySubtitle:
       "Look up the Scripture for any past date and hour you missed while the app was closed.",
@@ -177,6 +184,7 @@ export const translations = {
     navHome: "Nyumbani",
     navChat: "Maandishi",
     navHistory: "Historia",
+    navAlerts: "Arifa",
     homeHourLabel: "Saa {hour} · mstari wa saa hii",
     homeLoading: "Inapakia mstari wa saa hii…",
     homeChangesAt: "Mstari mpya saa {hour}:00",
@@ -229,6 +237,12 @@ export const translations = {
     notifyActive: "Arifa za kila saa zimewashwa kwa saa ulizochagua.",
     notifyDenied:
       "Arifa zimezuiwa. Ziruhusu katika mipangilio ya kivinjari au simu yako.",
+    notifyPageTitle: "Arifa za mistari",
+    notifyPageSubtitle:
+      "Chagua saa unazotaka arifa ya mstari — inafanya kazi app imefungwa baada ya kusakinisha.",
+    notifyPresetPrayer: "6 · 9 · 12 · 15 · 18",
+    notifyPresetAll: "Kila saa",
+    notifyInstallLink: "Weka arifa za kila saa",
     historyTitle: "Mstari kwa tarehe na saa",
     historySubtitle:
       "Tafuta mstari wa tarehe na saa yoyote uliyokosa app ilipokuwa imefungwa.",

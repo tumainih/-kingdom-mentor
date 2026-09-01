@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Check, Copy, MessageSquare } from "lucide-react";
+import { Bell, Check, Copy, MessageSquare } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/context/locale-context";
@@ -221,19 +221,28 @@ export function HourlyVerseHome() {
           <p className="mx-auto mb-2 hidden max-w-sm text-[10px] leading-snug text-muted-foreground sm:block sm:text-xs">
             {t("homeSubtitle")}
           </p>
-          <Link
-            href="/history"
-            className="mb-2 inline-flex h-8 items-center gap-1.5 rounded-lg border border-brand/30 px-3 text-xs font-medium"
-          >
-            {t("navHistory")}
-          </Link>
-          <Link
-            href="/"
-            className="inline-flex h-8 max-w-full items-center justify-center gap-1.5 truncate rounded-lg border border-brand/30 bg-background px-3 text-xs font-medium transition-colors hover:bg-muted sm:h-9 sm:gap-2 sm:px-4 sm:text-sm"
-          >
-            <MessageSquare className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
-            <span className="truncate">{t("homeGoChat")}</span>
-          </Link>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <Link
+              href="/history"
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-brand/30 px-3 text-xs font-medium"
+            >
+              {t("navHistory")}
+            </Link>
+            <Link
+              href="/notifications"
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border/50 px-3 text-xs font-medium text-muted-foreground"
+            >
+              <Bell className="h-3.5 w-3.5" />
+              {t("navAlerts")}
+            </Link>
+            <Link
+              href="/"
+              className="inline-flex h-8 max-w-full items-center justify-center gap-1.5 truncate rounded-lg border border-brand/30 bg-background px-3 text-xs font-medium transition-colors hover:bg-muted sm:px-4 sm:text-sm"
+            >
+              <MessageSquare className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+              <span className="truncate">{t("homeGoChat")}</span>
+            </Link>
+          </div>
         </div>
       </main>
     </div>

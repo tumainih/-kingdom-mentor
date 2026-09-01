@@ -1,4 +1,23 @@
-# Deploy Kingdom AI (free — no Vercel Pro, no Netlify)
+## Option 0: Vercel (same link for installed app)
+
+**Important:** Temporary anonymous Vercel URLs change and expire. For your **installed PWA to update on the same link**, claim the project on Vercel once:
+
+1. [vercel.com](https://vercel.com) → sign in → **Add New → Project**
+2. Import **`tumainih/-kingdom-mentor`** from GitHub (or claim an earlier deployment)
+3. Add environment variables: `GEMINI_API_KEY`, `NEXT_PUBLIC_SITE_URL`, `VAPID_*`, `CRON_SECRET`
+4. Deploy — you get a stable URL like `https://kingdom-mentor-xxx.vercel.app`
+
+**Redeploy updates (same URL, PWA refreshes):**
+
+```bash
+export VERCEL_TOKEN="..."          # vercel.com/account/tokens
+export VERCEL_PROJECT_ID="prj_..." # Project → Settings → Project ID
+npm run deploy:vercel
+```
+
+Or push to `main` if GitHub is connected on Vercel — auto-deploys to the same domain.
+
+---
 
 Latest code: **https://github.com/tumainih/-kingdom-mentor** (`main`)
 

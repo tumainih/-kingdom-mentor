@@ -1,17 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, ChevronDown, ChevronUp, Home, Zap } from "lucide-react";
+import { Bell, Home } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { VerseNotificationsToggle } from "@/components/pwa/verse-notifications-toggle";
-import { Button } from "@/components/ui/button";
 import { useLocale } from "@/context/locale-context";
 import {
   DEFAULT_NOTIFY_HOURS,
   getNotifyHours,
   isVerseNotificationsEnabled,
-  previewHourVerseNotification,
   setNotifyHours,
   syncVerseNotifications,
 } from "@/lib/notifications/verse-notifications";
@@ -20,66 +18,11 @@ function pad(n: number) {
   return n.toString().padStart(2, "0");
 }
 
-function defaultSendAtLocal(): string {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() + 1, 0, 0);
-  const p = (n: number) => n.toString().padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
-}
-
 export function NotificationSettingsView() {
   const { locale, t } = useLocale();
   const [selectedHours, setSelectedHours] = useState<number[]>(DEFAULT_NOTIFY_HOURS);
-  const [testHour, setTestHour] = useState(() => new Date().getHours());
-  const [testAt, setTestAt] = useState(defaultSendAtLocal);
-  const [testing, setTesting] = useState(false);
-  const [testMessage, setTestMessage] = useState<"sent" | "failed" | "scheduled" | null>(null);
   const [pushServerReady, setPushServerReady] = useState<boolean | null>(null);
   const [backgroundPushReady, setBackgroundPushReady] = useState<boolean | null>(null);
-  const [testOpen, setTestOpen] = useState(false);
-  const scheduleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const sendTest = useCallback(async () => {
-    const shown = await previewHourVerseNotification(locale, testHour);
-    setTestMessage(shown ? "sent" : "failed");
-    setTesting(false);
-  }, [locale, testHour]);
-
-  const testNotification = useCallback(() => {
-    if (typeof Notification === "undefined" || Notification.permission !== "granted") {
-      setTestMessage("failed");
-      return;
-    }
-
-    if (scheduleRef.current) {
-      clearTimeout(scheduleRef.current);
-      scheduleRef.current = null;
-    }
-
-    setTesting(true);
-    setTestMessage(null);
-
-    const targetMs = new Date(testAt).getTime();
-    const delay = targetMs - Date.now();
-
-    if (Number.isFinite(targetMs) && delay > 15_000) {
-      scheduleRef.current = setTimeout(() => {
-        scheduleRef.current = null;
-        void sendTest();
-      }, delay);
-      setTestMessage("scheduled");
-      setTesting(false);
-      return;
-    }
-
-    void sendTest();
-  }, [sendTest, testAt]);
-
-  useEffect(() => {
-    return () => {
-      if (scheduleRef.current) clearTimeout(scheduleRef.current);
-    };
-  }, []);
 
   useEffect(() => {
     setSelectedHours(getNotifyHours());
@@ -142,75 +85,6 @@ export function NotificationSettingsView() {
 
         <div className="mt-3">
           <VerseNotificationsToggle compact />
-          {typeof Notification !== "undefined" &&
-          Notification.permission === "granted" &&
-          isVerseNotificationsEnabled() ? (
-            <div className="mt-2 rounded-lg border border-border/50 bg-card/40">
-              <button
-                type="button"
-                onClick={() => setTestOpen((open) => !open)}
-                className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left"
-                aria-expanded={testOpen}
-              >
-                <span className="flex items-center gap-2 text-xs font-semibold">
-                  <Zap className="h-3.5 w-3.5 text-brand" />
-                  {t("notifyTestNow")}
-                </span>
-                {testOpen ? (
-                  <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-                )}
-              </button>
-              {testOpen ? (
-                <div className="border-t border-border/40 px-3 pb-3 pt-2">
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <label className="text-[10px] text-muted-foreground">
-                      {t("notifyTestHour")}
-                      <select
-                        value={testHour}
-                        onChange={(e) => setTestHour(Number(e.target.value))}
-                        className="mt-1 w-full rounded-md border border-border/50 bg-background px-2 py-1.5 text-xs"
-                      >
-                        {Array.from({ length: 24 }, (_, h) => (
-                          <option key={h} value={h}>
-                            {pad(h)}:00
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="text-[10px] text-muted-foreground">
-                      {t("notifyTestAt")}
-                      <input
-                        type="datetime-local"
-                        value={testAt}
-                        onChange={(e) => setTestAt(e.target.value)}
-                        className="mt-1 w-full rounded-md border border-border/50 bg-background px-2 py-1.5 text-xs"
-                      />
-                    </label>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-2 w-full gap-2 text-xs"
-                    disabled={testing}
-                    onClick={() => testNotification()}
-                  >
-                    <Zap className="h-3.5 w-3.5" />
-                    {testing ? t("notifyWorking") : t("notifyTestSend")}
-                  </Button>
-                  {testMessage === "sent" ? (
-                    <p className="mt-2 text-[10px] text-brand-light">{t("notifyTestSent")}</p>
-                  ) : testMessage === "scheduled" ? (
-                    <p className="mt-2 text-[10px] text-brand-light">{t("notifyTestScheduled")}</p>
-                  ) : testMessage === "failed" ? (
-                    <p className="mt-2 text-[10px] text-amber-200/90">{t("notifyTestFailed")}</p>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
           {backgroundPushReady ? (
             <p className="mt-2 text-[10px] leading-snug text-brand-light">
               {t("notifyBackgroundReady")}

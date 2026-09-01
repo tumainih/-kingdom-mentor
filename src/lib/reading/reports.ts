@@ -1,5 +1,5 @@
 import { backfillAbsentSlots } from "@/lib/reading/backfill";
-import { dueReportWindows, periodKey, reportUnitLabel } from "@/lib/reading/periods";
+import { dueReportWindows, periodKey } from "@/lib/reading/periods";
 import { aggregateReport, buildReadEvent } from "@/lib/reading/report-math";
 import {
   eventsInRange,
@@ -13,8 +13,6 @@ import {
   saveReport,
 } from "@/lib/reading/store.server";
 import type { DevelopmentReport, PendingNotification, ReadEvent, ReportUnit } from "@/lib/reading/types";
-import { ensureWebPush, webpush } from "@/lib/push/vapid";
-import { listPushSubscriptions } from "@/lib/push/store";
 
 export { buildReadEvent, aggregateReport } from "@/lib/reading/report-math";
 
@@ -114,52 +112,6 @@ export async function generateAllDueReports(): Promise<number> {
   for (const deviceId of deviceIds) {
     const reports = await generateDueReportsForDevice(deviceId);
     count += reports.length;
-    for (const report of reports) {
-      await notifyReportReady(deviceId, report);
-    }
   }
   return count;
-}
-
-async function notifyReportReady(
-  deviceId: string,
-  report: DevelopmentReport,
-): Promise<void> {
-  if (!ensureWebPush()) return;
-
-  const subs = await listPushSubscriptions();
-  const sub = subs.find((s) => s.deviceId === deviceId);
-  if (!sub) return;
-
-  const title = sub.locale === "sw" ? "Ripoti ya maendeleo" : "Development report";
-  const label =
-    report.customLabel ||
-    (report.unit === "custom"
-      ? sub.locale === "sw"
-        ? "Masafa maalum"
-        : "Custom range"
-      : reportUnitLabel(report.unit, sub.locale));
-  const body =
-    sub.locale === "sw"
-      ? `${label} · wastani ${report.avgRate} · ${report.eventCount} arifa`
-      : `${label} · avg ${report.avgRate} · ${report.eventCount} alerts`;
-
-  try {
-    await webpush.sendNotification(
-      { endpoint: sub.endpoint, keys: sub.keys },
-      JSON.stringify({
-        title,
-        body,
-        url: `/reports?report=${encodeURIComponent(report.id)}`,
-        type: "report",
-        reportId: report.id,
-        locale: sub.locale,
-        deviceId,
-      }),
-    );
-    report.notifiedAt = Date.now();
-    await saveReport(report);
-  } catch {
-    /* best-effort */
-  }
 }

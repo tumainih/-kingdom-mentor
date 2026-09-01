@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build 49allUn65Vr9n3ooFCaoT) */
-const CACHE = "kingdom-ai-49allUn65Vr9n3ooFCaoT";
+/* Kingdom AI — offline-capable service worker (build w5ahVQ-0VwbuwxughkJHa) */
+const CACHE = "kingdom-ai-w5ahVQ-0VwbuwxughkJHa";
 const PRECACHE = [
   "/",
   "/home",
@@ -41,9 +41,7 @@ const PRECACHE = [
   "/data/pools/strength.json",
   "/data/pools/trust.json",
   "/data/pools/wisdom.json",
-  "/_next/static/49allUn65Vr9n3ooFCaoT/_buildManifest.js",
-  "/_next/static/49allUn65Vr9n3ooFCaoT/_clientMiddlewareManifest.js",
-  "/_next/static/49allUn65Vr9n3ooFCaoT/_ssgManifest.js",
+  "/_next/static/chunks/0c-ectuafg47u.js",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
   "/_next/static/chunks/1g179lcifdq15.js",
@@ -53,16 +51,15 @@ const PRECACHE = [
   "/_next/static/chunks/24ihfyt9kr7mm.js",
   "/_next/static/chunks/24t7crwozt_yd.js",
   "/_next/static/chunks/2rzlk32zr9nnw.js",
-  "/_next/static/chunks/2vw8t6u-2ywit.js",
   "/_next/static/chunks/2x5oncyuqs3pt.js",
   "/_next/static/chunks/2ydnron3zbkwf.js",
-  "/_next/static/chunks/36dam2qbr6oth.js",
   "/_next/static/chunks/373skgu07-_06.js",
   "/_next/static/chunks/38crxovcaonw3.js",
   "/_next/static/chunks/3adwt13tezgym.js",
   "/_next/static/chunks/3q576hlfnuh0n.js",
-  "/_next/static/chunks/3rqun10tu03ye.css",
   "/_next/static/chunks/3xvapijkg6ty7.js",
+  "/_next/static/chunks/3y41qw5u5vb7j.css",
+  "/_next/static/chunks/456jxsty-hc-k.js",
   "/_next/static/chunks/turbopack-0snm50y8kpj5e.js",
   "/_next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2",
   "/_next/static/media/2bbe8d2671613f1f-s.0k62hbripvv8p.woff2",
@@ -79,7 +76,10 @@ const PRECACHE = [
   "/_next/static/media/e7150917543fc9da-s.0mybutugvu-lq.woff2",
   "/_next/static/media/e9457141811d41ae-s.02frcczqg7k-8.woff2",
   "/_next/static/media/favicon.2vob68tjqpejf.ico",
-  "/_next/static/media/icon.1v5cwft9ue97g.svg"
+  "/_next/static/media/icon.1v5cwft9ue97g.svg",
+  "/_next/static/w5ahVQ-0VwbuwxughkJHa/_buildManifest.js",
+  "/_next/static/w5ahVQ-0VwbuwxughkJHa/_clientMiddlewareManifest.js",
+  "/_next/static/w5ahVQ-0VwbuwxughkJHa/_ssgManifest.js"
 ];
 
 self.addEventListener("install", (event) => {
@@ -311,9 +311,8 @@ function shouldNotifyHour(state, hour) {
   return state.notifyHours.includes(hour);
 }
 
-function notificationId(isTest) {
-  const prefix = isTest ? "test-" : "kn-";
-  return prefix + Date.now() + "-" + Math.random().toString(36).slice(2, 9);
+function notificationId() {
+  return "kn-" + Date.now() + "-" + Math.random().toString(36).slice(2, 9);
 }
 
 function currentSlotKey() {
@@ -322,6 +321,69 @@ function currentSlotKey() {
 
 function readActionTitle(locale) {
   return locale === "sw" ? "Nimesoma" : "Read";
+}
+
+function alreadyReadActionTitle(locale) {
+  return locale === "sw" ? "Tayari nimesoma" : "Already read";
+}
+
+function alreadyReadLabel(locale) {
+  return locale === "sw" ? "Tayari nimesoma" : "Already read";
+}
+
+function localDayForTimezone(at, timezone) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(at));
+}
+
+async function isHourSlotAlreadyRead(deviceId, hour, timezone) {
+  if (!deviceId) return false;
+  try {
+    var db = await openReadingDb();
+    return await new Promise(function (resolve) {
+      var tx = db.transaction("events", "readonly");
+      var req = tx.objectStore("events").index("deviceId").getAll(deviceId);
+      req.onsuccess = function () {
+        var events = req.result || [];
+        var today = localDayForTimezone(Date.now(), timezone);
+        var hit = events.some(function (e) {
+          if (e.missed) return false;
+          if (e.hour !== hour) return false;
+          return localDayForTimezone(e.shownAt, timezone) === today;
+        });
+        resolve(hit);
+      };
+      req.onerror = function () {
+        resolve(false);
+      };
+    });
+  } catch {
+    return false;
+  }
+}
+
+async function isNotificationAlreadyRead(deviceId, notificationId) {
+  if (!deviceId || !notificationId) return false;
+  try {
+    var db = await openReadingDb();
+    return await new Promise(function (resolve) {
+      var tx = db.transaction("events", "readonly");
+      var req = tx.objectStore("events").index("notificationId").getAll(notificationId);
+      req.onsuccess = function () {
+        var hits = req.result || [];
+        resolve(hits.some(function (e) { return e.deviceId === deviceId && !e.missed; }));
+      };
+      req.onerror = function () {
+        resolve(false);
+      };
+    });
+  } catch {
+    return false;
+  }
 }
 
 async function readDeviceId() {
@@ -440,7 +502,7 @@ async function postReadEvent(data, readAt) {
   }
 }
 
-async function postPendingNotification(data, isTest) {
+async function postPendingNotification(data) {
   if (!data.deviceId || !data.notificationId) return;
   try {
     await fetch("/api/reading/pending", {
@@ -456,7 +518,7 @@ async function postPendingNotification(data, isTest) {
         themeLabel: data.themeLabel || "",
         locale: data.locale || "en",
         timezone: data.timezone || "UTC",
-        isTest: Boolean(isTest),
+        isTest: false,
       }),
     });
   } catch {
@@ -464,7 +526,7 @@ async function postPendingNotification(data, isTest) {
   }
 }
 
-async function showHourlyVerseNotification(locale, hourOverride, notifyHours, force, isTest) {
+async function showHourlyVerseNotification(locale, hourOverride, notifyHours) {
   if (!self.registration?.showNotification) return false;
   if (self.Notification?.permission && self.Notification.permission !== "granted") {
     return false;
@@ -473,10 +535,10 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours, fo
   const hour = typeof hourOverride === "number" ? hourOverride : currentHour();
   const state = await readNotificationState();
   const hours = notifyHours ?? state?.notifyHours ?? [];
-  if (!force && hours.length && !hours.includes(hour)) return false;
+  if (hours.length && !hours.includes(hour)) return false;
 
   const slot = currentSlotKey();
-  if (!force && !isTest && state?.lastSlot === slot) return false;
+  if (state?.lastSlot === slot) return false;
 
   const entry = await loadHourlyVerse(locale, hour);
   if (!entry?.passage?.text) return false;
@@ -487,19 +549,27 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours, fo
     ? entry.passage.text.slice(0, 177) + "…"
     : entry.passage.text;
   const shownAt = Date.now();
-  const nid = notificationId(isTest);
+  const nid = notificationId();
   const deviceId = state?.deviceId || (await readDeviceId());
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  const alreadyRead = await isHourSlotAlreadyRead(deviceId, hour, timezone);
+  const lineTitle = alreadyRead ? title + " · " + alreadyReadLabel(locale) : title;
 
   await self.registration.showNotification("Kingdom AI", {
-    body: title + "\n\n" + body,
+    body: lineTitle + "\n\n" + body,
     icon: "/icon-192.png",
     badge: "/icon-192.png",
-    tag: "kingdom-hour-" + hour + "-" + nid,
+    tag: "kingdom-hour-" + hour + "-" + localDateString(),
     renotify: true,
     silent: false,
-    vibrate: [180, 90, 180],
-    requireInteraction: true,
-    actions: [{ action: "read", title: readActionTitle(locale) }],
+    vibrate: alreadyRead ? [] : [180, 90, 180],
+    requireInteraction: !alreadyRead,
+    actions: [
+      {
+        action: alreadyRead ? "already-read" : "read",
+        title: alreadyRead ? alreadyReadActionTitle(locale) : readActionTitle(locale),
+      },
+    ],
     data: {
       url: "/notifications",
       locale,
@@ -512,11 +582,13 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours, fo
       shownAt,
       notificationId: nid,
       deviceId,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+      timezone,
+      alreadyRead,
     },
   });
-  await postPendingNotification(
-    {
+
+  if (!alreadyRead) {
+    await postPendingNotification({
       deviceId,
       notificationId: nid,
       shownAt,
@@ -525,17 +597,15 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours, fo
       theme: entry.theme,
       themeLabel: entry.themeLabel,
       locale,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
-    },
-    isTest,
-  );
-  if (!isTest) {
-    await writeNotificationState({
-      ...(state || {}),
-      lastSlot: slot,
-      lastHour: hour,
+      timezone,
     });
   }
+
+  await writeNotificationState({
+    ...(state || {}),
+    lastSlot: slot,
+    lastHour: hour,
+  });
   return true;
 }
 
@@ -564,7 +634,7 @@ async function scheduleHourlyNotification(locale, notifyHours, delayMs) {
       if (!state?.enabled) return;
       const hour = currentHour();
       if (shouldNotifyHour(state, hour)) {
-        await showHourlyVerseNotification(state.locale || locale, hour, state.notifyHours, false, false);
+        await showHourlyVerseNotification(state.locale || locale, hour, state.notifyHours);
       }
       await scheduleHourlyNotification(state.locale || locale, state.notifyHours);
     } catch {
@@ -591,7 +661,7 @@ async function resumeHourlyNotifications() {
   const hour = currentHour();
   const slot = currentSlotKey();
   if (state.lastSlot !== slot && shouldNotifyHour(state, hour)) {
-    await showHourlyVerseNotification(state.locale || "en", hour, state.notifyHours, false, false);
+    await showHourlyVerseNotification(state.locale || "en", hour, state.notifyHours);
   }
 
   const now = Date.now();
@@ -612,56 +682,68 @@ self.addEventListener("push", (event) => {
     /* use defaults */
   }
 
+  if (payload.type === "report") {
+    return;
+  }
+
   const locale = payload.locale || "en";
   const shownAt = Date.now();
   const nid = notificationId();
-  const isReport = payload.type === "report";
 
   event.waitUntil(
     (async () => {
-      await self.registration.showNotification(payload.title || "Kingdom AI", {
+      const deviceId = payload.deviceId || (await readDeviceId());
+      const timezone = payload.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+      const hour = typeof payload.hour === "number" ? payload.hour : currentHour();
+      const alreadyRead = await isHourSlotAlreadyRead(deviceId, hour, timezone);
+      const titleLine = alreadyRead
+        ? (payload.title || "Kingdom AI") + " · " + alreadyReadLabel(locale)
+        : payload.title || "Kingdom AI";
+
+      await self.registration.showNotification("Kingdom AI", {
         body: payload.body,
         icon: "/icon-192.png",
         badge: "/icon-192.png",
-        tag: isReport ? "kingdom-report-" + (payload.reportId || nid) : "kingdom-hour-push-" + nid,
+        tag: "kingdom-hour-push-" + hour + "-" + localDateString(),
         renotify: true,
         silent: false,
-        vibrate: [180, 90, 180],
-        requireInteraction: true,
-        actions: isReport
-          ? [{ action: "open-report", title: locale === "sw" ? "Fungua ripoti" : "Open report" }]
-          : [{ action: "read", title: readActionTitle(locale) }],
+        vibrate: alreadyRead ? [] : [180, 90, 180],
+        requireInteraction: !alreadyRead,
+        actions: [
+          {
+            action: alreadyRead ? "already-read" : "read",
+            title: alreadyRead ? alreadyReadActionTitle(locale) : readActionTitle(locale),
+          },
+        ],
         data: {
-          url: payload.url || (isReport ? "/reports" : "/notifications"),
+          url: payload.url || "/notifications",
           hour: payload.hour,
           locale,
-          type: payload.type || "verse",
+          type: "verse",
           verseRef: payload.verseRef || "",
           theme: payload.theme || "",
           themeLabel: payload.themeLabel || "",
           verseText: payload.verseText || "",
-          reportId: payload.reportId || "",
           deviceId: payload.deviceId || "",
           shownAt,
           notificationId: nid,
-          timezone: payload.timezone || "UTC",
+          timezone,
+          alreadyRead,
         },
       });
-      if (payload.type !== "report") {
-        await postPendingNotification(
-          {
-            deviceId: payload.deviceId,
-            notificationId: nid,
-            shownAt,
-            hour: payload.hour,
-            verseRef: payload.verseRef || "",
-            theme: payload.theme || "",
-            themeLabel: payload.themeLabel || "",
-            locale,
-            timezone: payload.timezone || "UTC",
-          },
-          false,
-        );
+
+      if (!alreadyRead) {
+        await postPendingNotification({
+          deviceId: payload.deviceId,
+          notificationId: nid,
+          shownAt,
+          hour: payload.hour,
+          verseRef: payload.verseRef || "",
+          theme: payload.theme || "",
+          themeLabel: payload.themeLabel || "",
+          locale,
+          timezone,
+        });
       }
     })(),
   );
@@ -671,32 +753,22 @@ self.addEventListener("notificationclick", (event) => {
   const data = event.notification.data || {};
   const action = event.action;
   const readAt = Date.now();
+  const locale = data.locale || "en";
+
+  if (action === "already-read" || data.alreadyRead) {
+    event.notification.close();
+    return;
+  }
 
   if (action === "read" || (!action && data.type === "verse")) {
     event.notification.close();
     event.waitUntil(
       (async () => {
+        const deviceId = data.deviceId || (await readDeviceId());
+        const already = await isNotificationAlreadyRead(deviceId, data.notificationId);
+        if (already) return;
         await postReadEvent(data, readAt);
       })(),
-    );
-    return;
-  }
-
-  if (action === "open-report" || data.type === "report") {
-    event.notification.close();
-    const target = data.reportId
-      ? "/reports?report=" + encodeURIComponent(data.reportId)
-      : data.url || "/reports";
-    event.waitUntil(
-      self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
-        for (const client of clients) {
-          if (client.url.includes(self.location.origin) && "focus" in client) {
-            client.navigate(target);
-            return client.focus();
-          }
-        }
-        if (self.clients.openWindow) return self.clients.openWindow(target);
-      }),
     );
     return;
   }
@@ -739,15 +811,6 @@ self.addEventListener("message", (event) => {
           data.notifyHours || [],
           data.delayMs,
         );
-        if (data.showNow) {
-          await showHourlyVerseNotification(
-            data.locale || "en",
-            currentHour(),
-            data.notifyHours || [],
-            true,
-            true,
-          );
-        }
       })(),
     );
     return;
@@ -770,23 +833,6 @@ self.addEventListener("message", (event) => {
   if (data.type === "STOP_HOURLY_NOTIFICATIONS") {
     event.waitUntil(stopHourlyNotifications());
     return;
-  }
-
-  if (data.type === "SHOW_HOUR_VERSE") {
-    event.waitUntil(
-      (async () => {
-        const shown = await showHourlyVerseNotification(
-          data.locale || "en",
-          data.hour,
-          data.notifyHours || [],
-          data.force === true,
-          data.isTest === true,
-        );
-        if (data.replyPort && event.ports?.[0]) {
-          event.ports[0].postMessage({ shown });
-        }
-      })(),
-    );
   }
 });
 

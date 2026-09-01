@@ -54,7 +54,7 @@ export function VerseNotificationsToggle({
       }
 
       const permission = await enableVerseNotifications(locale, {
-        showNow: true,
+        showNow: false,
         notifyHours: getNotifyHours(),
       });
       setDenied(permission === "denied");

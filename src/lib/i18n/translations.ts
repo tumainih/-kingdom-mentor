@@ -139,7 +139,7 @@ export const translations = {
       "Sound uses your phone's default notification tone. In Settings, allow notifications and sound for Kingdom AI.",
     reportPageTitle: "Self-development reports",
     reportPageSubtitle:
-      "Reports build up naturally: 1 hour → 3 → 6 → 12 → day → week → month. Missed hours = rate 0 (brown).",
+      "Reports build quietly in the background (no alerts). Open this page anytime. 1 hour → 3 → 6 → …",
     reportEmpty: "No reports yet. Mark verse notifications as Read to build your trend.",
     reportUnit: "Period",
     reportLapseAvg: "Avg unread time",
@@ -337,7 +337,7 @@ export const translations = {
       "Sauti hutumia mlio wa arifa wa simu. Katika Mipangilio, ruhusu arifa na sauti kwa Kingdom AI.",
     reportPageTitle: "Ripoti za maendeleo",
     reportPageSubtitle:
-      "Ripoti hujengwa asili: saa 1 → 3 → 6 → 12 → siku → wiki → mwezi. Saa ulizokosa = kiwango 0 (kahawia).",
+      "Ripoti hujengwa kimya (hakuna arifa). Fungua ukurasa huu wakati wowote. Saa 1 → 3 → 6 → …",
     reportEmpty: "Hakuna ripoti bado. Weka alama Nimesoma kwenye arifa za mistari.",
     reportUnit: "Kipindi",
     reportLapseAvg: "Wastani wa muda",

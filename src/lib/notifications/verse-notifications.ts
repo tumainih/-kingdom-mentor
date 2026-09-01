@@ -209,36 +209,3 @@ export async function showHourVerseNotification(
     notifyHours: getNotifyHours(),
   });
 }
-
-export async function previewHourVerseNotification(
-  locale: AppLocale,
-  hour: number,
-): Promise<boolean> {
-  if (Notification.permission !== "granted") return false;
-
-  const registration = await getReadyRegistration();
-  const worker = registration?.active;
-  if (!worker) return false;
-
-  return new Promise((resolve) => {
-    const channel = new MessageChannel();
-    channel.port1.onmessage = (event) => {
-      resolve(event.data?.shown === true);
-    };
-
-    worker.postMessage(
-      {
-        type: "SHOW_HOUR_VERSE",
-        locale,
-        hour,
-        notifyHours: getNotifyHours(),
-        force: true,
-        isTest: true,
-        replyPort: true,
-      },
-      [channel.port2],
-    );
-
-    setTimeout(() => resolve(false), 8000);
-  });
-}

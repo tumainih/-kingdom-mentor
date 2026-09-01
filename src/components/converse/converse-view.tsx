@@ -129,11 +129,11 @@ export function ConverseView({ mode, onModeChange }: ConverseViewProps) {
           : t("talkStatusIdle");
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-2 pb-1 pt-2 sm:px-4 sm:pt-3">
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 sm:px-4 sm:pt-3">
       <div className="chat-canvas mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden">
         <span className="canvas-label">{t("canvas")}</span>
 
-        <div className="canvas-body flex flex-col items-center justify-center px-4 py-6 text-center sm:px-6 sm:py-8">
+        <div className="canvas-body flex flex-col items-center justify-start overflow-y-auto overscroll-contain px-4 py-6 text-center sm:px-6 sm:py-8">
           <BrandTitle size="lg" />
           <p className="mt-4 max-w-md text-base leading-relaxed text-brand sm:text-lg">
             {status}
@@ -181,21 +181,21 @@ export function ConverseView({ mode, onModeChange }: ConverseViewProps) {
             </div>
           )}
         </div>
+
+        <ComposerBar
+          mode={mode}
+          onModeChange={onModeChange}
+          value=""
+          onChange={() => {}}
+          onSend={() => {}}
+          isListening={isListening}
+          onTalkToggle={toggleMic}
+          talkDisabled={talkDisabled}
+        />
       </div>
 
-      <ComposerBar
-        mode={mode}
-        onModeChange={onModeChange}
-        value=""
-        onChange={() => {}}
-        onSend={() => {}}
-        isListening={isListening}
-        onTalkToggle={toggleMic}
-        talkDisabled={talkDisabled}
-      />
-
       {displayError && (
-        <div className="pointer-events-none absolute bottom-28 left-1/2 z-30 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-lg border border-destructive/40 bg-card px-3 py-2 text-center text-xs text-destructive">
+        <div className="pointer-events-none absolute bottom-36 left-1/2 z-30 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-lg border border-destructive/40 bg-card px-3 py-2 text-center text-xs text-destructive">
           {displayError}
         </div>
       )}

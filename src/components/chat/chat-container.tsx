@@ -105,13 +105,13 @@ export function ChatContainer({ mode, onModeChange }: ChatContainerProps) {
     !lastMessage.content.trim();
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-2 pb-1 pt-2 sm:px-4 sm:pt-3">
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 sm:px-4 sm:pt-3">
       <div className="chat-canvas mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden">
         <span className="canvas-label">{t("canvas")}</span>
 
         <div className="canvas-body overflow-y-auto overscroll-contain">
           {messages.length === 0 ? (
-            <div className="flex h-full min-h-[140px] flex-col items-center justify-center px-4 py-6 text-center sm:px-6 sm:py-8">
+            <div className="flex min-h-[120px] flex-col items-center justify-center px-4 py-6 text-center sm:px-6 sm:py-8">
               <BrandLogo size="lg" className="logo-glow-ring rounded-2xl" />
               <BrandTitle size="lg" className="mt-4 sm:mt-5" />
               <p className="mt-5 max-w-md text-base leading-relaxed text-foreground/90 sm:mt-6 sm:text-lg">
@@ -125,22 +125,22 @@ export function ChatContainer({ mode, onModeChange }: ChatContainerProps) {
             </>
           )}
         </div>
+
+        <ComposerBar
+          mode={mode}
+          onModeChange={onModeChange}
+          value={input}
+          onChange={setInput}
+          onSend={() => sendMessage(input)}
+          disabled={isStreaming}
+          placeholder={
+            messages.length ? t("placeholderContinue") : t("placeholder")
+          }
+        />
       </div>
 
-      <ComposerBar
-        mode={mode}
-        onModeChange={onModeChange}
-        value={input}
-        onChange={setInput}
-        onSend={() => sendMessage(input)}
-        disabled={isStreaming}
-        placeholder={
-          messages.length ? t("placeholderContinue") : t("placeholder")
-        }
-      />
-
       {error && (
-        <div className="pointer-events-none absolute bottom-28 left-1/2 z-30 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-lg border border-destructive/40 bg-card px-3 py-2 text-center text-xs text-destructive">
+        <div className="pointer-events-none absolute bottom-36 left-1/2 z-30 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-lg border border-destructive/40 bg-card px-3 py-2 text-center text-xs text-destructive">
           {error}
         </div>
       )}

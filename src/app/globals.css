@@ -104,7 +104,7 @@
   }
 
   .composer-shell {
-    background: linear-gradient(180deg, transparent 0%, rgba(7, 16, 24, 0.85) 30%);
+    background: linear-gradient(180deg, transparent 0%, rgba(7, 16, 24, 0.35) 100%);
   }
 
   .chat-canvas {

@@ -35,9 +35,21 @@ Copy from `.env.example`. After deploy, set hourly cron (all platforms):
    - **Start:** `npm start`
    - **Plan:** Free
 5. Add environment variables (table above).
-6. Deploy → URL like `https://kingdom-mentor.onrender.com`.
+6. Deploy → Render gives you a **`.onrender.com`** URL, for example:
 
-**Note:** Free tier sleeps after ~15 min idle; first visit may take 30–60 s to wake.
+   `https://kingdom-mentor.onrender.com`
+
+   That `.com` address is your live app. Use these links:
+
+   | Page | URL |
+   |------|-----|
+   | **Install (share this)** | `https://YOUR-APP.onrender.com/install` |
+   | Home | `https://YOUR-APP.onrender.com/home` |
+   | Hourly cron (cron-job.org) | `https://YOUR-APP.onrender.com/api/cron/hourly-verse?secret=YOUR_CRON_SECRET` |
+
+   Replace `YOUR-APP` with the name Render assigned (shown at the top of your service dashboard).
+
+**Note:** Free tier sleeps after ~15 min idle; first visit may take 30–60 s to wake. HTTPS is included — required for **Add to Home Screen** and offline mode.
 
 ---
 

@@ -118,6 +118,14 @@ export const translations = {
     notifyDisable: "Turn off notifications",
     notifyWorking: "Updating…",
     notifyActive: "Hourly notifications are on for your selected hours.",
+    notifyTestNow: "Send test notification now",
+    notifyTestSent: "Test notification sent — check your notification shade.",
+    notifyTestFailed:
+      "Could not show a notification. Install the app, allow alerts, and open it once online.",
+    notifyPushServerOff:
+      "Background push is not configured on the server yet — alerts work while the app is installed and has been opened recently.",
+    notifySoundHint:
+      "Sound uses your phone's default notification tone. In Settings, allow notifications and sound for Kingdom AI.",
     notifyDenied: "Notifications blocked. Allow them in your browser or phone settings.",
     notifyPageTitle: "Verse alerts",
     notifyPageSubtitle:
@@ -272,6 +280,14 @@ export const translations = {
     notifyDisable: "Zima arifa",
     notifyWorking: "Inasasisha…",
     notifyActive: "Arifa za kila saa zimewashwa kwa saa ulizochagua.",
+    notifyTestNow: "Tuma arifa ya majaribio sasa",
+    notifyTestSent: "Arifa ya majaribio imetumwa — angalia arifa za simu.",
+    notifyTestFailed:
+      "Imeshindwa kuonyesha arifa. Sakinisha app, ruhusu arifa, na ufungue mara moja ukiwa mtandaoni.",
+    notifyPushServerOff:
+      "Push ya nyuma haijasanidiwa bado — arifa zinafanya kazi app imesakinishwa na imefunguliwa hivi karibuni.",
+    notifySoundHint:
+      "Sauti hutumia mlio wa arifa wa simu. Katika Mipangilio, ruhusu arifa na sauti kwa Kingdom AI.",
     notifyDenied:
       "Arifa zimezuiwa. Ziruhusu katika mipangilio ya kivinjari au simu yako.",
     notifyPageTitle: "Arifa za mistari",

@@ -2,14 +2,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, Home } from "lucide-react";
+import { Bell, Home, Zap } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { VerseNotificationsToggle } from "@/components/pwa/verse-notifications-toggle";
+import { Button } from "@/components/ui/button";
 import { useLocale } from "@/context/locale-context";
 import {
   DEFAULT_NOTIFY_HOURS,
   getNotifyHours,
   isVerseNotificationsEnabled,
+  previewHourVerseNotification,
   setNotifyHours,
   syncVerseNotifications,
 } from "@/lib/notifications/verse-notifications";
@@ -21,9 +23,37 @@ function pad(n: number) {
 export function NotificationSettingsView() {
   const { locale, t } = useLocale();
   const [selectedHours, setSelectedHours] = useState<number[]>(DEFAULT_NOTIFY_HOURS);
+  const [testing, setTesting] = useState(false);
+  const [testMessage, setTestMessage] = useState<"sent" | "failed" | null>(null);
+  const [pushServerReady, setPushServerReady] = useState<boolean | null>(null);
+
+  const testNotification = useCallback(async () => {
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") {
+      setTestMessage("failed");
+      return;
+    }
+    setTesting(true);
+    setTestMessage(null);
+    try {
+      const hour = new Date().getHours();
+      const shown = await previewHourVerseNotification(locale, hour);
+      setTestMessage(shown ? "sent" : "failed");
+    } catch {
+      setTestMessage("failed");
+    } finally {
+      setTesting(false);
+    }
+  }, [locale]);
 
   useEffect(() => {
     setSelectedHours(getNotifyHours());
+  }, []);
+
+  useEffect(() => {
+    void fetch("/api/push/vapid-public-key")
+      .then((res) => res.json())
+      .then((data: { configured?: boolean }) => setPushServerReady(Boolean(data.configured)))
+      .catch(() => setPushServerReady(false));
   }, []);
 
   useEffect(() => {
@@ -65,6 +95,34 @@ export function NotificationSettingsView() {
 
         <div className="mt-3 shrink-0">
           <VerseNotificationsToggle compact />
+          {typeof Notification !== "undefined" &&
+          Notification.permission === "granted" &&
+          isVerseNotificationsEnabled() ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-2 w-full gap-2 text-xs"
+              disabled={testing}
+              onClick={() => void testNotification()}
+            >
+              <Zap className="h-3.5 w-3.5" />
+              {testing ? t("notifyWorking") : t("notifyTestNow")}
+            </Button>
+          ) : null}
+          {testMessage === "sent" ? (
+            <p className="mt-2 text-[10px] text-brand-light">{t("notifyTestSent")}</p>
+          ) : testMessage === "failed" ? (
+            <p className="mt-2 text-[10px] text-amber-200/90">{t("notifyTestFailed")}</p>
+          ) : null}
+          {pushServerReady === false ? (
+            <p className="mt-2 text-[10px] leading-snug text-muted-foreground">
+              {t("notifyPushServerOff")}
+            </p>
+          ) : null}
+          <p className="mt-2 text-[10px] leading-snug text-muted-foreground">
+            {t("notifySoundHint")}
+          </p>
         </div>
 
         <div className="mt-3 flex min-h-0 flex-1 flex-col rounded-xl border border-border/50 bg-card/40 p-3 sm:p-4">

@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build BhthNTHZ4e_eke0_GFnoU) */
-const CACHE = "kingdom-ai-BhthNTHZ4e_eke0_GFnoU";
+/* Kingdom AI — offline-capable service worker (build J9PzrWIoMz4dBeRw7oVaR) */
+const CACHE = "kingdom-ai-J9PzrWIoMz4dBeRw7oVaR";
 const PRECACHE = [
   "/",
   "/home",
@@ -40,22 +40,22 @@ const PRECACHE = [
   "/data/pools/strength.json",
   "/data/pools/trust.json",
   "/data/pools/wisdom.json",
-  "/_next/static/BhthNTHZ4e_eke0_GFnoU/_buildManifest.js",
-  "/_next/static/BhthNTHZ4e_eke0_GFnoU/_clientMiddlewareManifest.js",
-  "/_next/static/BhthNTHZ4e_eke0_GFnoU/_ssgManifest.js",
+  "/_next/static/J9PzrWIoMz4dBeRw7oVaR/_buildManifest.js",
+  "/_next/static/J9PzrWIoMz4dBeRw7oVaR/_clientMiddlewareManifest.js",
+  "/_next/static/J9PzrWIoMz4dBeRw7oVaR/_ssgManifest.js",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
+  "/_next/static/chunks/0qvnzw2-u7bbl.js",
   "/_next/static/chunks/1g179lcifdq15.js",
   "/_next/static/chunks/1h0lni661c03r.js",
   "/_next/static/chunks/1uj543fzv0-to.js",
-  "/_next/static/chunks/1v_pjl-smq2s4.js",
   "/_next/static/chunks/1z99mlp5cofct.js",
-  "/_next/static/chunks/22yo5plex5kpv.js",
   "/_next/static/chunks/24ihfyt9kr7mm.js",
   "/_next/static/chunks/24t7crwozt_yd.js",
   "/_next/static/chunks/271y7z0stpu_5.js",
   "/_next/static/chunks/2w4fbwkoiy-9y.js",
   "/_next/static/chunks/2x5oncyuqs3pt.js",
+  "/_next/static/chunks/31_d3vznkzvbq.js",
   "/_next/static/chunks/34kmwrswtbn9a.css",
   "/_next/static/chunks/373skgu07-_06.js",
   "/_next/static/chunks/3adwt13tezgym.js",
@@ -308,7 +308,7 @@ function shouldNotifyHour(state, hour) {
   return state.notifyHours.includes(hour);
 }
 
-async function showHourlyVerseNotification(locale, hourOverride, notifyHours) {
+async function showHourlyVerseNotification(locale, hourOverride, notifyHours, force) {
   if (!self.registration?.showNotification) return false;
   if (self.Notification?.permission && self.Notification.permission !== "granted") {
     return false;
@@ -317,7 +317,7 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours) {
   const hour = typeof hourOverride === "number" ? hourOverride : currentHour();
   const state = await readNotificationState();
   const hours = notifyHours ?? state?.notifyHours ?? [];
-  if (hours.length && !hours.includes(hour)) return false;
+  if (!force && hours.length && !hours.includes(hour)) return false;
 
   const entry = await loadHourlyVerse(locale, hour);
   if (!entry?.passage?.text) return false;
@@ -459,8 +459,13 @@ self.addEventListener("message", (event) => {
           data.notifyHours || [],
           data.delayMs,
         );
-        if (data.showNow && shouldNotifyHour({ notifyHours: data.notifyHours || [] }, currentHour())) {
-          await showHourlyVerseNotification(data.locale || "en", currentHour(), data.notifyHours || []);
+        if (data.showNow) {
+          await showHourlyVerseNotification(
+            data.locale || "en",
+            currentHour(),
+            data.notifyHours || [],
+            true,
+          );
         }
       })(),
     );
@@ -474,7 +479,17 @@ self.addEventListener("message", (event) => {
 
   if (data.type === "SHOW_HOUR_VERSE") {
     event.waitUntil(
-      showHourlyVerseNotification(data.locale || "en", data.hour, data.notifyHours || []),
+      (async () => {
+        const shown = await showHourlyVerseNotification(
+          data.locale || "en",
+          data.hour,
+          data.notifyHours || [],
+          data.force === true,
+        );
+        if (data.replyPort && event.ports?.[0]) {
+          event.ports[0].postMessage({ shown });
+        }
+      })(),
     );
   }
 });

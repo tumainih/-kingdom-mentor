@@ -128,7 +128,7 @@ function shouldNotifyHour(state, hour) {
   return state.notifyHours.includes(hour);
 }
 
-async function showHourlyVerseNotification(locale, hourOverride, notifyHours) {
+async function showHourlyVerseNotification(locale, hourOverride, notifyHours, force) {
   if (!self.registration?.showNotification) return false;
   if (self.Notification?.permission && self.Notification.permission !== "granted") {
     return false;
@@ -137,7 +137,7 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours) {
   const hour = typeof hourOverride === "number" ? hourOverride : currentHour();
   const state = await readNotificationState();
   const hours = notifyHours ?? state?.notifyHours ?? [];
-  if (hours.length && !hours.includes(hour)) return false;
+  if (!force && hours.length && !hours.includes(hour)) return false;
 
   const entry = await loadHourlyVerse(locale, hour);
   if (!entry?.passage?.text) return false;
@@ -279,8 +279,13 @@ self.addEventListener("message", (event) => {
           data.notifyHours || [],
           data.delayMs,
         );
-        if (data.showNow && shouldNotifyHour({ notifyHours: data.notifyHours || [] }, currentHour())) {
-          await showHourlyVerseNotification(data.locale || "en", currentHour(), data.notifyHours || []);
+        if (data.showNow) {
+          await showHourlyVerseNotification(
+            data.locale || "en",
+            currentHour(),
+            data.notifyHours || [],
+            true,
+          );
         }
       })(),
     );
@@ -294,7 +299,17 @@ self.addEventListener("message", (event) => {
 
   if (data.type === "SHOW_HOUR_VERSE") {
     event.waitUntil(
-      showHourlyVerseNotification(data.locale || "en", data.hour, data.notifyHours || []),
+      (async () => {
+        const shown = await showHourlyVerseNotification(
+          data.locale || "en",
+          data.hour,
+          data.notifyHours || [],
+          data.force === true,
+        );
+        if (data.replyPort && event.ports?.[0]) {
+          event.ports[0].postMessage({ shown });
+        }
+      })(),
     );
   }
 });

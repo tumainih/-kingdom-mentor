@@ -1,4 +1,5 @@
 import type { AppLocale } from "@/lib/i18n/translations";
+import { getOrCreateDeviceId } from "@/lib/reading/device-id.client";
 
 const ENABLED_KEY = "kingdom-verse-notifications";
 const HOURS_KEY = "kingdom-notify-hours";
@@ -98,6 +99,7 @@ async function subscribeToPush(
         locale,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         notifyHours,
+        deviceId: getOrCreateDeviceId(),
       }),
     });
 
@@ -161,6 +163,7 @@ export async function enableVerseNotifications(
     locale,
     notifyHours,
     showNow: options?.showNow ?? false,
+    deviceId: getOrCreateDeviceId(),
   });
 
   persistEnabled(true);
@@ -186,6 +189,7 @@ export async function syncVerseNotifications(locale: AppLocale): Promise<void> {
       locale,
       notifyHours,
       showNow: false,
+      deviceId: getOrCreateDeviceId(),
     });
   } catch {
     /* background sync — push may be unavailable in dev */

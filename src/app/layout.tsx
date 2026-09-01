@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Lora } from "next/font/google";
+import { EnsureReadingDevice } from "@/components/reading/ensure-reading-device";
 import { LocaleProvider } from "@/context/locale-context";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import { OfflineBanner } from "@/components/pwa/offline-banner";
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="h-full overflow-hidden bg-background text-foreground">
         <RegisterServiceWorker />
         <LocaleProvider>
+          <EnsureReadingDevice />
           <OfflineBanner />
           {children}
         </LocaleProvider>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, History, Bell, MessageSquare, Plus } from "lucide-react";
+import { Home, History, Bell, MessageSquare, Plus, BarChart3 } from "lucide-react";
 import { BrandLogo, BrandTitle } from "@/components/chat/brand";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -94,6 +94,22 @@ export function AppHeader({
                 <Bell className="h-3.5 w-3.5 shrink-0" />
                 {!compactNav && (
                   <span className="hidden min-[480px]:inline">{t("navAlerts")}</span>
+                )}
+              </Link>
+              <Link
+                href="/reports"
+                aria-label={t("navReports")}
+                title={t("navReports")}
+                className={cn(
+                  "flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-semibold transition-colors sm:px-2.5 sm:text-[11px]",
+                  pathname === "/reports"
+                    ? "bg-brand text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <BarChart3 className="h-3.5 w-3.5 shrink-0" />
+                {!compactNav && (
+                  <span className="hidden min-[520px]:inline">{t("navReports")}</span>
                 )}
               </Link>
               <Link

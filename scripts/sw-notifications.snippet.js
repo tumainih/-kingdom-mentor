@@ -128,6 +128,46 @@ function shouldNotifyHour(state, hour) {
   return state.notifyHours.includes(hour);
 }
 
+function notificationId() {
+  return "kn-" + Date.now() + "-" + Math.random().toString(36).slice(2, 9);
+}
+
+function readActionTitle(locale) {
+  return locale === "sw" ? "Nimesoma" : "Read";
+}
+
+async function readDeviceId() {
+  const state = await readNotificationState();
+  return state?.deviceId || null;
+}
+
+async function postReadEvent(data, readAt) {
+  const shownAt = data.shownAt || readAt;
+  const deviceId = data.deviceId || (await readDeviceId());
+  if (!deviceId) return;
+
+  try {
+    await fetch("/api/reading/read", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        deviceId,
+        notificationId: data.notificationId,
+        shownAt,
+        readAt,
+        hour: data.hour,
+        verseRef: data.verseRef || "",
+        theme: data.theme || "",
+        themeLabel: data.themeLabel || "",
+        locale: data.locale || "en",
+        timezone: data.timezone || "UTC",
+      }),
+    });
+  } catch {
+    /* offline — app syncs later */
+  }
+}
+
 async function showHourlyVerseNotification(locale, hourOverride, notifyHours, force) {
   if (!self.registration?.showNotification) return false;
   if (self.Notification?.permission && self.Notification.permission !== "granted") {
@@ -147,16 +187,34 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours, fo
   const body = entry.passage.text.length > 180
     ? entry.passage.text.slice(0, 177) + "…"
     : entry.passage.text;
+  const shownAt = Date.now();
+  const nid = notificationId();
+  const deviceId = state?.deviceId || (await readDeviceId());
 
   await self.registration.showNotification("Kingdom AI", {
     body: title + "\n\n" + body,
     icon: "/icon-192.png",
     badge: "/icon-192.png",
-    tag: "kingdom-hour-" + hour,
+    tag: "kingdom-hour-" + hour + "-" + nid,
     renotify: true,
     silent: false,
     vibrate: [180, 90, 180],
-    data: { url: "/notifications", locale, hour },
+    requireInteraction: true,
+    actions: [{ action: "read", title: readActionTitle(locale) }],
+    data: {
+      url: "/notifications",
+      locale,
+      hour,
+      type: "verse",
+      verseRef: ref,
+      theme: entry.theme,
+      themeLabel: entry.themeLabel,
+      verseText: entry.passage.text,
+      shownAt,
+      notificationId: nid,
+      deviceId,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+    },
   });
   return true;
 }
@@ -227,30 +285,86 @@ async function resumeHourlyNotifications() {
 }
 
 self.addEventListener("push", (event) => {
-  let payload = { title: "Kingdom AI", body: "Scripture for this hour.", url: "/notifications" };
+  let payload = { title: "Kingdom AI", body: "Scripture for this hour.", url: "/notifications", type: "verse" };
   try {
     if (event.data) payload = { ...payload, ...event.data.json() };
   } catch {
     /* use defaults */
   }
 
+  const locale = payload.locale || "en";
+  const shownAt = Date.now();
+  const nid = notificationId();
+  const isReport = payload.type === "report";
+
   event.waitUntil(
     self.registration.showNotification(payload.title || "Kingdom AI", {
       body: payload.body,
       icon: "/icon-192.png",
       badge: "/icon-192.png",
-      tag: "kingdom-hour-push",
+      tag: isReport ? "kingdom-report-" + (payload.reportId || nid) : "kingdom-hour-push-" + nid,
       renotify: true,
       silent: false,
       vibrate: [180, 90, 180],
-      data: { url: payload.url || "/notifications", hour: payload.hour, locale: payload.locale },
+      requireInteraction: true,
+      actions: isReport
+        ? [{ action: "open-report", title: locale === "sw" ? "Fungua ripoti" : "Open report" }]
+        : [{ action: "read", title: readActionTitle(locale) }],
+      data: {
+        url: payload.url || (isReport ? "/reports" : "/notifications"),
+        hour: payload.hour,
+        locale,
+        type: payload.type || "verse",
+        verseRef: payload.verseRef || "",
+        theme: payload.theme || "",
+        themeLabel: payload.themeLabel || "",
+        verseText: payload.verseText || "",
+        reportId: payload.reportId || "",
+        deviceId: payload.deviceId || "",
+        shownAt,
+        notificationId: nid,
+        timezone: payload.timezone || "UTC",
+      },
     }),
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
+  const data = event.notification.data || {};
+  const action = event.action;
+  const readAt = Date.now();
+
+  if (action === "read" || (!action && data.type === "verse")) {
+    event.notification.close();
+    event.waitUntil(
+      (async () => {
+        await postReadEvent(data, readAt);
+      })(),
+    );
+    return;
+  }
+
+  if (action === "open-report" || data.type === "report") {
+    event.notification.close();
+    const target = data.reportId
+      ? "/reports?report=" + encodeURIComponent(data.reportId)
+      : data.url || "/reports";
+    event.waitUntil(
+      self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+        for (const client of clients) {
+          if (client.url.includes(self.location.origin) && "focus" in client) {
+            client.navigate(target);
+            return client.focus();
+          }
+        }
+        if (self.clients.openWindow) return self.clients.openWindow(target);
+      }),
+    );
+    return;
+  }
+
   event.notification.close();
-  const target = event.notification.data?.url || "/notifications";
+  const target = data.url || "/notifications";
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {
@@ -274,6 +388,14 @@ self.addEventListener("message", (event) => {
   if (data.type === "START_HOURLY_NOTIFICATIONS") {
     event.waitUntil(
       (async () => {
+        const prev = await readNotificationState();
+        await writeNotificationState({
+          ...(prev || {}),
+          enabled: true,
+          locale: data.locale || "en",
+          notifyHours: data.notifyHours || [],
+          deviceId: data.deviceId || prev?.deviceId,
+        });
         await scheduleHourlyNotification(
           data.locale || "en",
           data.notifyHours || [],
@@ -287,6 +409,20 @@ self.addEventListener("message", (event) => {
             true,
           );
         }
+      })(),
+    );
+    return;
+  }
+
+  if (data.type === "SET_DEVICE_ID") {
+    event.waitUntil(
+      (async () => {
+        const prev = await readNotificationState();
+        await writeNotificationState({
+          ...(prev || { enabled: false, locale: "en", notifyHours: [], nextAt: 0, lastHour: -1 }),
+          deviceId: data.deviceId,
+          timezone: data.timezone,
+        });
       })(),
     );
     return;

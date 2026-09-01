@@ -5,6 +5,7 @@ const APP_ROUTES = [
   "/history",
   "/areas",
   "/notifications",
+  "/reports",
   "/install",
 ] as const;
 

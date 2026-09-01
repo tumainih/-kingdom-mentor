@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyGithubActionsCronToken } from "@/lib/auth/github-oidc";
+import { generateAllDueReports } from "@/lib/reading/reports";
 import { sendHourlyVersePush } from "@/lib/push/send-hourly";
 
 export const runtime = "nodejs";
@@ -18,6 +19,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await sendHourlyVersePush();
-  return NextResponse.json({ ok: true, ...result });
+  const push = await sendHourlyVersePush();
+  const reportsGenerated = await generateAllDueReports();
+  return NextResponse.json({ ok: true, ...push, reportsGenerated });
 }

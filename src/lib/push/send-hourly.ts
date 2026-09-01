@@ -14,6 +14,11 @@ export interface HourlyPushPayload {
   url: string;
   hour: number;
   locale: BibleLocale;
+  type: string;
+  verseRef: string;
+  theme: string;
+  themeLabel: string;
+  verseText: string;
 }
 
 export async function buildHourlyPushPayload(
@@ -36,6 +41,11 @@ export async function buildHourlyPushPayload(
     url: `/notifications?hour=${hour}`,
     hour,
     locale,
+    type: "verse",
+    verseRef: ref,
+    theme: result.theme,
+    themeLabel: result.themeLabel,
+    verseText: result.passage.text,
   };
 }
 
@@ -83,6 +93,13 @@ export async function sendHourlyVersePush(): Promise<{
           url: payload.url,
           hour: payload.hour,
           locale: payload.locale,
+          type: "verse",
+          verseRef: payload.verseRef,
+          theme: payload.theme,
+          themeLabel: payload.themeLabel,
+          verseText: payload.verseText,
+          deviceId: sub.deviceId,
+          timezone: sub.timezone,
         }),
         {
           TTL: 3600,

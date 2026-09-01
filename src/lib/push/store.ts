@@ -8,6 +8,7 @@ export interface PushSubscriptionRecord {
   locale: "en" | "sw";
   timezone: string;
   notifyHours: number[];
+  deviceId?: string;
   createdAt: string;
 }
 

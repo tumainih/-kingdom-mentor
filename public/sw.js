@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build zZeEKYUj2doVWNbQJsI6R) */
-const CACHE = "kingdom-ai-zZeEKYUj2doVWNbQJsI6R";
+/* Kingdom AI — offline-capable service worker (build 1_c3EqGg67OsPVJt8Y1FZ) */
+const CACHE = "kingdom-ai-1_c3EqGg67OsPVJt8Y1FZ";
 const PRECACHE = [
   "/",
   "/home",
@@ -40,22 +40,26 @@ const PRECACHE = [
   "/data/pools/strength.json",
   "/data/pools/trust.json",
   "/data/pools/wisdom.json",
+  "/_next/static/1_c3EqGg67OsPVJt8Y1FZ/_buildManifest.js",
+  "/_next/static/1_c3EqGg67OsPVJt8Y1FZ/_clientMiddlewareManifest.js",
+  "/_next/static/1_c3EqGg67OsPVJt8Y1FZ/_ssgManifest.js",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
-  "/_next/static/chunks/0g3n-n8ycbl0d.js",
-  "/_next/static/chunks/0v2cxs4utdqu9.css",
+  "/_next/static/chunks/0rsnbqltz8cn0.css",
+  "/_next/static/chunks/1fqmwa10ac1gx.js",
   "/_next/static/chunks/1g179lcifdq15.js",
   "/_next/static/chunks/1h0lni661c03r.js",
   "/_next/static/chunks/1uj543fzv0-to.js",
   "/_next/static/chunks/1z99mlp5cofct.js",
   "/_next/static/chunks/24ihfyt9kr7mm.js",
   "/_next/static/chunks/24t7crwozt_yd.js",
-  "/_next/static/chunks/271y7z0stpu_5.js",
   "/_next/static/chunks/2fdae8o94lfgi.js",
   "/_next/static/chunks/2w4fbwkoiy-9y.js",
   "/_next/static/chunks/2x5oncyuqs3pt.js",
   "/_next/static/chunks/373skgu07-_06.js",
+  "/_next/static/chunks/38crxovcaonw3.js",
   "/_next/static/chunks/3adwt13tezgym.js",
+  "/_next/static/chunks/3gxcvi-5brnhb.js",
   "/_next/static/chunks/3q576hlfnuh0n.js",
   "/_next/static/chunks/turbopack-0snm50y8kpj5e.js",
   "/_next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2",
@@ -73,10 +77,7 @@ const PRECACHE = [
   "/_next/static/media/e7150917543fc9da-s.0mybutugvu-lq.woff2",
   "/_next/static/media/e9457141811d41ae-s.02frcczqg7k-8.woff2",
   "/_next/static/media/favicon.2vob68tjqpejf.ico",
-  "/_next/static/media/icon.1v5cwft9ue97g.svg",
-  "/_next/static/zZeEKYUj2doVWNbQJsI6R/_buildManifest.js",
-  "/_next/static/zZeEKYUj2doVWNbQJsI6R/_clientMiddlewareManifest.js",
-  "/_next/static/zZeEKYUj2doVWNbQJsI6R/_ssgManifest.js"
+  "/_next/static/media/icon.1v5cwft9ue97g.svg"
 ];
 
 self.addEventListener("install", (event) => {
@@ -308,6 +309,46 @@ function shouldNotifyHour(state, hour) {
   return state.notifyHours.includes(hour);
 }
 
+function notificationId() {
+  return "kn-" + Date.now() + "-" + Math.random().toString(36).slice(2, 9);
+}
+
+function readActionTitle(locale) {
+  return locale === "sw" ? "Nimesoma" : "Read";
+}
+
+async function readDeviceId() {
+  const state = await readNotificationState();
+  return state?.deviceId || null;
+}
+
+async function postReadEvent(data, readAt) {
+  const shownAt = data.shownAt || readAt;
+  const deviceId = data.deviceId || (await readDeviceId());
+  if (!deviceId) return;
+
+  try {
+    await fetch("/api/reading/read", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        deviceId,
+        notificationId: data.notificationId,
+        shownAt,
+        readAt,
+        hour: data.hour,
+        verseRef: data.verseRef || "",
+        theme: data.theme || "",
+        themeLabel: data.themeLabel || "",
+        locale: data.locale || "en",
+        timezone: data.timezone || "UTC",
+      }),
+    });
+  } catch {
+    /* offline — app syncs later */
+  }
+}
+
 async function showHourlyVerseNotification(locale, hourOverride, notifyHours, force) {
   if (!self.registration?.showNotification) return false;
   if (self.Notification?.permission && self.Notification.permission !== "granted") {
@@ -327,16 +368,34 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours, fo
   const body = entry.passage.text.length > 180
     ? entry.passage.text.slice(0, 177) + "…"
     : entry.passage.text;
+  const shownAt = Date.now();
+  const nid = notificationId();
+  const deviceId = state?.deviceId || (await readDeviceId());
 
   await self.registration.showNotification("Kingdom AI", {
     body: title + "\n\n" + body,
     icon: "/icon-192.png",
     badge: "/icon-192.png",
-    tag: "kingdom-hour-" + hour,
+    tag: "kingdom-hour-" + hour + "-" + nid,
     renotify: true,
     silent: false,
     vibrate: [180, 90, 180],
-    data: { url: "/notifications", locale, hour },
+    requireInteraction: true,
+    actions: [{ action: "read", title: readActionTitle(locale) }],
+    data: {
+      url: "/notifications",
+      locale,
+      hour,
+      type: "verse",
+      verseRef: ref,
+      theme: entry.theme,
+      themeLabel: entry.themeLabel,
+      verseText: entry.passage.text,
+      shownAt,
+      notificationId: nid,
+      deviceId,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+    },
   });
   return true;
 }
@@ -407,30 +466,86 @@ async function resumeHourlyNotifications() {
 }
 
 self.addEventListener("push", (event) => {
-  let payload = { title: "Kingdom AI", body: "Scripture for this hour.", url: "/notifications" };
+  let payload = { title: "Kingdom AI", body: "Scripture for this hour.", url: "/notifications", type: "verse" };
   try {
     if (event.data) payload = { ...payload, ...event.data.json() };
   } catch {
     /* use defaults */
   }
 
+  const locale = payload.locale || "en";
+  const shownAt = Date.now();
+  const nid = notificationId();
+  const isReport = payload.type === "report";
+
   event.waitUntil(
     self.registration.showNotification(payload.title || "Kingdom AI", {
       body: payload.body,
       icon: "/icon-192.png",
       badge: "/icon-192.png",
-      tag: "kingdom-hour-push",
+      tag: isReport ? "kingdom-report-" + (payload.reportId || nid) : "kingdom-hour-push-" + nid,
       renotify: true,
       silent: false,
       vibrate: [180, 90, 180],
-      data: { url: payload.url || "/notifications", hour: payload.hour, locale: payload.locale },
+      requireInteraction: true,
+      actions: isReport
+        ? [{ action: "open-report", title: locale === "sw" ? "Fungua ripoti" : "Open report" }]
+        : [{ action: "read", title: readActionTitle(locale) }],
+      data: {
+        url: payload.url || (isReport ? "/reports" : "/notifications"),
+        hour: payload.hour,
+        locale,
+        type: payload.type || "verse",
+        verseRef: payload.verseRef || "",
+        theme: payload.theme || "",
+        themeLabel: payload.themeLabel || "",
+        verseText: payload.verseText || "",
+        reportId: payload.reportId || "",
+        deviceId: payload.deviceId || "",
+        shownAt,
+        notificationId: nid,
+        timezone: payload.timezone || "UTC",
+      },
     }),
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
+  const data = event.notification.data || {};
+  const action = event.action;
+  const readAt = Date.now();
+
+  if (action === "read" || (!action && data.type === "verse")) {
+    event.notification.close();
+    event.waitUntil(
+      (async () => {
+        await postReadEvent(data, readAt);
+      })(),
+    );
+    return;
+  }
+
+  if (action === "open-report" || data.type === "report") {
+    event.notification.close();
+    const target = data.reportId
+      ? "/reports?report=" + encodeURIComponent(data.reportId)
+      : data.url || "/reports";
+    event.waitUntil(
+      self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+        for (const client of clients) {
+          if (client.url.includes(self.location.origin) && "focus" in client) {
+            client.navigate(target);
+            return client.focus();
+          }
+        }
+        if (self.clients.openWindow) return self.clients.openWindow(target);
+      }),
+    );
+    return;
+  }
+
   event.notification.close();
-  const target = event.notification.data?.url || "/notifications";
+  const target = data.url || "/notifications";
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {
@@ -454,6 +569,14 @@ self.addEventListener("message", (event) => {
   if (data.type === "START_HOURLY_NOTIFICATIONS") {
     event.waitUntil(
       (async () => {
+        const prev = await readNotificationState();
+        await writeNotificationState({
+          ...(prev || {}),
+          enabled: true,
+          locale: data.locale || "en",
+          notifyHours: data.notifyHours || [],
+          deviceId: data.deviceId || prev?.deviceId,
+        });
         await scheduleHourlyNotification(
           data.locale || "en",
           data.notifyHours || [],
@@ -467,6 +590,20 @@ self.addEventListener("message", (event) => {
             true,
           );
         }
+      })(),
+    );
+    return;
+  }
+
+  if (data.type === "SET_DEVICE_ID") {
+    event.waitUntil(
+      (async () => {
+        const prev = await readNotificationState();
+        await writeNotificationState({
+          ...(prev || { enabled: false, locale: "en", notifyHours: [], nextAt: 0, lastHour: -1 }),
+          deviceId: data.deviceId,
+          timezone: data.timezone,
+        });
       })(),
     );
     return;

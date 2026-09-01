@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { parseLocale } from "@/lib/bible/locale";
+import { ensureDeviceMeta } from "@/lib/reading/store.server";
 import {
   removePushSubscription,
   savePushSubscription,
@@ -16,6 +17,7 @@ interface SubscribeBody {
   locale?: unknown;
   timezone?: string;
   notifyHours?: number[];
+  deviceId?: string;
 }
 
 function parseNotifyHours(value: unknown): number[] {
@@ -35,15 +37,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid subscription." }, { status: 400 });
   }
 
+  const locale = parseLocale(body.locale);
+  const timezone =
+    body.timezone ||
+    Intl.DateTimeFormat().resolvedOptions().timeZone ||
+    "UTC";
+  const deviceId = typeof body.deviceId === "string" ? body.deviceId.trim() : "";
+
+  if (deviceId) {
+    await ensureDeviceMeta(deviceId, timezone, locale);
+  }
+
   const record: PushSubscriptionRecord = {
     endpoint,
     keys: { p256dh, auth },
-    locale: parseLocale(body.locale),
-    timezone:
-      body.timezone ||
-      Intl.DateTimeFormat().resolvedOptions().timeZone ||
-      "UTC",
+    locale,
+    timezone,
     notifyHours: parseNotifyHours(body.notifyHours),
+    deviceId: deviceId || undefined,
     createdAt: new Date().toISOString(),
   };
 

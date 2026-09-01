@@ -134,7 +134,7 @@ export const translations = {
       "Sound uses your phone's default notification tone. In Settings, allow notifications and sound for Kingdom AI.",
     reportPageTitle: "Self-development reports",
     reportPageSubtitle:
-      "Reading speed from verse alerts — tap Read (Nimesoma) when you finish. Data starts from when you first use the app.",
+      "All-time tracking from your selected alert hours. Unread or missed hours = rate 0 (brown). Reports use natural calendar periods.",
     reportEmpty: "No reports yet. Mark verse notifications as Read to build your trend.",
     reportUnit: "Period",
     reportLapseAvg: "Avg unread time",
@@ -149,7 +149,7 @@ export const translations = {
     reportSince: "Tracking since",
     reportOpen: "Open",
     reportRateHint:
-      "Scale 0 (brown) = unread by hour end. 1 (fast) → 6+ (slow). Light = quick, red = longer.",
+      "Scale 0 (brown) = unread or no alert that hour. 1 (fast) → 6+ (slow). Every selected hour is tracked.",
     reportCustomTitle: "Report for any time",
     reportFrom: "From",
     reportTo: "To",
@@ -328,7 +328,7 @@ export const translations = {
       "Sauti hutumia mlio wa arifa wa simu. Katika Mipangilio, ruhusu arifa na sauti kwa Kingdom AI.",
     reportPageTitle: "Ripoti za maendeleo",
     reportPageSubtitle:
-      "Kasi ya kusoma kutoka arifa za mistari — gusa Nimesoma ukimaliza. Data inaanza ulipoanza kutumia programu.",
+      "Ufuatiliaji wa muda wote kutoka saa ulizochagua. Haijasomwa au ukosefu = kiwango 0 (kahawia). Ripoti zinafuata kalenda asili.",
     reportEmpty: "Hakuna ripoti bado. Weka alama Nimesoma kwenye arifa za mistari.",
     reportUnit: "Kipindi",
     reportLapseAvg: "Wastani wa muda",
@@ -343,7 +343,7 @@ export const translations = {
     reportSince: "Kufuatilia tangu",
     reportOpen: "Fungua",
     reportRateHint:
-      "Kiwango 0 (kahawia) = haijasomwa ndani ya saa. 1 (haraka) → 6+ (polepole).",
+      "Kiwango 0 (kahawia) = haijasomwa au hakuna arifa hiyo saa. 1 (haraka) → 6+ (polepole). Kila saa uliyochagua inafuatiliwa.",
     reportCustomTitle: "Ripoti kwa muda wowote",
     reportFrom: "Kutoka",
     reportTo: "Hadi",

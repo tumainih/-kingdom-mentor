@@ -11,7 +11,9 @@ import {
   getDeviceTimezone,
   getOrCreateDeviceId,
 } from "@/lib/reading/device-id.client";
+import { getNotifyHours } from "@/lib/notifications/verse-notifications";
 import { formatLapse, rateToColor, UNREAD_COLOR } from "@/lib/reading/rates";
+import { localDateKey } from "@/lib/reading/slots";
 import { reportUnitLabel } from "@/lib/reading/periods";
 import type { DevelopmentReport, ReadEvent } from "@/lib/reading/types";
 
@@ -55,7 +57,12 @@ export function DevelopmentReportView() {
     setLoading(true);
     try {
       const res = await fetch(
-        `/api/reading/events?${new URLSearchParams({ deviceId, timezone, locale })}`,
+        `/api/reading/events?${new URLSearchParams({
+          deviceId,
+          timezone,
+          locale,
+          notifyHours: JSON.stringify(getNotifyHours()),
+        })}`,
       );
       if (!res.ok) return;
       const data = (await res.json()) as {
@@ -128,14 +135,28 @@ export function DevelopmentReportView() {
     const map = new Map<string, { totalRate: number; count: number; color: string }>();
     for (const e of events) {
       const key = dayKey(e.shownAt, timezone);
-      const prev = map.get(key) ?? { totalRate: 0, count: 0, color: "#f8fafc" };
+      const prev = map.get(key) ?? { totalRate: 0, count: 0, color: UNREAD_COLOR };
       prev.totalRate += e.rate;
       prev.count += 1;
       const avg = prev.totalRate / prev.count;
       map.set(key, { ...prev, color: rateToColor(Math.round(avg)) });
     }
+
+    if (startedAt) {
+      let probe = startedAt;
+      const end = Date.now();
+      let guard = 0;
+      while (probe <= end && guard++ < 4000) {
+        const key = localDateKey(probe, timezone);
+        if (!map.has(key)) {
+          map.set(key, { totalRate: 0, count: 1, color: UNREAD_COLOR });
+        }
+        probe += 86_400_000;
+      }
+    }
+
     return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  }, [events, timezone]);
+  }, [events, startedAt, timezone]);
 
   const submitNote = useCallback(async () => {
     if (!activeReport) return;

@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build Tfz06TPd9q7k_0LZ0INWJ) */
-const CACHE = "kingdom-ai-Tfz06TPd9q7k_0LZ0INWJ";
+/* Kingdom AI — offline-capable service worker (build Yxn-kDaGBIzigA9a91Ce1) */
+const CACHE = "kingdom-ai-Yxn-kDaGBIzigA9a91Ce1";
 const PRECACHE = [
   "/",
   "/home",
@@ -40,9 +40,11 @@ const PRECACHE = [
   "/data/pools/strength.json",
   "/data/pools/trust.json",
   "/data/pools/wisdom.json",
-  "/_next/static/Tfz06TPd9q7k_0LZ0INWJ/_buildManifest.js",
-  "/_next/static/Tfz06TPd9q7k_0LZ0INWJ/_clientMiddlewareManifest.js",
-  "/_next/static/Tfz06TPd9q7k_0LZ0INWJ/_ssgManifest.js",
+  "/_next/static/Yxn-kDaGBIzigA9a91Ce1/_buildManifest.js",
+  "/_next/static/Yxn-kDaGBIzigA9a91Ce1/_clientMiddlewareManifest.js",
+  "/_next/static/Yxn-kDaGBIzigA9a91Ce1/_ssgManifest.js",
+  "/_next/static/chunks/0-542o8kyykqz.js",
+  "/_next/static/chunks/0-y-8jtljp2c4.js",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
   "/_next/static/chunks/0rsnbqltz8cn0.css",
@@ -52,7 +54,6 @@ const PRECACHE = [
   "/_next/static/chunks/1z99mlp5cofct.js",
   "/_next/static/chunks/24ihfyt9kr7mm.js",
   "/_next/static/chunks/24t7crwozt_yd.js",
-  "/_next/static/chunks/2_aw_yckvsg3t.js",
   "/_next/static/chunks/2fdae8o94lfgi.js",
   "/_next/static/chunks/2w4fbwkoiy-9y.js",
   "/_next/static/chunks/2x5oncyuqs3pt.js",
@@ -60,7 +61,6 @@ const PRECACHE = [
   "/_next/static/chunks/38crxovcaonw3.js",
   "/_next/static/chunks/3adwt13tezgym.js",
   "/_next/static/chunks/3q576hlfnuh0n.js",
-  "/_next/static/chunks/3x0o3p-hz16s5.js",
   "/_next/static/chunks/turbopack-0snm50y8kpj5e.js",
   "/_next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2",
   "/_next/static/media/2bbe8d2671613f1f-s.0k62hbripvv8p.woff2",
@@ -309,8 +309,13 @@ function shouldNotifyHour(state, hour) {
   return state.notifyHours.includes(hour);
 }
 
-function notificationId() {
-  return "kn-" + Date.now() + "-" + Math.random().toString(36).slice(2, 9);
+function notificationId(isTest) {
+  const prefix = isTest ? "test-" : "kn-";
+  return prefix + Date.now() + "-" + Math.random().toString(36).slice(2, 9);
+}
+
+function currentSlotKey() {
+  return localDateString() + ":" + currentHour();
 }
 
 function readActionTitle(locale) {
@@ -384,6 +389,9 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours, fo
   const hours = notifyHours ?? state?.notifyHours ?? [];
   if (!force && hours.length && !hours.includes(hour)) return false;
 
+  const slot = currentSlotKey();
+  if (!force && !isTest && state?.lastSlot === slot) return false;
+
   const entry = await loadHourlyVerse(locale, hour);
   if (!entry?.passage?.text) return false;
 
@@ -393,7 +401,7 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours, fo
     ? entry.passage.text.slice(0, 177) + "…"
     : entry.passage.text;
   const shownAt = Date.now();
-  const nid = notificationId();
+  const nid = notificationId(isTest);
   const deviceId = state?.deviceId || (await readDeviceId());
 
   await self.registration.showNotification("Kingdom AI", {
@@ -435,6 +443,13 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours, fo
     },
     isTest,
   );
+  if (!isTest) {
+    await writeNotificationState({
+      ...(state || {}),
+      lastSlot: slot,
+      lastHour: hour,
+    });
+  }
   return true;
 }
 
@@ -488,9 +503,9 @@ async function resumeHourlyNotifications() {
   if (!state?.enabled) return;
 
   const hour = currentHour();
-  if (state.lastHour !== hour && shouldNotifyHour(state, hour)) {
+  const slot = currentSlotKey();
+  if (state.lastSlot !== slot && shouldNotifyHour(state, hour)) {
     await showHourlyVerseNotification(state.locale || "en", hour, state.notifyHours, false, false);
-    await writeNotificationState({ ...state, lastHour: hour });
   }
 
   const now = Date.now();

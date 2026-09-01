@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { backfillAbsentSlots } from "@/lib/reading/backfill";
 import {
   ensureDeviceMeta,
   getDeviceMeta,
@@ -17,7 +18,19 @@ export async function GET(request: Request) {
 
   const timezone = searchParams.get("timezone")?.trim() || "UTC";
   const locale = searchParams.get("locale") === "sw" ? "sw" : "en";
-  await ensureDeviceMeta(deviceId, timezone, locale);
+  const notifyHoursRaw = searchParams.get("notifyHours");
+  let notifyHours: number[] | undefined;
+  if (notifyHoursRaw) {
+    try {
+      const parsed = JSON.parse(notifyHoursRaw) as number[];
+      if (Array.isArray(parsed)) notifyHours = parsed;
+    } catch {
+      /* ignore */
+    }
+  }
+
+  await ensureDeviceMeta(deviceId, timezone, locale, notifyHours);
+  await backfillAbsentSlots(deviceId);
 
   const meta = await getDeviceMeta(deviceId);
   const events = await listReadEvents(deviceId);

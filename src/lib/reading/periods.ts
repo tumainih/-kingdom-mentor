@@ -1,4 +1,5 @@
 import type { ReportUnit } from "@/lib/reading/types";
+import { localDateKey, slotStartMs } from "@/lib/reading/slots";
 
 /** Hours (0–23) when each unit’s report is generated (local device timezone). */
 export const REPORT_TRIGGER_HOURS: Partial<Record<ReportUnit, number[]>> = {
@@ -27,7 +28,7 @@ export function reportUnitLabel(unit: ReportUnit, locale: "en" | "sw"): string {
     "3h": "3 hours",
     "6h": "6 hours",
     "12h": "12 hours",
-    "24h": "24 hours",
+    "24h": "Daily",
     week: "Weekly",
     fortnight: "Fortnight",
     month: "Monthly",
@@ -41,7 +42,7 @@ export function reportUnitLabel(unit: ReportUnit, locale: "en" | "sw"): string {
     "3h": "Saa 3",
     "6h": "Saa 6",
     "12h": "Saa 12",
-    "24h": "Saa 24",
+    "24h": "Kila siku",
     week: "Kila wiki",
     fortnight: "Wiki 2",
     month: "Kila mwezi",
@@ -52,19 +53,6 @@ export function reportUnitLabel(unit: ReportUnit, locale: "en" | "sw"): string {
     custom: "Masafa maalum",
   };
   return locale === "sw" ? sw[unit] : en[unit];
-}
-
-function startOfLocalDay(date: Date, tz: string): Date {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: tz,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
-  const y = Number(parts.find((p) => p.type === "year")?.value);
-  const m = Number(parts.find((p) => p.type === "month")?.value);
-  const d = Number(parts.find((p) => p.type === "day")?.value);
-  return new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
 }
 
 function localParts(date: Date, tz: string) {
@@ -89,13 +77,52 @@ function localParts(date: Date, tz: string) {
   };
 }
 
+function localDayStartMs(at: number, tz: string): number {
+  const day = localDateKey(at, tz);
+  return slotStartMs(day, 0, tz);
+}
+
+function previousLocalDayStartMs(at: number, tz: string): number {
+  return localDayStartMs(at, tz) - 86_400_000;
+}
+
+function naturalBlockWindow(
+  endHour: number,
+  blockHours: number,
+  now: Date,
+  tz: string,
+): { start: number; end: number } {
+  const end = now.getTime();
+  const dayStart = localDayStartMs(end, tz);
+  const startHour = endHour - blockHours;
+  if (startHour >= 0) {
+    return { start: dayStart + startHour * 3_600_000, end };
+  }
+  const prevDayStart = dayStart - 86_400_000;
+  return { start: prevDayStart + (24 + startHour) * 3_600_000, end };
+}
+
+function isoWeekStartMs(at: number, tz: string): number {
+  const probe = new Date(at);
+  for (let i = 0; i < 8; i++) {
+    const day = localDateKey(probe.getTime(), tz);
+    const weekday = new Intl.DateTimeFormat("en-US", {
+      timeZone: tz,
+      weekday: "short",
+    }).format(probe);
+    if (weekday === "Mon") return slotStartMs(day, 0, tz);
+    probe.setTime(probe.getTime() - 86_400_000);
+  }
+  return localDayStartMs(at, tz);
+}
+
 export interface PeriodWindow {
   unit: ReportUnit;
   start: number;
   end: number;
 }
 
-/** Returns report windows that close at the current local hour/day. */
+/** Natural calendar-aligned report windows that close at the current local hour/day. */
 export function dueReportWindows(
   now: Date,
   timezone: string,
@@ -110,77 +137,72 @@ export function dueReportWindows(
     number[],
   ][]) {
     if (!hours.includes(hour)) continue;
-    const hoursBack =
+    const blockHours =
       unit === "3h" ? 3 : unit === "6h" ? 6 : unit === "12h" ? 12 : 24;
-    const start = end - hoursBack * 60 * 60 * 1000;
-    if (start >= appStartedAt) {
-      due.push({ unit, start: Math.max(start, appStartedAt), end });
-    }
+    const start =
+      unit === "24h"
+        ? previousLocalDayStartMs(end, timezone)
+        : naturalBlockWindow(hour, blockHours, now, timezone).start;
+    due.push({ unit, start: Math.max(start, appStartedAt), end });
   }
 
-  if (hour === 0 && weekday === "Sat") {
-    const start = end - 7 * 24 * 60 * 60 * 1000;
-    if (start >= appStartedAt) {
-      due.push({
-        unit: "week",
-        start: Math.max(start, appStartedAt),
-        end,
-      });
-    }
-    const fortnightStart = end - 14 * 24 * 60 * 60 * 1000;
-    if (fortnightStart >= appStartedAt) {
-      due.push({
-        unit: "fortnight",
-        start: Math.max(fortnightStart, appStartedAt),
-        end,
-      });
-    }
+  if (hour === 0 && weekday === "Mon") {
+    const weekStart = isoWeekStartMs(end - 86_400_000, timezone);
+    due.push({
+      unit: "week",
+      start: Math.max(weekStart, appStartedAt),
+      end,
+    });
+    const fortnightStart = weekStart - 7 * 86_400_000;
+    due.push({
+      unit: "fortnight",
+      start: Math.max(fortnightStart, appStartedAt),
+      end,
+    });
   }
 
   if (hour === 0 && day === 1) {
-    const monthStart = new Date(year, month - 2, 1).getTime();
-    if (monthStart >= appStartedAt) {
+    const prevMonth = month === 1 ? 12 : month - 1;
+    const prevYear = month === 1 ? year - 1 : year;
+    const prevMonthStart = slotStartMs(
+      `${prevYear}-${String(prevMonth).padStart(2, "0")}-01`,
+      0,
+      timezone,
+    );
+    due.push({
+      unit: "month",
+      start: Math.max(prevMonthStart, appStartedAt),
+      end,
+    });
+
+    if ([1, 4, 7, 10].includes(month)) {
+      const qMonth = month <= 3 ? 1 : month <= 6 ? 4 : month <= 9 ? 7 : 10;
+      const qStart = slotStartMs(`${year}-${String(qMonth).padStart(2, "0")}-01`, 0, timezone);
       due.push({
-        unit: "month",
-        start: Math.max(monthStart, appStartedAt),
+        unit: "quarter",
+        start: Math.max(qStart, appStartedAt),
         end,
       });
     }
-    if ([1, 4, 7, 10].includes(month)) {
-      const qMonth = month <= 3 ? 1 : month <= 6 ? 4 : month <= 9 ? 7 : 10;
-      const qStart = new Date(year, qMonth - 1, 1).getTime();
-      if (qStart >= appStartedAt) {
+
+    if (month === 1) {
+      const yStart = slotStartMs(`${year - 1}-01-01`, 0, timezone);
+      due.push({ unit: "year", start: Math.max(yStart, appStartedAt), end });
+      if ((year - 1) % 4 === 0) {
+        const fourStart = slotStartMs(`${year - 4}-01-01`, 0, timezone);
         due.push({
-          unit: "quarter",
-          start: Math.max(qStart, appStartedAt),
+          unit: "4year",
+          start: Math.max(fourStart, appStartedAt),
           end,
         });
       }
-    }
-    if (month === 1) {
-      const yStart = new Date(year, 0, 1).getTime();
-      if (yStart >= appStartedAt) {
-        due.push({ unit: "year", start: Math.max(yStart, appStartedAt), end });
-      }
-      if (year % 4 === 0) {
-        const fourStart = end - 4 * 366 * 24 * 60 * 60 * 1000;
-        if (fourStart >= appStartedAt) {
-          due.push({
-            unit: "4year",
-            start: Math.max(fourStart, appStartedAt),
-            end,
-          });
-        }
-      }
-      if (year % 10 === 0) {
-        const tenStart = end - 10 * 365.25 * 24 * 60 * 60 * 1000;
-        if (tenStart >= appStartedAt) {
-          due.push({
-            unit: "10year",
-            start: Math.max(tenStart, appStartedAt),
-            end,
-          });
-        }
+      if ((year - 1) % 10 === 0) {
+        const tenStart = slotStartMs(`${year - 10}-01-01`, 0, timezone);
+        due.push({
+          unit: "10year",
+          start: Math.max(tenStart, appStartedAt),
+          end,
+        });
       }
     }
   }

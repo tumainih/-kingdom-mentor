@@ -128,8 +128,13 @@ function shouldNotifyHour(state, hour) {
   return state.notifyHours.includes(hour);
 }
 
-function notificationId() {
-  return "kn-" + Date.now() + "-" + Math.random().toString(36).slice(2, 9);
+function notificationId(isTest) {
+  const prefix = isTest ? "test-" : "kn-";
+  return prefix + Date.now() + "-" + Math.random().toString(36).slice(2, 9);
+}
+
+function currentSlotKey() {
+  return localDateString() + ":" + currentHour();
 }
 
 function readActionTitle(locale) {
@@ -203,6 +208,9 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours, fo
   const hours = notifyHours ?? state?.notifyHours ?? [];
   if (!force && hours.length && !hours.includes(hour)) return false;
 
+  const slot = currentSlotKey();
+  if (!force && !isTest && state?.lastSlot === slot) return false;
+
   const entry = await loadHourlyVerse(locale, hour);
   if (!entry?.passage?.text) return false;
 
@@ -212,7 +220,7 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours, fo
     ? entry.passage.text.slice(0, 177) + "…"
     : entry.passage.text;
   const shownAt = Date.now();
-  const nid = notificationId();
+  const nid = notificationId(isTest);
   const deviceId = state?.deviceId || (await readDeviceId());
 
   await self.registration.showNotification("Kingdom AI", {
@@ -254,6 +262,13 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours, fo
     },
     isTest,
   );
+  if (!isTest) {
+    await writeNotificationState({
+      ...(state || {}),
+      lastSlot: slot,
+      lastHour: hour,
+    });
+  }
   return true;
 }
 
@@ -307,9 +322,9 @@ async function resumeHourlyNotifications() {
   if (!state?.enabled) return;
 
   const hour = currentHour();
-  if (state.lastHour !== hour && shouldNotifyHour(state, hour)) {
+  const slot = currentSlotKey();
+  if (state.lastSlot !== slot && shouldNotifyHour(state, hour)) {
     await showHourlyVerseNotification(state.locale || "en", hour, state.notifyHours, false, false);
-    await writeNotificationState({ ...state, lastHour: hour });
   }
 
   const now = Date.now();

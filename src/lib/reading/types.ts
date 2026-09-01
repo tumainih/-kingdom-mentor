@@ -65,4 +65,5 @@ export interface DeviceReadingMeta {
   startedAt: number;
   timezone: string;
   locale: "en" | "sw";
+  notifyHours?: number[];
 }

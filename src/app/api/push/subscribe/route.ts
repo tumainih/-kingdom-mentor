@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { parseLocale } from "@/lib/bible/locale";
-import { ensureDeviceMeta } from "@/lib/reading/store.server";
+import { ensureDeviceMeta, updateDeviceNotifyHours } from "@/lib/reading/store.server";
 import {
   removePushSubscription,
   savePushSubscription,
@@ -44,8 +44,14 @@ export async function POST(request: Request) {
     "UTC";
   const deviceId = typeof body.deviceId === "string" ? body.deviceId.trim() : "";
 
+  const parsed = parseNotifyHours(body.notifyHours);
+  const notifyHours = parsed.length ? parsed : [6, 9, 12, 15, 18];
+
   if (deviceId) {
-    await ensureDeviceMeta(deviceId, timezone, locale);
+    await ensureDeviceMeta(deviceId, timezone, locale, notifyHours);
+    if (notifyHours.length) {
+      await updateDeviceNotifyHours(deviceId, notifyHours);
+    }
   }
 
   const record: PushSubscriptionRecord = {
@@ -53,7 +59,7 @@ export async function POST(request: Request) {
     keys: { p256dh, auth },
     locale,
     timezone,
-    notifyHours: parseNotifyHours(body.notifyHours),
+    notifyHours,
     deviceId: deviceId || undefined,
     createdAt: new Date().toISOString(),
   };

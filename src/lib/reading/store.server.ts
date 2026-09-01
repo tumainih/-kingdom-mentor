@@ -55,16 +55,24 @@ export async function ensureDeviceMeta(
   deviceId: string,
   timezone: string,
   locale: "en" | "sw",
+  notifyHours?: number[],
 ): Promise<DeviceReadingMeta> {
   const redis = redisClient();
   const existing = await getDeviceMeta(deviceId);
-  if (existing) return existing;
+  if (existing) {
+    if (notifyHours?.length) {
+      existing.notifyHours = notifyHours;
+      if (redis) await redis.set(metaKey(deviceId), existing);
+    }
+    return existing;
+  }
 
   const meta: DeviceReadingMeta = {
     deviceId,
     startedAt: Date.now(),
     timezone,
     locale,
+    notifyHours: notifyHours?.length ? notifyHours : undefined,
   };
 
   if (redis) {
@@ -72,6 +80,17 @@ export async function ensureDeviceMeta(
     await trackDevice(deviceId);
   }
   return meta;
+}
+
+export async function updateDeviceNotifyHours(
+  deviceId: string,
+  notifyHours: number[],
+): Promise<void> {
+  const redis = redisClient();
+  const meta = await getDeviceMeta(deviceId);
+  if (!meta) return;
+  meta.notifyHours = notifyHours;
+  if (redis) await redis.set(metaKey(deviceId), meta);
 }
 
 function pendingKey(deviceId: string) {
@@ -129,7 +148,7 @@ export async function saveReadEvent(event: ReadEvent): Promise<void> {
   if (!redis) return;
 
   const events = (await redis.get<ReadEvent[]>(eventsKey(event.deviceId))) ?? [];
-  if (events.some((e) => e.id === event.id)) return;
+  if (events.some((e) => e.id === event.id || e.notificationId === event.notificationId)) return;
   events.push(event);
   await redis.set(eventsKey(event.deviceId), events);
   await trackDevice(event.deviceId);

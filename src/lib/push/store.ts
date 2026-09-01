@@ -92,3 +92,33 @@ export function localMinuteInTimezone(timezone: string, at = new Date()): number
     }).format(at),
   );
 }
+
+const SENT_SLOTS_KEY = "kingdom:push:sent-slots";
+
+function sentSlotsKey(deviceId: string): string {
+  return `${SENT_SLOTS_KEY}:${deviceId}`;
+}
+
+export async function wasPushSent(deviceId: string, slotKey: string): Promise<boolean> {
+  const redis = redisClient();
+  if (!redis || !deviceId) return false;
+  const slots = (await redis.get<string[]>(sentSlotsKey(deviceId))) ?? [];
+  return slots.includes(slotKey);
+}
+
+export async function markPushSent(deviceId: string, slotKey: string): Promise<void> {
+  const redis = redisClient();
+  if (!redis || !deviceId) return;
+  const slots = (await redis.get<string[]>(sentSlotsKey(deviceId))) ?? [];
+  const next = [...slots.filter((s) => s !== slotKey), slotKey].slice(-96);
+  await redis.set(sentSlotsKey(deviceId), next);
+}
+
+export function localDateKeyInTimezone(timezone: string, at = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(at);
+}

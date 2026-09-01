@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyGithubActionsCronToken } from "@/lib/auth/github-oidc";
+import { backfillAllDevices } from "@/lib/reading/backfill";
 import { generateAllDueReports } from "@/lib/reading/reports";
 import { sendHourlyVersePush } from "@/lib/push/send-hourly";
 
@@ -20,6 +21,7 @@ export async function GET(request: Request) {
   }
 
   const push = await sendHourlyVersePush();
+  const backfilled = await backfillAllDevices();
   const reportsGenerated = await generateAllDueReports();
-  return NextResponse.json({ ok: true, ...push, reportsGenerated });
+  return NextResponse.json({ ok: true, ...push, backfilled, reportsGenerated });
 }

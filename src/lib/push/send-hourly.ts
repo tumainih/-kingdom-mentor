@@ -3,8 +3,12 @@ import { getHourlyVerse } from "@/lib/bible/get-hourly-verse";
 import type { BibleLocale } from "@/lib/bible/locale";
 import {
   listPushSubscriptions,
+  localDateKeyInTimezone,
   localHourInTimezone,
+  localMinuteInTimezone,
+  markPushSent,
   type PushSubscriptionRecord,
+  wasPushSent,
 } from "@/lib/push/store";
 import { ensureWebPush, webpush } from "@/lib/push/vapid";
 
@@ -64,13 +68,27 @@ export async function sendHourlyVersePush(): Promise<{
   }
 
   const subs = await listPushSubscriptions();
+  const now = new Date();
   let sent = 0;
   let skipped = 0;
   let errors = 0;
 
   for (const sub of subs) {
-    const hour = localHourInTimezone(sub.timezone);
+    const hour = localHourInTimezone(sub.timezone, now);
+    const minute = localMinuteInTimezone(sub.timezone, now);
+    if (minute > 15) {
+      skipped++;
+      continue;
+    }
+
     if (!shouldNotifySub(sub, hour)) {
+      skipped++;
+      continue;
+    }
+
+    const day = localDateKeyInTimezone(sub.timezone, now);
+    const slotKey = `${day}:${hour}`;
+    if (sub.deviceId && (await wasPushSent(sub.deviceId, slotKey))) {
       skipped++;
       continue;
     }
@@ -106,6 +124,7 @@ export async function sendHourlyVersePush(): Promise<{
           urgency: "high",
         },
       );
+      if (sub.deviceId) await markPushSent(sub.deviceId, slotKey);
       sent++;
     } catch (err) {
       errors++;

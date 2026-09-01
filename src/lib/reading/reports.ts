@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { backfillAbsentSlots } from "@/lib/reading/backfill";
 import { periodKey } from "@/lib/reading/periods";
 import {
   averageRate,
@@ -136,6 +137,7 @@ export async function generateReportForRange(
   periodEnd: number,
   customLabel?: string,
 ): Promise<DevelopmentReport | null> {
+  await backfillAbsentSlots(deviceId, periodEnd);
   const events = await eventsInRange(deviceId, periodStart, periodEnd);
   return aggregateReport(deviceId, unit, periodStart, periodEnd, events, customLabel);
 }
@@ -146,6 +148,8 @@ export async function generateDueReportsForDevice(
 ): Promise<DevelopmentReport[]> {
   const meta = await getDeviceMeta(deviceId);
   if (!meta) return [];
+
+  await backfillAbsentSlots(deviceId, now.getTime());
 
   const windows = dueReportWindows(now, meta.timezone, meta.startedAt);
   const existing = await listReports(deviceId);
@@ -173,6 +177,8 @@ export async function generateDueReportsForDevice(
 
 export async function generateAllDueReports(): Promise<number> {
   await closeMissedNotifications();
+  const { backfillAllDevices } = await import("@/lib/reading/backfill");
+  await backfillAllDevices();
 
   const deviceIds = await listReadingDeviceIds();
   let count = 0;

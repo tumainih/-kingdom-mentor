@@ -101,6 +101,8 @@ async function subscribeToPush(
         notifyHours,
         deviceId: getOrCreateDeviceId(),
       }),
+    }).then((res) => {
+      if (!res.ok) throw new Error("Push subscribe failed");
     });
 
     return subscription;
@@ -127,8 +129,8 @@ async function unsubscribeFromPush(): Promise<void> {
   }
 }
 
-function postToWorker(message: object): void {
-  void getReadyRegistration()
+function postToWorker(message: object): Promise<void> {
+  return getReadyRegistration()
     .then((registration) => {
       registration?.active?.postMessage(message);
     })
@@ -158,7 +160,7 @@ export async function enableVerseNotifications(
 
   await subscribeToPush(locale, notifyHours);
 
-  postToWorker({
+  await postToWorker({
     type: "START_HOURLY_NOTIFICATIONS",
     locale,
     notifyHours,
@@ -173,7 +175,7 @@ export async function enableVerseNotifications(
 export async function disableVerseNotifications(): Promise<void> {
   persistEnabled(false);
   await unsubscribeFromPush();
-  postToWorker({ type: "STOP_HOURLY_NOTIFICATIONS" });
+  await postToWorker({ type: "STOP_HOURLY_NOTIFICATIONS" });
 }
 
 export async function syncVerseNotifications(locale: AppLocale): Promise<void> {
@@ -184,7 +186,7 @@ export async function syncVerseNotifications(locale: AppLocale): Promise<void> {
     const notifyHours = getNotifyHours();
     await subscribeToPush(locale, notifyHours);
 
-    postToWorker({
+    await postToWorker({
       type: "START_HOURLY_NOTIFICATIONS",
       locale,
       notifyHours,
@@ -200,7 +202,7 @@ export async function showHourVerseNotification(
   locale: AppLocale,
   hour: number,
 ): Promise<void> {
-  postToWorker({
+  await postToWorker({
     type: "SHOW_HOUR_VERSE",
     locale,
     hour,

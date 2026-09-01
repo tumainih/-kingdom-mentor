@@ -19,6 +19,61 @@ const root = process.cwd();
 const vercelJson = path.join(root, "vercel.json");
 const vercelBackup = path.join(root, "vercel.json.deploy-bak");
 
+const GITHUB_REPO_ID = 1352573169;
+const GITHUB_ORG = "tumainih";
+const GITHUB_REPO = "-kingdom-mentor";
+const PRODUCTION_ALIAS = "temporary-instant-onyx-uuarmez.vercel.app";
+
+async function triggerGithubProductionDeploy(token, projectId, orgId) {
+  const res = await fetch(
+    `https://api.vercel.com/v13/deployments?teamId=${encodeURIComponent(orgId)}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: "temporary-instant-onyx-uuarmez",
+        project: projectId,
+        target: "production",
+        gitSource: {
+          type: "github",
+          org: GITHUB_ORG,
+          repo: GITHUB_REPO,
+          ref: "main",
+          repoId: GITHUB_REPO_ID,
+        },
+      }),
+    },
+  );
+
+  const body = await res.json();
+  if (!res.ok) {
+    throw new Error(body.error?.message || `Vercel API deploy failed (${res.status})`);
+  }
+
+  const deploymentId = body.id;
+  const deadline = Date.now() + 10 * 60 * 1000;
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 10_000));
+    const statusRes = await fetch(
+      `https://api.vercel.com/v13/deployments/${deploymentId}?teamId=${encodeURIComponent(orgId)}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    const status = await statusRes.json();
+    if (status.readyState === "READY") {
+      return `https://${PRODUCTION_ALIAS}`;
+    }
+    if (status.readyState === "ERROR" || status.readyState === "CANCELED") {
+      throw new Error(`Deployment ${deploymentId} ended with ${status.readyState}`);
+    }
+    console.log(`… ${status.readyState} (${status.url || deploymentId})`);
+  }
+
+  throw new Error(`Timed out waiting for deployment ${deploymentId}`);
+}
+
 function run(cmd) {
   console.log(`> ${cmd.replace(/(token|VERCEL_TOKEN=)\S+/gi, "$1***")}`);
   return execSync(cmd, { encoding: "utf8", cwd: root });
@@ -73,13 +128,23 @@ try {
   if (projectId) env.VERCEL_PROJECT_ID = projectId;
   if (orgId) env.VERCEL_ORG_ID = orgId;
 
+  let out = "";
   let cmd = `npx vercel deploy --prod --yes --force --token "${token}"`;
   console.log(`> ${cmd.replace(/(token|VERCEL_TOKEN=)\S+/gi, "$1***")}`);
-  const out = execSync(cmd, { encoding: "utf8", cwd: root, env });
-  const urlMatch = out.match(/https:\/\/[^\s]+\.vercel\.app/);
+  try {
+    out = execSync(cmd, { encoding: "utf8", cwd: root, env });
+  } catch (cliErr) {
+    if (!projectId || !orgId) throw cliErr;
+    console.warn("Vercel CLI deploy failed — triggering GitHub production deploy via API…");
+    out = await triggerGithubProductionDeploy(token, projectId, orgId);
+  }
+
+  const urlMatch = out.match(/https:\/\/[^\s]+\.vercel\.app/) ||
+    out.match(/temporary-instant-onyx-uuarmez[^\s]*/);
   if (urlMatch) {
-    console.log(`\nLive: ${urlMatch[0]}`);
-    console.log(`Install: ${urlMatch[0]}/install`);
+    const url = urlMatch[0].startsWith("http") ? urlMatch[0] : `https://${urlMatch[0]}`;
+    console.log(`\nLive: ${url.includes("vercel.app") ? "https://temporary-instant-onyx-uuarmez.vercel.app" : url}`);
+    console.log(`Install: https://temporary-instant-onyx-uuarmez.vercel.app/install`);
     console.log("\nInstalled PWAs on this domain will pick up the new service worker on next open.");
   }
 } finally {

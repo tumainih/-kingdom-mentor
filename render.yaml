@@ -1,12 +1,22 @@
+# Render Blueprint — connect repo once, then every push to main auto-deploys.
+# Dashboard: New → Blueprint → https://github.com/tumainih/-kingdom-mentor
+
 services:
   - type: web
     name: kingdom-mentor
     runtime: node
     plan: free
     region: oregon
-    buildCommand: npm install && npm run build
+    repo: https://github.com/tumainih/-kingdom-mentor
+    branch: main
+    autoDeploy: true
+    buildCommand: npm ci && npm run build
     startCommand: npm start
-    healthCheckPath: /home
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
         value: "22"
+      - key: NODE_ENV
+        value: production
+      # Set in Render dashboard after first deploy:
+      # GEMINI_API_KEY, VAPID_*, CRON_SECRET, NEXT_PUBLIC_SITE_URL

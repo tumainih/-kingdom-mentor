@@ -63,6 +63,19 @@ Nothing in the app is locked to one URL — but you can pin your link in Render 
 
 **Your own domain (optional):** Settings → **Custom Domains** → add e.g. `kingdom.example.com` → point DNS as Render shows → set `NEXT_PUBLIC_SITE_URL` to that domain and redeploy.
 
+### Deploy from terminal (or Cursor agent)
+
+Every push to **`main`** auto-deploys when Render is connected to GitHub.
+
+Manual trigger:
+
+```bash
+export RENDER_DEPLOY_HOOK_URL="https://api.render.com/deploy/srv-...?key=..."
+npm run deploy
+```
+
+Or: `RENDER_API_KEY` + `RENDER_SERVICE_ID` from Render → Account → API Keys.
+
 ---
 
 ## Option 2: Fly.io (free allowance, always-on capable)

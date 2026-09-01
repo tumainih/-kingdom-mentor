@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build ltkWhTL9Fjl6N2JesacrE) */
-const CACHE = "kingdom-ai-ltkWhTL9Fjl6N2JesacrE";
+/* Kingdom AI — offline-capable service worker (build SoN44gKyrJGZIUHkQrMKq) */
+const CACHE = "kingdom-ai-SoN44gKyrJGZIUHkQrMKq";
 const PRECACHE = [
   "/",
   "/home",
@@ -8,6 +8,7 @@ const PRECACHE = [
   "/notifications",
   "/reports",
   "/install",
+  "/privacy",
   "/manifest.webmanifest",
   "/apple-touch-icon.png",
   "/icon-192.png",
@@ -41,30 +42,30 @@ const PRECACHE = [
   "/data/pools/strength.json",
   "/data/pools/trust.json",
   "/data/pools/wisdom.json",
+  "/_next/static/SoN44gKyrJGZIUHkQrMKq/_buildManifest.js",
+  "/_next/static/SoN44gKyrJGZIUHkQrMKq/_clientMiddlewareManifest.js",
+  "/_next/static/SoN44gKyrJGZIUHkQrMKq/_ssgManifest.js",
+  "/_next/static/chunks/0462_jaccswmq.js",
+  "/_next/static/chunks/04krbzd2lmnmg.js",
   "/_next/static/chunks/09zymofzcq9yo.js",
   "/_next/static/chunks/0ajknyisuvam9.css",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
   "/_next/static/chunks/0gi0fs-foriyd.js",
-  "/_next/static/chunks/1chi7o9p6td36.js",
   "/_next/static/chunks/1cmk72eecyy08.js",
   "/_next/static/chunks/1h0lni661c03r.js",
   "/_next/static/chunks/1ijjdsn2z-ov1.js",
   "/_next/static/chunks/1z99mlp5cofct.js",
+  "/_next/static/chunks/20ak3ty27pfwb.js",
   "/_next/static/chunks/24t7crwozt_yd.js",
+  "/_next/static/chunks/27m_hem7j38nc.js",
   "/_next/static/chunks/2n612fe5thts9.js",
-  "/_next/static/chunks/2rzlk32zr9nnw.js",
   "/_next/static/chunks/2ydnron3zbkwf.js",
-  "/_next/static/chunks/36uwp1rvcp2ff.js",
-  "/_next/static/chunks/38crxovcaonw3.js",
   "/_next/static/chunks/3adwt13tezgym.js",
   "/_next/static/chunks/3q576hlfnuh0n.js",
-  "/_next/static/chunks/41l7bnokh0liz.js",
-  "/_next/static/chunks/4399mcs732nz1.js",
+  "/_next/static/chunks/3wtl5qdkwgu5z.js",
+  "/_next/static/chunks/3z7kiq7lb_rtu.js",
   "/_next/static/chunks/turbopack-0snm50y8kpj5e.js",
-  "/_next/static/ltkWhTL9Fjl6N2JesacrE/_buildManifest.js",
-  "/_next/static/ltkWhTL9Fjl6N2JesacrE/_clientMiddlewareManifest.js",
-  "/_next/static/ltkWhTL9Fjl6N2JesacrE/_ssgManifest.js",
   "/_next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2",
   "/_next/static/media/2bbe8d2671613f1f-s.0k62hbripvv8p.woff2",
   "/_next/static/media/2c55a0e60120577a-s.0-dom-5bn10r2.woff2",
@@ -100,24 +101,99 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-async function cacheFirst(request) {
-  const cached = await caches.match(request);
-  if (cached) return cached;
+const NETWORK_TIMEOUT_MS = 2500;
+
+function isProbablyOffline() {
+  return typeof self.navigator !== "undefined" && self.navigator.onLine === false;
+}
+
+async function fetchWithTimeout(request, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(function () {
+    controller.abort();
+  }, timeoutMs || NETWORK_TIMEOUT_MS);
   try {
-    const response = await fetch(request);
+    return await fetch(request, { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function cacheFirst(request, options) {
+  const opts = options || {};
+  const cached = await caches.match(request);
+  if (cached) {
+    if (!isProbablyOffline() && opts.revalidate !== false) {
+      fetchWithTimeout(request).then(function (response) {
+        if (response.ok) {
+          caches.open(CACHE).then(function (cache) {
+            cache.put(request, response.clone());
+          });
+        }
+      }).catch(function () {});
+    }
+    return cached;
+  }
+  if (isProbablyOffline()) {
+    return Response.error();
+  }
+  try {
+    const response = await fetchWithTimeout(request);
     if (response.ok) {
       const cache = await caches.open(CACHE);
       cache.put(request, response.clone());
     }
     return response;
   } catch {
-    return cached || Response.error();
+    return Response.error();
   }
 }
 
-async function networkFirst(request) {
+async function navigateHandler(request) {
+  const cached = await caches.match(request);
+  if (isProbablyOffline()) {
+    return (
+      cached ||
+      (await caches.match("/home")) ||
+      (await caches.match("/")) ||
+      Response.error()
+    );
+  }
+  if (cached) {
+    fetchWithTimeout(request).then(function (response) {
+      if (response.ok) {
+        caches.open(CACHE).then(function (cache) {
+          cache.put(request, response.clone());
+        });
+      }
+    }).catch(function () {});
+    return cached;
+  }
   try {
-    const response = await fetch(request);
+    const response = await fetchWithTimeout(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return (
+      (await caches.match("/home")) ||
+      (await caches.match("/")) ||
+      Response.error()
+    );
+  }
+}
+
+async function apiHandler(request) {
+  if (isProbablyOffline()) {
+    return new Response(JSON.stringify({ offline: true }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  try {
+    const response = await fetchWithTimeout(request);
     if (response.ok && request.method === "GET") {
       const cache = await caches.open(CACHE);
       cache.put(request, response.clone());
@@ -125,30 +201,10 @@ async function networkFirst(request) {
     return response;
   } catch {
     const cached = await caches.match(request);
-    if (cached) return cached;
-    if (request.mode === "navigate") {
-      return (await caches.match("/home")) || (await caches.match("/")) || Response.error();
-    }
-    return Response.error();
-  }
-}
-
-async function navigateWithOfflineFallback(request) {
-  const cached = await caches.match(request);
-  try {
-    const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(CACHE);
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch {
-    if (cached) return cached;
-    return (
-      (await caches.match("/home")) ||
-      (await caches.match("/")) ||
-      Response.error()
-    );
+    return cached || new Response(JSON.stringify({ offline: true }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
 
@@ -169,17 +225,17 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (url.pathname.startsWith("/api/hourly-verse") || url.pathname.startsWith("/api/area-verses")) {
-    event.respondWith(networkFirst(request));
+  if (url.pathname.startsWith("/api/")) {
+    event.respondWith(apiHandler(request));
     return;
   }
 
   if (request.mode === "navigate") {
-    event.respondWith(navigateWithOfflineFallback(request));
+    event.respondWith(navigateHandler(request));
     return;
   }
 
-  event.respondWith(networkFirst(request));
+  event.respondWith(cacheFirst(request));
 });
 
 /** Inlined into public/sw.js — hourly verse notifications + Web Push */
@@ -632,10 +688,36 @@ function clearVerseTimer() {
   }
 }
 
+async function isServerReachable() {
+  if (typeof self.navigator !== "undefined" && self.navigator.onLine === false) {
+    return false;
+  }
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(function () {
+      controller.abort();
+    }, 2500);
+    const res = await fetch("/api/health", {
+      signal: controller.signal,
+      cache: "no-store",
+    });
+    clearTimeout(timer);
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function shouldUseLocalNotifications(state) {
+  if (!state?.pushEnabled) return true;
+  return !(await isServerReachable());
+}
+
 async function scheduleHourlyNotification(locale, notifyHours, delayMs) {
   clearVerseTimer();
   const existing = await readNotificationState();
-  if (existing?.pushEnabled) {
+  const useLocal = await shouldUseLocalNotifications(existing);
+  if (existing?.pushEnabled && !useLocal) {
     await writeNotificationState({
       ...(existing || {}),
       enabled: true,
@@ -687,7 +769,7 @@ async function stopHourlyNotifications() {
 async function resumeHourlyNotifications() {
   const state = await readNotificationState();
   if (!state?.enabled) return;
-  if (state.pushEnabled) return;
+  if (state.pushEnabled && !(await shouldUseLocalNotifications(state))) return;
 
   const hour = currentHour();
   const slot = currentSlotKey();
@@ -846,7 +928,8 @@ self.addEventListener("message", (event) => {
           deviceId: data.deviceId || prev?.deviceId,
           pushEnabled,
         });
-        if (pushEnabled) {
+        const useLocal = pushEnabled ? !(await isServerReachable()) : true;
+        if (pushEnabled && !useLocal) {
           clearVerseTimer();
           return;
         }

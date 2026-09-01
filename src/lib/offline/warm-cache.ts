@@ -7,6 +7,7 @@ const APP_ROUTES = [
   "/notifications",
   "/reports",
   "/install",
+  "/privacy",
 ] as const;
 
 const CORE_DATA = [
@@ -45,18 +46,20 @@ export async function warmOfflineCache(): Promise<void> {
   const pools = await poolDataUrls();
   const urls = [...CORE_DATA, ...pools, ...APP_ROUTES];
 
-  await Promise.allSettled(
+  void Promise.allSettled(
     urls.map((url) =>
       fetch(url, { cache: "force-cache", credentials: "same-origin" }),
     ),
   );
 }
 
-/** Wait for the service worker, then prefetch everything needed for offline use. */
+/** Mark offline-ready immediately; warm cache in background when online. */
 export async function ensureOfflineReady(): Promise<void> {
-  if (typeof window === "undefined" || !navigator.onLine) return;
+  if (typeof window === "undefined") return;
+  markOfflineReady();
+  if (!navigator.onLine) return;
   await waitForServiceWorker();
-  await warmOfflineCache();
+  void warmOfflineCache();
 }
 
 export function isOfflineReadyFlagSet(): boolean {

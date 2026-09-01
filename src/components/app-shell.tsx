@@ -5,6 +5,7 @@ import { AppHeader } from "@/components/app-header";
 import { ChatContainer } from "@/components/chat/chat-container";
 import { ConverseView } from "@/components/converse/converse-view";
 import { useLocale } from "@/context/locale-context";
+import { fetchWithTimeout, isBrowserOffline } from "@/lib/network";
 
 export type AppMode = "chat" | "converse";
 export type GuidanceMode = "gemini" | "unavailable";
@@ -23,11 +24,11 @@ export function AppShell() {
 
   useEffect(() => {
     if (!mounted) return;
-    if (typeof navigator !== "undefined" && !navigator.onLine) {
+    if (isBrowserOffline()) {
       setGuidanceMode("unavailable");
       return;
     }
-    fetch(`/api/status?locale=${locale}`)
+    void fetchWithTimeout(`/api/status?locale=${locale}`, {}, 2500)
       .then((r) => r.json())
       .then(
         (data: {

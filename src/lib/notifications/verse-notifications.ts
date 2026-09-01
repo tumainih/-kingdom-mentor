@@ -1,4 +1,5 @@
 import type { AppLocale } from "@/lib/i18n/translations";
+import { fetchWithTimeout, isBrowserOffline } from "@/lib/network";
 import { getOrCreateDeviceId } from "@/lib/reading/device-id.client";
 
 const ENABLED_KEY = "kingdom-verse-notifications";
@@ -72,10 +73,10 @@ async function subscribeToPush(
   locale: AppLocale,
   notifyHours: number[],
 ): Promise<PushSubscription | null> {
-  if (!isPushSupported()) return null;
+  if (!isPushSupported() || isBrowserOffline()) return null;
 
   try {
-    const res = await fetch("/api/push/vapid-public-key");
+    const res = await fetchWithTimeout("/api/push/vapid-public-key", {}, 2500);
     if (!res.ok) return null;
     const data = (await res.json()) as { configured?: boolean; publicKey?: string };
     if (!data.configured || !data.publicKey) return null;
@@ -91,17 +92,21 @@ async function subscribeToPush(
       });
     }
 
-    await fetch("/api/push/subscribe", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        subscription,
-        locale,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        notifyHours,
-        deviceId: getOrCreateDeviceId(),
-      }),
-    }).then((res) => {
+    await fetchWithTimeout(
+      "/api/push/subscribe",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subscription,
+          locale,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          notifyHours,
+          deviceId: getOrCreateDeviceId(),
+        }),
+      },
+      4000,
+    ).then((res) => {
       if (!res.ok) throw new Error("Push subscribe failed");
     });
 
@@ -112,16 +117,22 @@ async function subscribeToPush(
 }
 
 async function unsubscribeFromPush(): Promise<void> {
+  if (isBrowserOffline()) return;
+
   try {
     const registration = await getReadyRegistration();
     const subscription = await registration?.pushManager?.getSubscription();
     if (!subscription) return;
 
-    await fetch("/api/push/subscribe", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ endpoint: subscription.endpoint }),
-    });
+    await fetchWithTimeout(
+      "/api/push/subscribe",
+      {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ endpoint: subscription.endpoint }),
+      },
+      2500,
+    );
 
     await subscription.unsubscribe();
   } catch {
@@ -137,6 +148,22 @@ function postToWorker(message: object): Promise<void> {
     .catch(() => {
       /* worker not ready yet */
     });
+}
+
+async function startWorkerNotifications(
+  locale: AppLocale,
+  notifyHours: number[],
+  pushEnabled: boolean,
+  showNow = false,
+): Promise<void> {
+  await postToWorker({
+    type: "START_HOURLY_NOTIFICATIONS",
+    locale,
+    notifyHours,
+    showNow,
+    deviceId: getOrCreateDeviceId(),
+    pushEnabled,
+  });
 }
 
 export async function enableVerseNotifications(
@@ -158,17 +185,17 @@ export async function enableVerseNotifications(
     return permission;
   }
 
-  const pushSubscription = await subscribeToPush(locale, notifyHours);
+  const pushSubscription = isBrowserOffline()
+    ? null
+    : await subscribeToPush(locale, notifyHours);
   const pushEnabled = Boolean(pushSubscription);
 
-  await postToWorker({
-    type: "START_HOURLY_NOTIFICATIONS",
+  await startWorkerNotifications(
     locale,
     notifyHours,
-    showNow: options?.showNow ?? false,
-    deviceId: getOrCreateDeviceId(),
     pushEnabled,
-  });
+    options?.showNow ?? false,
+  );
 
   persistEnabled(true);
   return permission;
@@ -186,18 +213,13 @@ export async function syncVerseNotifications(locale: AppLocale): Promise<void> {
     if (Notification.permission !== "granted") return;
 
     const notifyHours = getNotifyHours();
-    const pushSubscription = await subscribeToPush(locale, notifyHours);
+    const pushSubscription = isBrowserOffline()
+      ? null
+      : await subscribeToPush(locale, notifyHours);
     const pushEnabled = Boolean(pushSubscription);
 
-    await postToWorker({
-      type: "START_HOURLY_NOTIFICATIONS",
-      locale,
-      notifyHours,
-      showNow: false,
-      deviceId: getOrCreateDeviceId(),
-      pushEnabled,
-    });
+    await startWorkerNotifications(locale, notifyHours, pushEnabled);
   } catch {
-    /* background sync — push may be unavailable in dev */
+    /* background sync — local alerts still run in the service worker */
   }
 }

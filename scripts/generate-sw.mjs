@@ -44,6 +44,7 @@ const precache = [
   "/notifications",
   "/reports",
   "/install",
+  "/privacy",
   "/manifest.webmanifest",
   "/apple-touch-icon.png",
   "/icon-192.png",
@@ -78,24 +79,99 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-async function cacheFirst(request) {
-  const cached = await caches.match(request);
-  if (cached) return cached;
+const NETWORK_TIMEOUT_MS = 2500;
+
+function isProbablyOffline() {
+  return typeof self.navigator !== "undefined" && self.navigator.onLine === false;
+}
+
+async function fetchWithTimeout(request, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(function () {
+    controller.abort();
+  }, timeoutMs || NETWORK_TIMEOUT_MS);
   try {
-    const response = await fetch(request);
+    return await fetch(request, { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function cacheFirst(request, options) {
+  const opts = options || {};
+  const cached = await caches.match(request);
+  if (cached) {
+    if (!isProbablyOffline() && opts.revalidate !== false) {
+      fetchWithTimeout(request).then(function (response) {
+        if (response.ok) {
+          caches.open(CACHE).then(function (cache) {
+            cache.put(request, response.clone());
+          });
+        }
+      }).catch(function () {});
+    }
+    return cached;
+  }
+  if (isProbablyOffline()) {
+    return Response.error();
+  }
+  try {
+    const response = await fetchWithTimeout(request);
     if (response.ok) {
       const cache = await caches.open(CACHE);
       cache.put(request, response.clone());
     }
     return response;
   } catch {
-    return cached || Response.error();
+    return Response.error();
   }
 }
 
-async function networkFirst(request) {
+async function navigateHandler(request) {
+  const cached = await caches.match(request);
+  if (isProbablyOffline()) {
+    return (
+      cached ||
+      (await caches.match("/home")) ||
+      (await caches.match("/")) ||
+      Response.error()
+    );
+  }
+  if (cached) {
+    fetchWithTimeout(request).then(function (response) {
+      if (response.ok) {
+        caches.open(CACHE).then(function (cache) {
+          cache.put(request, response.clone());
+        });
+      }
+    }).catch(function () {});
+    return cached;
+  }
   try {
-    const response = await fetch(request);
+    const response = await fetchWithTimeout(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return (
+      (await caches.match("/home")) ||
+      (await caches.match("/")) ||
+      Response.error()
+    );
+  }
+}
+
+async function apiHandler(request) {
+  if (isProbablyOffline()) {
+    return new Response(JSON.stringify({ offline: true }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  try {
+    const response = await fetchWithTimeout(request);
     if (response.ok && request.method === "GET") {
       const cache = await caches.open(CACHE);
       cache.put(request, response.clone());
@@ -103,30 +179,10 @@ async function networkFirst(request) {
     return response;
   } catch {
     const cached = await caches.match(request);
-    if (cached) return cached;
-    if (request.mode === "navigate") {
-      return (await caches.match("/home")) || (await caches.match("/")) || Response.error();
-    }
-    return Response.error();
-  }
-}
-
-async function navigateWithOfflineFallback(request) {
-  const cached = await caches.match(request);
-  try {
-    const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(CACHE);
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch {
-    if (cached) return cached;
-    return (
-      (await caches.match("/home")) ||
-      (await caches.match("/")) ||
-      Response.error()
-    );
+    return cached || new Response(JSON.stringify({ offline: true }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
 
@@ -147,17 +203,17 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (url.pathname.startsWith("/api/hourly-verse") || url.pathname.startsWith("/api/area-verses")) {
-    event.respondWith(networkFirst(request));
+  if (url.pathname.startsWith("/api/")) {
+    event.respondWith(apiHandler(request));
     return;
   }
 
   if (request.mode === "navigate") {
-    event.respondWith(navigateWithOfflineFallback(request));
+    event.respondWith(navigateHandler(request));
     return;
   }
 
-  event.respondWith(networkFirst(request));
+  event.respondWith(cacheFirst(request));
 });
 
 ${notificationSnippet}

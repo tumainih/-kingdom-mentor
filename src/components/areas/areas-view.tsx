@@ -12,6 +12,7 @@ import {
   fetchPoolIndex,
   resolveAreaPoolVerses,
 } from "@/lib/bible/resolve-hourly-verse.client";
+import { isBrowserOffline } from "@/lib/network";
 import { cn } from "@/lib/utils";
 
 interface AreaRow {
@@ -130,9 +131,17 @@ export function AreasView() {
     void (async () => {
       setVersesLoading(true);
       try {
-        const res = await fetch(
+        if (isBrowserOffline()) {
+          const data = await resolveAreaPoolVerses(selected.id, locale);
+          if (!cancelled) setVerses(data);
+          return;
+        }
+
+        const { fetchWithTimeout } = await import("@/lib/network");
+        const res = await fetchWithTimeout(
           `/api/area-verses?area=${encodeURIComponent(selected.id)}&locale=${locale}`,
           { cache: "no-store" },
+          2500,
         );
         if (res.ok) {
           const payload = (await res.json()) as { verses?: RetrievedPassage[] };

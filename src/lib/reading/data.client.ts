@@ -153,15 +153,21 @@ export async function loadReadingData(
   await backfillAbsentSlotsClient(deviceId);
   await generateDueReportsClient(deviceId);
 
-  if (isOnline()) {
-    await pushReadingToServer(deviceId);
-    await syncReadingFromServer(deviceId, timezone, locale);
-    await backfillAbsentSlotsClient(deviceId);
-  }
-
   const meta = await getDeviceMetaClient(deviceId);
   const events = await listReadEventsClient(deviceId);
   const reports = await listReportsClient(deviceId);
+
+  if (isOnline()) {
+    void (async () => {
+      try {
+        await pushReadingToServer(deviceId);
+        await syncReadingFromServer(deviceId, timezone, locale);
+        await backfillAbsentSlotsClient(deviceId);
+      } catch {
+        /* sync when back online */
+      }
+    })();
+  }
 
   return { meta, events, reports };
 }

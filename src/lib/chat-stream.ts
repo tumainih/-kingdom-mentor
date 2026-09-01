@@ -1,6 +1,7 @@
 import type { ScripturePassage } from "@/components/chat/types";
 import type { AppLocale } from "@/lib/i18n/translations";
 import { generateOfflineReply } from "@/lib/offline/client-reply";
+import { fetchWithTimeout, isBrowserOffline } from "@/lib/network";
 
 export interface StreamMessage {
   role: "user" | "assistant";
@@ -8,7 +9,7 @@ export interface StreamMessage {
 }
 
 function shouldUseOffline(): boolean {
-  return typeof navigator !== "undefined" && !navigator.onLine;
+  return isBrowserOffline();
 }
 
 export async function fetchKingdomReply(
@@ -20,15 +21,19 @@ export async function fetchKingdomReply(
   }
 
   try {
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        stream: false,
-        locale,
-        messages: history.map(({ role, content }) => ({ role, content })),
-      }),
-    });
+    const response = await fetchWithTimeout(
+      "/api/chat",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          stream: false,
+          locale,
+          messages: history.map(({ role, content }) => ({ role, content })),
+        }),
+      },
+      4000,
+    );
 
     const data = (await response.json().catch(() => ({}))) as {
       content?: string;
@@ -71,15 +76,19 @@ export async function streamKingdomReply(
   }
 
   try {
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        stream: true,
-        locale,
-        messages: history.map(({ role, content }) => ({ role, content })),
-      }),
-    });
+    const response = await fetchWithTimeout(
+      "/api/chat",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          stream: true,
+          locale,
+          messages: history.map(({ role, content }) => ({ role, content })),
+        }),
+      },
+      4000,
+    );
 
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));

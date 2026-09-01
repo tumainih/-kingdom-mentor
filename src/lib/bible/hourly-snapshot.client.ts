@@ -1,5 +1,6 @@
 import type { HourlyThemeId } from "./hourly-themes";
 import type { BibleLocale } from "./locale";
+import { isBrowserOffline } from "@/lib/network";
 import type { RetrievedPassage } from "./types";
 
 export interface HourlySnapshotEntry {
@@ -37,7 +38,7 @@ export async function getHourlyVerseFromSnapshot(
   if (snapshot.length === 0) return null;
 
   const snapshotDate = snapshot[0]?.date;
-  if (snapshotDate && date !== snapshotDate) return null;
+  if (snapshotDate && date !== snapshotDate && !isBrowserOffline()) return null;
 
   const entry = snapshot.find((s) => s.hour === hour);
   if (!entry?.passage) return null;
@@ -49,10 +50,14 @@ export async function fetchHourlyVerseFromApi(
   hour: number,
   date: string,
 ): Promise<HourlySnapshotEntry | null> {
+  if (isBrowserOffline()) return null;
+
   try {
-    const res = await fetch(
+    const { fetchWithTimeout } = await import("@/lib/network");
+    const res = await fetchWithTimeout(
       `/api/hourly-verse?locale=${locale}&hour=${hour}&date=${encodeURIComponent(date)}`,
       { cache: "no-store" },
+      2500,
     );
     if (!res.ok) return null;
     return (await res.json()) as HourlySnapshotEntry;

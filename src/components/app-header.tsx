@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import type { GuidanceMode } from "@/components/app-shell";
 import type { AppLocale } from "@/lib/i18n/translations";
 import { useLocale } from "@/context/locale-context";
+import { offlineNavigate } from "@/lib/pwa/offline-nav";
 
 interface AppHeaderProps {
   aiReady?: boolean;
@@ -36,7 +37,11 @@ export function AppHeader({
     <header className="sticky top-0 z-20 shrink-0 border-b border-border/50 bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex h-10 max-w-6xl items-center justify-between gap-1 px-2 sm:h-12 sm:gap-2 sm:px-4">
         <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-          <Link href="/home" className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+          <Link
+            href="/home"
+            onClick={(e) => offlineNavigate("/home", e)}
+            className="flex min-w-0 items-center gap-1.5 sm:gap-2"
+          >
             <BrandLogo size="sm" />
             <BrandTitle size="md" className="hidden min-[360px]:flex" />
           </Link>
@@ -50,6 +55,7 @@ export function AppHeader({
             >
               <Link
                 href="/home"
+                onClick={(e) => offlineNavigate("/home", e)}
                 aria-label={t("navHome")}
                 title={t("navHome")}
                 className={cn(
@@ -66,6 +72,7 @@ export function AppHeader({
               </Link>
               <Link
                 href="/history"
+                onClick={(e) => offlineNavigate("/history", e)}
                 aria-label={t("navHistory")}
                 title={t("navHistory")}
                 className={cn(
@@ -82,6 +89,7 @@ export function AppHeader({
               </Link>
               <Link
                 href="/notifications"
+                onClick={(e) => offlineNavigate("/notifications", e)}
                 aria-label={t("navAlerts")}
                 title={t("navAlerts")}
                 className={cn(
@@ -98,6 +106,7 @@ export function AppHeader({
               </Link>
               <Link
                 href="/reports"
+                onClick={(e) => offlineNavigate("/reports", e)}
                 aria-label={t("navReports")}
                 title={t("navReports")}
                 className={cn(
@@ -114,6 +123,7 @@ export function AppHeader({
               </Link>
               <Link
                 href="/"
+                onClick={(e) => offlineNavigate("/", e)}
                 aria-label={t("navChat")}
                 title={t("navChat")}
                 className={cn(

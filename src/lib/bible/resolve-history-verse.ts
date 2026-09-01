@@ -1,4 +1,5 @@
 import type { BibleLocale } from "./locale";
+import { isBrowserOffline } from "@/lib/network";
 import { getSlotForHour, themeLabel, type HourlyThemeId } from "./hourly-themes";
 import {
   fetchHourlyVerseFromApi,
@@ -81,6 +82,7 @@ export async function resolveHistoryVerseBatch(
   }
 
   for (let i = 0; i < pending.length; i += concurrency) {
+    if (isBrowserOffline()) break;
     const chunk = pending.slice(i, i + concurrency);
     const batch = await Promise.all(
       chunk.map(({ date, hour }) => fetchHourlyVerseFromApi(locale, hour, date)),

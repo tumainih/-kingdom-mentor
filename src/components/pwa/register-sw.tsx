@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { warmOfflineCache, ensureOfflineReady, markOfflineReady } from "@/lib/offline/client-reply";
+import { warmOfflineCache, markOfflineReady } from "@/lib/offline/client-reply";
 import {
   isVerseNotificationsEnabled,
   syncVerseNotifications,
@@ -23,7 +23,7 @@ export function RegisterServiceWorker() {
 
     void navigator.serviceWorker
       .register("/sw.js")
-      .then(async (registration) => {
+      .then((registration) => {
         registration.addEventListener("updatefound", () => {
           const worker = registration.installing;
           worker?.addEventListener("statechange", () => {
@@ -33,25 +33,20 @@ export function RegisterServiceWorker() {
           });
         });
 
-        try {
-          await navigator.serviceWorker.ready;
-        } catch {
-          /* first visit */
-        }
-
-        try {
-          await ensureOfflineReady();
-          markOfflineReady();
-        } catch {
-          /* best-effort */
-        }
-
         if (isVerseNotificationsEnabled()) {
           const locale =
             (localStorage.getItem("kingdom-locale") as "en" | "sw" | null) ?? "en";
           void syncVerseNotifications(locale).catch(() => {
             /* notification sync is best-effort */
           });
+        }
+
+        if (navigator.onLine) {
+          void warmOfflineCache()
+            .then(() => markOfflineReady())
+            .catch(() => markOfflineReady());
+        } else {
+          markOfflineReady();
         }
       })
       .catch(() => {
@@ -67,16 +62,35 @@ export function RegisterServiceWorker() {
         /* notification sync is best-effort */
       });
     };
-    document.addEventListener("visibilitychange", onVisible);
 
     const onOnline = () => {
       void warmOfflineCache().catch(() => {
         /* offline warm is best-effort */
       });
+      if (isVerseNotificationsEnabled()) {
+        const locale =
+          (localStorage.getItem("kingdom-locale") as "en" | "sw" | null) ?? "en";
+        void syncVerseNotifications(locale).catch(() => {
+          /* notification sync is best-effort */
+        });
+      }
     };
+
+    const onOffline = () => {
+      if (!isVerseNotificationsEnabled()) return;
+      const locale =
+        (localStorage.getItem("kingdom-locale") as "en" | "sw" | null) ?? "en";
+      void syncVerseNotifications(locale).catch(() => {
+        /* switch worker to local timers */
+      });
+    };
+
+    document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
     return () => {
       window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);

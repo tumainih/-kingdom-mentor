@@ -448,10 +448,36 @@ function clearVerseTimer() {
   }
 }
 
+async function isServerReachable() {
+  if (typeof self.navigator !== "undefined" && self.navigator.onLine === false) {
+    return false;
+  }
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(function () {
+      controller.abort();
+    }, 2500);
+    const res = await fetch("/api/health", {
+      signal: controller.signal,
+      cache: "no-store",
+    });
+    clearTimeout(timer);
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function shouldUseLocalNotifications(state) {
+  if (!state?.pushEnabled) return true;
+  return !(await isServerReachable());
+}
+
 async function scheduleHourlyNotification(locale, notifyHours, delayMs) {
   clearVerseTimer();
   const existing = await readNotificationState();
-  if (existing?.pushEnabled) {
+  const useLocal = await shouldUseLocalNotifications(existing);
+  if (existing?.pushEnabled && !useLocal) {
     await writeNotificationState({
       ...(existing || {}),
       enabled: true,
@@ -503,7 +529,7 @@ async function stopHourlyNotifications() {
 async function resumeHourlyNotifications() {
   const state = await readNotificationState();
   if (!state?.enabled) return;
-  if (state.pushEnabled) return;
+  if (state.pushEnabled && !(await shouldUseLocalNotifications(state))) return;
 
   const hour = currentHour();
   const slot = currentSlotKey();
@@ -662,7 +688,8 @@ self.addEventListener("message", (event) => {
           deviceId: data.deviceId || prev?.deviceId,
           pushEnabled,
         });
-        if (pushEnabled) {
+        const useLocal = pushEnabled ? !(await isServerReachable()) : true;
+        if (pushEnabled && !useLocal) {
           clearVerseTimer();
           return;
         }

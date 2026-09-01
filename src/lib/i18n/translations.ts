@@ -115,10 +115,12 @@ export const translations = {
     notifyInstallLink: "Set up hourly alerts",
     historyTitle: "Verse by date & hour",
     historySubtitle:
-      "Look up the Scripture for any past date and hour you missed while the app was closed.",
+      "24 unique verses — one per clock hour (0–23). Look up past hours you missed; future hours are not available yet.",
     historyDate: "Date",
     historyHour: "Hour",
     historyHourLabel: "Hour {hour}",
+    historyTodayLimit: "Today: only hours up to {hour}:00 — not the next hour yet.",
+    historyFutureDate: "That date hasn't arrived yet. Choose today or an earlier date.",
     historyNotifyHoursTitle: "Notification hours",
     historyNotifyHoursHint:
       "Tap the hours when you want a verse alert (e.g. 6am, 9am, 12pm, 3pm, 6pm). Default: 6 · 9 · 12 · 15 · 18.",
@@ -245,10 +247,12 @@ export const translations = {
     notifyInstallLink: "Weka arifa za kila saa",
     historyTitle: "Mstari kwa tarehe na saa",
     historySubtitle:
-      "Tafuta mstari wa tarehe na saa yoyote uliyokosa app ilipokuwa imefungwa.",
+      "Mistari 24 tofauti — moja kwa kila saa (0–23). Tafuta saa zilizopita; saa zijazo hazipatikani bado.",
     historyDate: "Tarehe",
     historyHour: "Saa",
     historyHourLabel: "Saa {hour}",
+    historyTodayLimit: "Leo: saa hadi {hour}:00 tu — si saa ijayo bado.",
+    historyFutureDate: "Tarehe hiyo bado haijafika. Chagua leo au tarehe iliyopita.",
     historyNotifyHoursTitle: "Saa za arifa",
     historyNotifyHoursHint:
       "Gusa saa unazotaka arifa (mf. 6, 9, 12, 15, 18). Chaguo-msingi: 6 · 9 · 12 · 15 · 18.",

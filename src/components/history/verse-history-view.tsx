@@ -6,6 +6,12 @@ import { Bell, Check, Copy, Home } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/context/locale-context";
+import {
+  clampHourForDate,
+  localDateInputValue,
+  maxSelectableHourForDate,
+  selectableHoursForDate,
+} from "@/lib/bible/history-hours";
 import type { HourlyThemeId } from "@/lib/bible/hourly-themes";
 
 interface HourlyVersePayload {
@@ -32,33 +38,34 @@ function formatDisplayDate(dateStr: string, locale: "en" | "sw"): string {
   }).format(date);
 }
 
-function localDateInputValue(date = new Date()): string {
-  const y = date.getFullYear();
-  const m = pad(date.getMonth() + 1);
-  const d = pad(date.getDate());
-  return `${y}-${m}-${d}`;
-}
-
 export function VerseHistoryView() {
   const { locale, t } = useLocale();
+  const [now, setNow] = useState<Date | null>(null);
   const [date, setDate] = useState("");
   const [hour, setHour] = useState(0);
   const [slots, setSlots] = useState<HourlyVersePayload[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    setDate(localDateInputValue());
-    setHour(new Date().getHours());
+  const today = now ? localDateInputValue(now) : "";
 
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const h = params.get("hour");
-      if (h !== null) {
-        const parsed = Number(h);
-        if (parsed >= 0 && parsed <= 23) setHour(parsed);
+  useEffect(() => {
+    const current = new Date();
+    setNow(current);
+    setDate(localDateInputValue(current));
+    setHour(current.getHours());
+
+    const params = new URLSearchParams(window.location.search);
+    const h = params.get("hour");
+    if (h !== null) {
+      const parsed = Number(h);
+      if (parsed >= 0 && parsed <= 23) {
+        setHour(clampHourForDate(localDateInputValue(current), parsed, current));
       }
     }
+
+    const tick = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(tick);
   }, []);
 
   useEffect(() => {
@@ -80,9 +87,36 @@ export function VerseHistoryView() {
     };
   }, [locale]);
 
+  const allowedHours = useMemo(() => {
+    if (!date || !now) return [];
+    return selectableHoursForDate(date, now);
+  }, [date, now]);
+
+  const maxHour = useMemo(() => {
+    if (!date || !now) return 23;
+    return maxSelectableHourForDate(date, now);
+  }, [date, now]);
+
+  const isFutureDate = Boolean(date && today && date > today);
+
+  useEffect(() => {
+    if (!now || !date) return;
+    setHour((prev) => clampHourForDate(date, prev, now));
+  }, [date, now]);
+
   const verse = useMemo(
     () => slots.find((s) => s.hour === hour) ?? null,
     [slots, hour],
+  );
+
+  const handleDateChange = useCallback(
+    (nextDate: string) => {
+      if (!now) return;
+      if (nextDate > localDateInputValue(now)) return;
+      setDate(nextDate);
+      setHour((prev) => clampHourForDate(nextDate, prev, now));
+    },
+    [now],
   );
 
   const copyVerse = useCallback(async () => {
@@ -111,7 +145,7 @@ export function VerseHistoryView() {
           <h1 className="font-heading text-lg font-semibold sm:text-xl">
             {t("historyTitle")}
           </h1>
-          <p className="mt-0.5 text-[10px] text-muted-foreground sm:text-xs">
+          <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground sm:text-xs">
             {t("historySubtitle")}
           </p>
         </div>
@@ -124,7 +158,8 @@ export function VerseHistoryView() {
             <input
               type="date"
               value={date}
-              onChange={(e) => setDate(e.target.value)}
+              max={today || undefined}
+              onChange={(e) => handleDateChange(e.target.value)}
               className="mt-0.5 w-full rounded-lg border border-border/60 bg-background px-2 py-1.5 text-xs sm:text-sm"
             />
           </label>
@@ -133,11 +168,12 @@ export function VerseHistoryView() {
               {t("historyHour")}
             </span>
             <select
-              value={hour}
+              value={allowedHours.includes(hour) ? hour : (allowedHours.at(-1) ?? 0)}
               onChange={(e) => setHour(Number(e.target.value))}
-              className="mt-0.5 w-full rounded-lg border border-border/60 bg-background px-2 py-1.5 text-xs sm:text-sm"
+              disabled={isFutureDate || allowedHours.length === 0}
+              className="mt-0.5 w-full rounded-lg border border-border/60 bg-background px-2 py-1.5 text-xs disabled:opacity-50 sm:text-sm"
             >
-              {Array.from({ length: 24 }, (_, h) => (
+              {allowedHours.map((h) => (
                 <option key={h} value={h}>
                   {pad(h)}:00
                 </option>
@@ -146,9 +182,19 @@ export function VerseHistoryView() {
           </label>
         </div>
 
+        {date === today && maxHour >= 0 && (
+          <p className="mt-1.5 shrink-0 text-center text-[10px] text-muted-foreground">
+            {t("historyTodayLimit", { hour: pad(maxHour) })}
+          </p>
+        )}
+
         <div className="mt-2 flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            {loading && !verse ? (
+            {isFutureDate ? (
+              <div className="rounded-xl border border-border/50 bg-card/60 px-4 py-6 text-center text-xs text-muted-foreground sm:text-sm">
+                {t("historyFutureDate")}
+              </div>
+            ) : loading && !verse ? (
               <div className="rounded-xl border border-border/50 bg-card/60 px-4 py-6 text-center text-xs text-muted-foreground sm:text-sm">
                 {t("homeLoading")}
               </div>

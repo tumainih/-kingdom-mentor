@@ -1,0 +1,165 @@
+{
+  "areas": [
+    {
+      "id": "love",
+      "labelEn": "Love",
+      "labelSw": "Upendo",
+      "count": 300,
+      "kind": "theme"
+    },
+    {
+      "id": "hope",
+      "labelEn": "Hope",
+      "labelSw": "Matumaini",
+      "count": 300,
+      "kind": "theme"
+    },
+    {
+      "id": "faith",
+      "labelEn": "Faith",
+      "labelSw": "Imani",
+      "count": 300,
+      "kind": "theme"
+    },
+    {
+      "id": "security",
+      "labelEn": "Security",
+      "labelSw": "Usalama",
+      "count": 300,
+      "kind": "theme"
+    },
+    {
+      "id": "forgiveness",
+      "labelEn": "Forgiveness",
+      "labelSw": "Msamaha",
+      "count": 300,
+      "kind": "theme"
+    },
+    {
+      "id": "strength",
+      "labelEn": "Strength",
+      "labelSw": "Nguvu",
+      "count": 300,
+      "kind": "theme"
+    },
+    {
+      "id": "wisdom",
+      "labelEn": "Wisdom",
+      "labelSw": "Hekima",
+      "count": 300,
+      "kind": "theme"
+    },
+    {
+      "id": "joy",
+      "labelEn": "Joy",
+      "labelSw": "Furaha",
+      "count": 300,
+      "kind": "theme"
+    },
+    {
+      "id": "trust",
+      "labelEn": "Trust",
+      "labelSw": "Kuamini",
+      "count": 213,
+      "kind": "theme"
+    },
+    {
+      "id": "grace",
+      "labelEn": "Grace",
+      "labelSw": "Neema",
+      "count": 258,
+      "kind": "theme"
+    },
+    {
+      "id": "mercy",
+      "labelEn": "Mercy",
+      "labelSw": "Rehema",
+      "count": 300,
+      "kind": "theme"
+    },
+    {
+      "id": "comfort",
+      "labelEn": "Comfort",
+      "labelSw": "Faraja",
+      "count": 300,
+      "kind": "theme"
+    },
+    {
+      "id": "courage",
+      "labelEn": "Courage",
+      "labelSw": "Ujasiri",
+      "count": 300,
+      "kind": "theme"
+    },
+    {
+      "id": "guidance",
+      "labelEn": "Guidance",
+      "labelSw": "Mwongozo",
+      "count": 300,
+      "kind": "theme"
+    },
+    {
+      "id": "patience",
+      "labelEn": "Patience",
+      "labelSw": "Subira",
+      "count": 300,
+      "kind": "theme"
+    },
+    {
+      "id": "peace",
+      "labelEn": "Peace",
+      "labelSw": "Amani",
+      "count": 300,
+      "kind": "theme"
+    },
+    {
+      "id": "anger",
+      "labelEn": "Anger",
+      "labelSw": "Hasira",
+      "count": 300,
+      "kind": "topic"
+    },
+    {
+      "id": "fear",
+      "labelEn": "Fear & Anxiety",
+      "labelSw": "Hofu na Wasiwasi",
+      "count": 295,
+      "kind": "topic"
+    },
+    {
+      "id": "marriage",
+      "labelEn": "Marriage",
+      "labelSw": "Ndoa",
+      "count": 300,
+      "kind": "topic"
+    },
+    {
+      "id": "prayer",
+      "labelEn": "Prayer",
+      "labelSw": "Sala",
+      "count": 300,
+      "kind": "topic"
+    },
+    {
+      "id": "doubt",
+      "labelEn": "Doubt",
+      "labelSw": "Shaka",
+      "count": 300,
+      "kind": "topic"
+    },
+    {
+      "id": "guilt",
+      "labelEn": "Guilt & Repentance",
+      "labelSw": "Hatia na Toba",
+      "count": 300,
+      "kind": "topic"
+    },
+    {
+      "id": "grief",
+      "labelEn": "Grief",
+      "labelSw": "Huzuni",
+      "count": 252,
+      "kind": "topic"
+    }
+  ]
+}

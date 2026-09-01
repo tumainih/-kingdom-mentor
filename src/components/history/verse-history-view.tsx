@@ -12,13 +12,15 @@ import {
   maxSelectableHourForDate,
   selectableHoursForDate,
 } from "@/lib/bible/history-hours";
-import type { HourlyThemeId } from "@/lib/bible/hourly-themes";
+import { getSlotForHour, themeLabel, type HourlyThemeId } from "@/lib/bible/hourly-themes";
+import { resolveHourlyVerseClient } from "@/lib/bible/resolve-hourly-verse.client";
 
 interface HourlyVersePayload {
   hour: number;
   theme: HourlyThemeId;
   themeLabel: string;
   scheduledRef: string;
+  poolSize: number;
   passage: { ref: string; text: string; refEn?: string } | null;
 }
 
@@ -43,11 +45,12 @@ export function VerseHistoryView() {
   const [now, setNow] = useState<Date | null>(null);
   const [date, setDate] = useState("");
   const [hour, setHour] = useState(0);
-  const [slots, setSlots] = useState<HourlyVersePayload[]>([]);
+  const [verse, setVerse] = useState<HourlyVersePayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
   const today = now ? localDateInputValue(now) : "";
+  const isFutureDate = Boolean(date && today && date > today);
 
   useEffect(() => {
     const current = new Date();
@@ -69,23 +72,53 @@ export function VerseHistoryView() {
   }, []);
 
   useEffect(() => {
+    if (!date || !now || isFutureDate) {
+      setVerse(null);
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
     void (async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/data/hourly-${locale}.json`);
-        const data = (await res.json()) as HourlyVersePayload[];
-        if (!cancelled) setSlots(data);
+        const slot = getSlotForHour(hour);
+        const resolved = await resolveHourlyVerseClient(
+          slot.theme,
+          locale,
+          hour,
+          date,
+        );
+        if (cancelled) return;
+
+        if (resolved.passage) {
+          setVerse({
+            hour,
+            theme: slot.theme,
+            themeLabel: themeLabel(slot.theme, locale),
+            scheduledRef: resolved.scheduledRef,
+            poolSize: resolved.poolSize,
+            passage: resolved.passage,
+          });
+          return;
+        }
+
+        const res = await fetch(
+          `/api/hourly-verse?locale=${locale}&hour=${hour}&date=${date}`,
+        );
+        const data = (await res.json()) as HourlyVersePayload;
+        if (!cancelled) setVerse(data);
       } catch {
-        if (!cancelled) setSlots([]);
+        if (!cancelled) setVerse(null);
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
+
     return () => {
       cancelled = true;
     };
-  }, [locale]);
+  }, [date, hour, locale, now, isFutureDate]);
 
   const allowedHours = useMemo(() => {
     if (!date || !now) return [];
@@ -97,17 +130,10 @@ export function VerseHistoryView() {
     return maxSelectableHourForDate(date, now);
   }, [date, now]);
 
-  const isFutureDate = Boolean(date && today && date > today);
-
   useEffect(() => {
     if (!now || !date) return;
     setHour((prev) => clampHourForDate(date, prev, now));
   }, [date, now]);
-
-  const verse = useMemo(
-    () => slots.find((s) => s.hour === hour) ?? null,
-    [slots, hour],
-  );
 
   const handleDateChange = useCallback(
     (nextDate: string) => {

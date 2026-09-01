@@ -6,13 +6,18 @@ import { Bell, Check, Copy, MessageSquare } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/context/locale-context";
-import type { HourlyThemeId } from "@/lib/bible/hourly-themes";
+import { getSlotForHour, themeLabel, type HourlyThemeId } from "@/lib/bible/hourly-themes";
+import {
+  localDateString,
+  resolveHourlyVerseClient,
+} from "@/lib/bible/resolve-hourly-verse.client";
 
 interface HourlyVersePayload {
   hour: number;
   theme: HourlyThemeId;
   themeLabel: string;
   scheduledRef: string;
+  poolSize: number;
   passage: { ref: string; text: string; refEn?: string } | null;
 }
 
@@ -61,21 +66,30 @@ export function HourlyVerseHome() {
   }, []);
 
   const fetchVerse = useCallback(
-    async (hour: number) => {
+    async (hour: number, dateStr: string) => {
       setLoading(true);
       try {
-        const localRes = await fetch(`/data/hourly-${locale}.json`);
-        if (localRes.ok) {
-          const slots = (await localRes.json()) as HourlyVersePayload[];
-          const match = slots.find((s) => s.hour === hour);
-          if (match?.passage) {
-            setVerse(match);
-            return;
-          }
+        const slot = getSlotForHour(hour);
+        const resolved = await resolveHourlyVerseClient(
+          slot.theme,
+          locale,
+          hour,
+          dateStr,
+        );
+        if (resolved.passage) {
+          setVerse({
+            hour: slot.hour,
+            theme: slot.theme,
+            themeLabel: themeLabel(slot.theme, locale),
+            scheduledRef: resolved.scheduledRef,
+            poolSize: resolved.poolSize,
+            passage: resolved.passage,
+          });
+          return;
         }
 
         const res = await fetch(
-          `/api/hourly-verse?locale=${locale}&hour=${hour}`,
+          `/api/hourly-verse?locale=${locale}&hour=${hour}&date=${dateStr}`,
         );
         const data = (await res.json()) as HourlyVersePayload;
         setVerse(data);
@@ -98,9 +112,9 @@ export function HourlyVerseHome() {
   const currentHour = now?.getHours() ?? null;
 
   useEffect(() => {
-    if (currentHour === null) return;
-    void fetchVerse(currentHour);
-  }, [currentHour, fetchVerse]);
+    if (currentHour === null || !now) return;
+    void fetchVerse(currentHour, localDateString(now));
+  }, [currentHour, now, fetchVerse]);
 
   const copyVerse = useCallback(async () => {
     if (!verse?.passage) return;
@@ -206,6 +220,11 @@ export function HourlyVerseHome() {
                         hour: pad((currentHour + 1) % 24),
                       })
                     : null}
+                  {verse.poolSize > 0 ? (
+                    <span className="mt-0.5 block">
+                      {t("homePoolSize", { count: verse.poolSize })}
+                    </span>
+                  ) : null}
                 </p>
               </div>
             ) : (
@@ -227,6 +246,12 @@ export function HourlyVerseHome() {
               className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-brand/30 px-3 text-xs font-medium"
             >
               {t("navHistory")}
+            </Link>
+            <Link
+              href="/areas"
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border/50 px-3 text-xs font-medium text-muted-foreground"
+            >
+              {t("navAreas")}
             </Link>
             <Link
               href="/notifications"

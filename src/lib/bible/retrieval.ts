@@ -1,5 +1,6 @@
 import Fuse from "fuse.js";
 import type { BibleLocale } from "./locale";
+import { AREA_KEYWORDS } from "./content-areas";
 import { loadVerses } from "./verse-lookup";
 import {
   detectNarrative,
@@ -8,23 +9,13 @@ import {
 } from "./narratives";
 import type { BibleVerse, RetrievedPassage } from "./types";
 import { lookupVerseReference } from "./verse-lookup";
+import { detectContentAreas } from "./verse-pools-detect";
+import { retrieveFromPools as retrieveFromPoolsClient } from "./retrieve-pools.client";
 
 export type { BibleLocale };
 
-const TOPIC_KEYWORDS: Record<string, string[]> = {
-  forgiveness: ["forgive", "mercy", "pardon", "reconcile", "msamaha", "samehe"],
-  anger: ["anger", "wrath", "slow to anger", "hasira", "ghadhabu"],
-  love: ["love one another", "charity", "beloved", "upendo", "penda"],
-  wisdom: ["wisdom", "understanding", "prudent", "wise", "hekima", "busara"],
-  fear: ["fear not", "afraid", "anxious", "trust in the lord", "ogopa", "wasiwasi", "hofu"],
-  marriage: ["husband", "wife", "marriage", "adultery", "mume", "mke", "ndoa"],
-  prayer: ["pray", "prayer", "supplication", "omba", "sala", "ombea"],
-  faith: ["faith", "believe", "trust", "imani", "amini"],
-  doubt: ["doubt", "unbelief", "shaka", "waswas"],
-  guilt: ["guilty", "repent", "forgive", "confess", "hatia", "toba"],
-  grief: ["grief", "mourn", "loss", "huzuni", "ombolezo", "faraja"],
-  peace: ["peace", "comfort", "amani", "faraja"],
-};
+/** @deprecated Use AREA_KEYWORDS from content-areas.ts */
+const TOPIC_KEYWORDS = AREA_KEYWORDS;
 
 const WEAK_SINGLE_WORDS = new Set([
   "about", "accuse", "after", "also", "been", "before", "being", "could",
@@ -156,6 +147,61 @@ export async function retrieveScripture(
   const narrative = detectNarrative(userText, locale);
   if (narrative) {
     return retrieveNarrativePassages(narrative, locale, allVerses, Math.max(limit, 15));
+  }
+
+  const areas = detectContentAreas(userText);
+  if (areas.length > 0) {
+    const poolPassages =
+      typeof window !== "undefined"
+        ? await retrieveFromPoolsClient(areas, locale, limit, userText)
+        : await (
+            await import("./verse-pools.server")
+          ).retrieveFromPoolsServer(areas, locale, limit, userText);
+    if (poolPassages.length >= limit) {
+      return poolPassages.slice(0, limit);
+    }
+
+    const fuse = await getFuse(locale);
+    const queries = extractSearchQueries(userText);
+    const scored = new Map<string, { verse: BibleVerse; score: number }>();
+
+    for (const query of queries) {
+      const perQueryLimit = query.split(/\s+/).length >= 2 ? 6 : 4;
+      for (const result of fuse.search(query, { limit: perQueryLimit })) {
+        const existing = scored.get(result.item.ref);
+        const score = result.score ?? 1;
+        if (!existing || score < existing.score) {
+          scored.set(result.item.ref, { verse: result.item, score });
+        }
+      }
+    }
+
+    let ranked = [...scored.values()]
+      .filter(({ score }) => score <= STRONG_MATCH_MAX_SCORE)
+      .sort((a, b) => a.score - b.score);
+
+    if (ranked.length === 0) {
+      ranked = [...scored.values()]
+        .filter(({ score }) => score <= FALLBACK_MAX_SCORE)
+        .sort((a, b) => a.score - b.score);
+    }
+
+    const fusePassages = dedupeByRef(ranked.map(({ verse }) => verse)).map(
+      (v) => ({
+        ref: v.ref,
+        text: v.text,
+        refEn: v.refEn ?? (locale === "en" ? v.ref : undefined),
+      }),
+    );
+
+    const seen = new Set(poolPassages.map((p) => p.ref));
+    const merged = [...poolPassages];
+    for (const p of fusePassages) {
+      if (seen.has(p.ref)) continue;
+      merged.push(p);
+      if (merged.length >= limit) break;
+    }
+    return merged.slice(0, limit);
   }
 
   const fuse = await getFuse(locale);

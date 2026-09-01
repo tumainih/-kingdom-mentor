@@ -26,18 +26,33 @@ function walk(dir, base = "") {
 
 const staticAssets = walk(staticDir);
 
+const poolAssets = [];
+const poolsDir = path.join(root, "public", "data", "pools");
+try {
+  for (const name of readdirSync(poolsDir)) {
+    poolAssets.push(`/data/pools/${name}`);
+  }
+} catch {
+  /* pools not built yet */
+}
+
 const precache = [
   "/",
   "/home",
   "/history",
+  "/areas",
   "/notifications",
   "/install",
   "/manifest.webmanifest",
   "/apple-touch-icon.png",
   "/icon-192.png",
   "/icon-512.png",
+  "/data/hourly-schedule.json",
   "/data/hourly-en.json",
   "/data/hourly-sw.json",
+  "/data/kjv-index.json",
+  "/data/swahili-index.json",
+  ...poolAssets,
   ...staticAssets,
 ];
 

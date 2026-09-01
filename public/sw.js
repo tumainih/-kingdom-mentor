@@ -1,36 +1,66 @@
-/* Kingdom AI — offline-capable service worker (build mEf7H_ja9u_-D7NZ5WljL) */
-const CACHE = "kingdom-ai-mEf7H_ja9u_-D7NZ5WljL";
+/* Kingdom AI — offline-capable service worker (build ga7YzT6UThWkjAh_PAreH) */
+const CACHE = "kingdom-ai-ga7YzT6UThWkjAh_PAreH";
 const PRECACHE = [
   "/",
   "/home",
   "/history",
+  "/areas",
   "/notifications",
   "/install",
   "/manifest.webmanifest",
   "/apple-touch-icon.png",
   "/icon-192.png",
   "/icon-512.png",
+  "/data/hourly-schedule.json",
   "/data/hourly-en.json",
   "/data/hourly-sw.json",
-  "/_next/static/chunks/02s8cw8-iig5o.js",
+  "/data/kjv-index.json",
+  "/data/swahili-index.json",
+  "/data/pools/anger.json",
+  "/data/pools/comfort.json",
+  "/data/pools/courage.json",
+  "/data/pools/doubt.json",
+  "/data/pools/faith.json",
+  "/data/pools/fear.json",
+  "/data/pools/forgiveness.json",
+  "/data/pools/grace.json",
+  "/data/pools/grief.json",
+  "/data/pools/guidance.json",
+  "/data/pools/guilt.json",
+  "/data/pools/hope.json",
+  "/data/pools/index.json",
+  "/data/pools/joy.json",
+  "/data/pools/love.json",
+  "/data/pools/marriage.json",
+  "/data/pools/mercy.json",
+  "/data/pools/patience.json",
+  "/data/pools/peace.json",
+  "/data/pools/prayer.json",
+  "/data/pools/security.json",
+  "/data/pools/strength.json",
+  "/data/pools/trust.json",
+  "/data/pools/wisdom.json",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
-  "/_next/static/chunks/0u-2edh8m05zc.js",
+  "/_next/static/chunks/196sgafjkzhm7.js",
   "/_next/static/chunks/1ha3d4buospca.js",
+  "/_next/static/chunks/1hsi7i8_qoc6w.js",
   "/_next/static/chunks/1z99mlp5cofct.js",
+  "/_next/static/chunks/24ihfyt9kr7mm.js",
   "/_next/static/chunks/24t7crwozt_yd.js",
-  "/_next/static/chunks/2usf06h1uchme.css",
+  "/_next/static/chunks/2hk3aqg7abklb.css",
+  "/_next/static/chunks/2iftyeritnsue.js",
   "/_next/static/chunks/2y1nd8vf7h77j.js",
   "/_next/static/chunks/3_qcxdfi4zlnd.js",
   "/_next/static/chunks/3adwt13tezgym.js",
   "/_next/static/chunks/3hhai1xccupwp.js",
+  "/_next/static/chunks/3i41wwvnz6-p2.js",
   "/_next/static/chunks/3q576hlfnuh0n.js",
-  "/_next/static/chunks/3qj_7-wm0x83d.js",
-  "/_next/static/chunks/40_-th3l4iag_.js",
+  "/_next/static/chunks/3qp2shuz549qd.js",
   "/_next/static/chunks/turbopack-0snm50y8kpj5e.js",
-  "/_next/static/mEf7H_ja9u_-D7NZ5WljL/_buildManifest.js",
-  "/_next/static/mEf7H_ja9u_-D7NZ5WljL/_clientMiddlewareManifest.js",
-  "/_next/static/mEf7H_ja9u_-D7NZ5WljL/_ssgManifest.js",
+  "/_next/static/ga7YzT6UThWkjAh_PAreH/_buildManifest.js",
+  "/_next/static/ga7YzT6UThWkjAh_PAreH/_clientMiddlewareManifest.js",
+  "/_next/static/ga7YzT6UThWkjAh_PAreH/_ssgManifest.js",
   "/_next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2",
   "/_next/static/media/2bbe8d2671613f1f-s.0k62hbripvv8p.woff2",
   "/_next/static/media/2c55a0e60120577a-s.0-dom-5bn10r2.woff2",
@@ -165,12 +195,90 @@ async function writeNotificationState(state) {
 }
 
 async function loadHourlyVerse(locale, hour) {
-  const url = "/data/hourly-" + locale + ".json";
-  const res = await cacheFirst(new Request(url));
-  if (!res || !res.ok) return null;
-  const slots = await res.json();
-  if (!Array.isArray(slots)) return null;
-  return slots.find((s) => s.hour === hour) ?? null;
+  const scheduleRes = await cacheFirst(new Request("/data/hourly-schedule.json"));
+  if (!scheduleRes || !scheduleRes.ok) return null;
+  const schedule = await scheduleRes.json();
+  const slot = schedule.find((s) => s.hour === hour);
+  if (!slot) return null;
+
+  const poolRes = await cacheFirst(new Request("/data/pools/" + slot.theme + ".json"));
+  if (!poolRes || !poolRes.ok) return null;
+  const pool = await poolRes.json();
+  if (!pool.refs?.length) return null;
+
+  const date = localDateString();
+  const seed = slot.theme + ":" + date + ":" + hour;
+  const scheduledRef = pool.refs[pickPoolIndex(seed, pool.refs.length)];
+
+  const bibleFile = locale === "sw" ? "swahili-index.json" : "kjv-index.json";
+  const bibleRes = await cacheFirst(new Request("/data/" + bibleFile));
+  if (!bibleRes || !bibleRes.ok) return null;
+  const verses = await bibleRes.json();
+  const passage = findVerseInIndex(verses, scheduledRef, locale);
+  if (!passage) return null;
+
+  const labels = {
+    love: { en: "Love", sw: "Upendo" },
+    hope: { en: "Hope", sw: "Matumaini" },
+    faith: { en: "Faith", sw: "Imani" },
+    security: { en: "Security", sw: "Usalama" },
+    forgiveness: { en: "Forgiveness", sw: "Msamaha" },
+    strength: { en: "Strength", sw: "Nguvu" },
+    wisdom: { en: "Wisdom", sw: "Hekima" },
+    joy: { en: "Joy", sw: "Furaha" },
+    trust: { en: "Trust", sw: "Kuamini" },
+    grace: { en: "Grace", sw: "Neema" },
+    mercy: { en: "Mercy", sw: "Rehema" },
+    comfort: { en: "Comfort", sw: "Faraja" },
+    courage: { en: "Courage", sw: "Ujasiri" },
+    guidance: { en: "Guidance", sw: "Mwongozo" },
+    patience: { en: "Patience", sw: "Subira" },
+    peace: { en: "Peace", sw: "Amani" },
+  };
+
+  return {
+    hour,
+    theme: slot.theme,
+    themeLabel: labels[slot.theme]?.[locale] || slot.theme,
+    scheduledRef,
+    passage,
+  };
+}
+
+function hashSeed(input) {
+  let h = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function pickPoolIndex(seed, length) {
+  if (length <= 0) return 0;
+  return hashSeed(seed) % length;
+}
+
+function localDateString() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return y + "-" + m + "-" + d;
+}
+
+function normalizeRef(ref) {
+  return ref.replace(/^Psalm\b/, "Psalms").replace(/\s+/g, " ").trim();
+}
+
+function findVerseInIndex(verses, ref, locale) {
+  const normalized = normalizeRef(ref);
+  if (locale === "sw") {
+    const byEn = verses.find((v) => v.refEn === normalized || v.refEn === ref);
+    if (byEn) return { ref: byEn.ref, text: byEn.text, refEn: byEn.refEn };
+  }
+  const hit = verses.find((v) => v.ref === normalized || v.ref === ref);
+  return hit ? { ref: hit.ref, text: hit.text, refEn: hit.refEn } : null;
 }
 
 function shouldNotifyHour(state, hour) {

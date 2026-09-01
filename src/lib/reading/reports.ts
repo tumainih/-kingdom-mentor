@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { backfillAbsentSlots } from "@/lib/reading/backfill";
-import { periodKey } from "@/lib/reading/periods";
+import { dueReportWindows, periodKey, reportUnitLabel } from "@/lib/reading/periods";
 import {
   averageRate,
   lapseMsToRate,
@@ -18,7 +18,6 @@ import {
   saveReport,
 } from "@/lib/reading/store.server";
 import type { DevelopmentReport, PendingNotification, ReadEvent, ReportUnit } from "@/lib/reading/types";
-import { dueReportWindows } from "@/lib/reading/periods";
 import { ensureWebPush, webpush } from "@/lib/push/vapid";
 import { listPushSubscriptions } from "@/lib/push/store";
 
@@ -203,7 +202,13 @@ async function notifyReportReady(
   if (!sub) return;
 
   const title = sub.locale === "sw" ? "Ripoti ya maendeleo" : "Development report";
-  const label = report.customLabel || report.unit;
+  const label =
+    report.customLabel ||
+    (report.unit === "custom"
+      ? sub.locale === "sw"
+        ? "Masafa maalum"
+        : "Custom range"
+      : reportUnitLabel(report.unit, sub.locale));
   const body =
     sub.locale === "sw"
       ? `${label} · wastani ${report.avgRate} · ${report.eventCount} arifa`

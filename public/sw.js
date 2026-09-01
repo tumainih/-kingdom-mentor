@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build k-At8RB77fjFu1lsVfjvC) */
-const CACHE = "kingdom-ai-k-At8RB77fjFu1lsVfjvC";
+/* Kingdom AI — offline-capable service worker (build fLvG508plrQQWlqWb68rS) */
+const CACHE = "kingdom-ai-fLvG508plrQQWlqWb68rS";
 const PRECACHE = [
   "/",
   "/home",
@@ -42,7 +42,6 @@ const PRECACHE = [
   "/data/pools/wisdom.json",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
-  "/_next/static/chunks/0rsnbqltz8cn0.css",
   "/_next/static/chunks/0v-jrbses_9y8.js",
   "/_next/static/chunks/11licf-gz3vxm.js",
   "/_next/static/chunks/1g179lcifdq15.js",
@@ -51,17 +50,18 @@ const PRECACHE = [
   "/_next/static/chunks/1z99mlp5cofct.js",
   "/_next/static/chunks/24ihfyt9kr7mm.js",
   "/_next/static/chunks/24t7crwozt_yd.js",
+  "/_next/static/chunks/2vw8t6u-2ywit.js",
   "/_next/static/chunks/2w4fbwkoiy-9y.js",
   "/_next/static/chunks/2x5oncyuqs3pt.js",
   "/_next/static/chunks/373skgu07-_06.js",
   "/_next/static/chunks/38crxovcaonw3.js",
   "/_next/static/chunks/3adwt13tezgym.js",
-  "/_next/static/chunks/3cq74-2go9m3a.js",
   "/_next/static/chunks/3q576hlfnuh0n.js",
+  "/_next/static/chunks/3rqun10tu03ye.css",
   "/_next/static/chunks/turbopack-0snm50y8kpj5e.js",
-  "/_next/static/k-At8RB77fjFu1lsVfjvC/_buildManifest.js",
-  "/_next/static/k-At8RB77fjFu1lsVfjvC/_clientMiddlewareManifest.js",
-  "/_next/static/k-At8RB77fjFu1lsVfjvC/_ssgManifest.js",
+  "/_next/static/fLvG508plrQQWlqWb68rS/_buildManifest.js",
+  "/_next/static/fLvG508plrQQWlqWb68rS/_clientMiddlewareManifest.js",
+  "/_next/static/fLvG508plrQQWlqWb68rS/_ssgManifest.js",
   "/_next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2",
   "/_next/static/media/2bbe8d2671613f1f-s.0k62hbripvv8p.woff2",
   "/_next/static/media/2c55a0e60120577a-s.0-dom-5bn10r2.woff2",

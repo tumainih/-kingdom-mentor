@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bell, Home, Zap } from "lucide-react";
+import { Bell, ChevronDown, ChevronUp, Home, Zap } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { VerseNotificationsToggle } from "@/components/pwa/verse-notifications-toggle";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,7 @@ export function NotificationSettingsView() {
   const [testMessage, setTestMessage] = useState<"sent" | "failed" | "scheduled" | null>(null);
   const [pushServerReady, setPushServerReady] = useState<boolean | null>(null);
   const [backgroundPushReady, setBackgroundPushReady] = useState<boolean | null>(null);
+  const [testOpen, setTestOpen] = useState(false);
   const scheduleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const sendTest = useCallback(async () => {
@@ -128,8 +129,8 @@ export function NotificationSettingsView() {
     <div className="canvas-gradient flex h-dvh min-h-0 flex-col overflow-hidden supports-[height:100dvh]:h-dvh">
       <AppHeader aiReady showNav compactNav hideStatusOnMobile />
 
-      <main className="mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 sm:px-4">
-        <div className="shrink-0 text-center">
+      <main className="mx-auto min-h-0 w-full max-w-lg flex-1 overflow-y-auto overscroll-contain px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 sm:px-4">
+        <div className="text-center">
           <Bell className="mx-auto h-7 w-7 text-brand sm:h-8 sm:w-8" />
           <h1 className="mt-1.5 font-heading text-lg font-semibold sm:text-xl">
             {t("notifyPageTitle")}
@@ -139,57 +140,76 @@ export function NotificationSettingsView() {
           </p>
         </div>
 
-        <div className="mt-3 shrink-0">
+        <div className="mt-3">
           <VerseNotificationsToggle compact />
           {typeof Notification !== "undefined" &&
           Notification.permission === "granted" &&
           isVerseNotificationsEnabled() ? (
-            <div className="mt-2 rounded-lg border border-border/50 bg-card/40 p-3">
-              <p className="text-xs font-semibold">{t("notifyTestNow")}</p>
-              <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                <label className="text-[10px] text-muted-foreground">
-                  {t("notifyTestHour")}
-                  <select
-                    value={testHour}
-                    onChange={(e) => setTestHour(Number(e.target.value))}
-                    className="mt-1 w-full rounded-md border border-border/50 bg-background px-2 py-1.5 text-xs"
-                  >
-                    {Array.from({ length: 24 }, (_, h) => (
-                      <option key={h} value={h}>
-                        {pad(h)}:00
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="text-[10px] text-muted-foreground">
-                  {t("notifyTestAt")}
-                  <input
-                    type="datetime-local"
-                    value={testAt}
-                    onChange={(e) => setTestAt(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-border/50 bg-background px-2 py-1.5 text-xs"
-                  />
-                </label>
-              </div>
-              <Button
+            <div className="mt-2 rounded-lg border border-border/50 bg-card/40">
+              <button
                 type="button"
-                variant="outline"
-                size="sm"
-                className="mt-2 w-full gap-2 text-xs"
-                disabled={testing}
-                onClick={() => testNotification()}
+                onClick={() => setTestOpen((open) => !open)}
+                className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left"
+                aria-expanded={testOpen}
               >
-                <Zap className="h-3.5 w-3.5" />
-                {testing ? t("notifyWorking") : t("notifyTestSend")}
-              </Button>
+                <span className="flex items-center gap-2 text-xs font-semibold">
+                  <Zap className="h-3.5 w-3.5 text-brand" />
+                  {t("notifyTestNow")}
+                </span>
+                {testOpen ? (
+                  <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                )}
+              </button>
+              {testOpen ? (
+                <div className="border-t border-border/40 px-3 pb-3 pt-2">
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <label className="text-[10px] text-muted-foreground">
+                      {t("notifyTestHour")}
+                      <select
+                        value={testHour}
+                        onChange={(e) => setTestHour(Number(e.target.value))}
+                        className="mt-1 w-full rounded-md border border-border/50 bg-background px-2 py-1.5 text-xs"
+                      >
+                        {Array.from({ length: 24 }, (_, h) => (
+                          <option key={h} value={h}>
+                            {pad(h)}:00
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="text-[10px] text-muted-foreground">
+                      {t("notifyTestAt")}
+                      <input
+                        type="datetime-local"
+                        value={testAt}
+                        onChange={(e) => setTestAt(e.target.value)}
+                        className="mt-1 w-full rounded-md border border-border/50 bg-background px-2 py-1.5 text-xs"
+                      />
+                    </label>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 w-full gap-2 text-xs"
+                    disabled={testing}
+                    onClick={() => testNotification()}
+                  >
+                    <Zap className="h-3.5 w-3.5" />
+                    {testing ? t("notifyWorking") : t("notifyTestSend")}
+                  </Button>
+                  {testMessage === "sent" ? (
+                    <p className="mt-2 text-[10px] text-brand-light">{t("notifyTestSent")}</p>
+                  ) : testMessage === "scheduled" ? (
+                    <p className="mt-2 text-[10px] text-brand-light">{t("notifyTestScheduled")}</p>
+                  ) : testMessage === "failed" ? (
+                    <p className="mt-2 text-[10px] text-amber-200/90">{t("notifyTestFailed")}</p>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
-          ) : null}
-          {testMessage === "sent" ? (
-            <p className="mt-2 text-[10px] text-brand-light">{t("notifyTestSent")}</p>
-          ) : testMessage === "scheduled" ? (
-            <p className="mt-2 text-[10px] text-brand-light">{t("notifyTestScheduled")}</p>
-          ) : testMessage === "failed" ? (
-            <p className="mt-2 text-[10px] text-amber-200/90">{t("notifyTestFailed")}</p>
           ) : null}
           {backgroundPushReady ? (
             <p className="mt-2 text-[10px] leading-snug text-brand-light">
@@ -208,15 +228,15 @@ export function NotificationSettingsView() {
           </p>
         </div>
 
-        <div className="mt-3 flex min-h-0 flex-1 flex-col rounded-xl border border-border/50 bg-card/40 p-3 sm:p-4">
-          <p className="shrink-0 text-left text-xs font-semibold text-foreground">
+        <div className="mt-3 rounded-xl border border-border/50 bg-card/40 p-3 sm:p-4">
+          <p className="text-left text-xs font-semibold text-foreground">
             {t("historyNotifyHoursTitle")}
           </p>
-          <p className="mt-1 shrink-0 text-left text-[10px] leading-snug text-muted-foreground sm:text-[11px]">
+          <p className="mt-1 text-left text-[10px] leading-snug text-muted-foreground sm:text-[11px]">
             {t("historyNotifyHoursHint")}
           </p>
 
-          <div className="mt-2 flex shrink-0 flex-wrap gap-1.5">
+          <div className="mt-2 flex flex-wrap gap-1.5">
             <button
               type="button"
               onClick={() => selectPreset([6, 9, 12, 15, 18])}
@@ -233,30 +253,28 @@ export function NotificationSettingsView() {
             </button>
           </div>
 
-          <div className="mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-0.5">
-            <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6">
-              {Array.from({ length: 24 }, (_, h) => {
-                const active = selectedHours.includes(h);
-                return (
-                  <button
-                    key={h}
-                    type="button"
-                    onClick={() => toggleHour(h)}
-                    className={`rounded-md border py-2 text-[10px] font-semibold sm:text-xs ${
-                      active
-                        ? "border-brand bg-brand/15 text-brand-light"
-                        : "border-border/50 text-muted-foreground"
-                    }`}
-                  >
-                    {pad(h)}:00
-                  </button>
-                );
-              })}
-            </div>
+          <div className="mt-3 grid grid-cols-4 gap-1.5 sm:grid-cols-6">
+            {Array.from({ length: 24 }, (_, h) => {
+              const active = selectedHours.includes(h);
+              return (
+                <button
+                  key={h}
+                  type="button"
+                  onClick={() => toggleHour(h)}
+                  className={`rounded-md border py-2 text-[10px] font-semibold sm:text-xs ${
+                    active
+                      ? "border-brand bg-brand/15 text-brand-light"
+                      : "border-border/50 text-muted-foreground"
+                  }`}
+                >
+                  {pad(h)}:00
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div className="mt-2 shrink-0 flex justify-center gap-2 pb-0.5">
+        <div className="mt-3 flex justify-center gap-2 pb-1">
           <Link
             href="/home"
             className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-brand/30 px-3 text-xs font-medium"

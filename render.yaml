@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: kingdom-mentor
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /home
+    envVars:
+      - key: NODE_VERSION
+        value: "22"

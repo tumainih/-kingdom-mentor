@@ -66,24 +66,37 @@ Stories pull chapter ranges and key verses across the full 66-book canon.
 - **Chat** — type messages; replies stream as text only (no speech)
 - **Talk** — tap the mic to speak; Kingdom AI listens and **reads replies aloud**
 
-## Deploy (Vercel)
+## Deploy (free — no Vercel Pro needed)
+
+**Full guide:** [DEPLOY.md](./DEPLOY.md)
+
+### Render (recommended)
+
+1. [render.com](https://render.com) → **New Blueprint** or **Web Service**
+2. Connect **https://github.com/tumainih/-kingdom-mentor**
+3. Uses `render.yaml` — build: `npm install && npm run build`, start: `npm start`
+4. Add env vars from `.env.example` in the Render dashboard
+
+### Netlify
+
+1. [netlify.com](https://netlify.com) → Import from Git → same repo
+2. Uses `netlify.toml` automatically
+
+### Local production test
 
 ```bash
 npm run build
 npm start
 ```
 
-Or with Vercel CLI:
-
-```bash
-vercel login
-vercel deploy --prod
-```
+Open [http://localhost:3000](http://localhost:3000).
 
 Optional environment variables:
 
 - `GEMINI_API_KEY` — enables Gemini when quota allows; otherwise free mode
 - `GEMINI_MODEL` — optional (default: `gemini-3.6-flash`)
+- `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` — Web Push
+- `CRON_SECRET` — protects `/api/cron/hourly-verse` (use [cron-job.org](https://cron-job.org) on Render/Netlify)
 
 ## Rebuild Bible indexes (optional)
 

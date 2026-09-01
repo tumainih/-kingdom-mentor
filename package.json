@@ -10,8 +10,9 @@
     "prepare-offline": "node scripts/build-verse-pools.mjs && node scripts/prepare-offline.mjs",
     "prepare-pwa-icons": "node scripts/generate-pwa-icons.mjs",
     "build": "npm run prepare-offline && next build && node scripts/generate-sw.mjs",
-    "start": "next start",
-    "deploy": "vercel deploy --prod",
+    "start": "next start -H 0.0.0.0 -p ${PORT:-3000}",
+    "deploy:render": "echo 'Connect https://github.com/tumainih/-kingdom-mentor on Render — see DEPLOY.md'",
+    "deploy:netlify": "npm run build && npx netlify deploy --prod",
     "lint": "eslint"
   },
   "dependencies": {
@@ -33,6 +34,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.15.13",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

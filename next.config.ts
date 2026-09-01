@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
     "/api/chat": ["./data/**/*"],
     "/api/status": ["./data/**/*"],
     "/api/hourly-verse": ["./data/**/*"],
+    "/api/area-verses": ["./data/**/*"],
+    "/api/cron/hourly-verse": ["./data/**/*"],
   },
   async headers() {
     return [

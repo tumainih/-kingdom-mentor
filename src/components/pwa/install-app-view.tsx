@@ -24,6 +24,7 @@ import {
 } from "@/lib/pwa/platform";
 import { RegisterServiceWorker } from "./register-sw";
 import { warmOfflineCache } from "@/lib/offline/client-reply";
+import { VerseNotificationsToggle } from "./verse-notifications-toggle";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -191,6 +192,8 @@ export function InstallAppView() {
             ) : null}
           </div>
 
+          <VerseNotificationsToggle />
+
           <div className="mt-4 rounded-lg border border-border/40 bg-muted/30 px-3 py-2">
             <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
               {t("installOneLink")}
@@ -216,7 +219,7 @@ export function InstallAppView() {
                   </>
                 )}
               </Button>
-              {"share" in navigator && (
+              {canShare && (
                 <Button
                   type="button"
                   variant="outline"

@@ -97,6 +97,14 @@ export const translations = {
     installOfflinePreparing: "Preparing offline Bible…",
     installOfflineReady: "Offline Bible ready",
     offlineBanner: "Offline — hourly verses, Bible lookup, and guidance still work.",
+    notifyTitle: "Verse every 15 minutes",
+    notifyHint:
+      "Get a Scripture notification every 15 minutes — hope, faith, love, and more. Works best when Kingdom AI is installed.",
+    notifyEnable: "Turn on verse notifications",
+    notifyDisable: "Turn off notifications",
+    notifyWorking: "Updating…",
+    notifyActive: "Verse notifications are on — every 15 minutes.",
+    notifyDenied: "Notifications blocked. Allow them in your browser or phone settings.",
   },
   sw: {
     language: "Kiswahili",
@@ -200,6 +208,15 @@ export const translations = {
     installOfflineReady: "Biblia ya nje ya mtandao iko tayari",
     offlineBanner:
       "Nje ya mtandao — mistari ya kila saa, utafutaji wa mistari, na mwongozo bado vinafanya kazi.",
+    notifyTitle: "Mstari kila dakika 15",
+    notifyHint:
+      "Pokea arifa ya mstari kila dakika 15 — matumaini, imani, upendo, na zaidi. Inafanya kazi vizuri ukiwa umesakinisha Kingdom AI.",
+    notifyEnable: "Washa arifa za mistari",
+    notifyDisable: "Zima arifa",
+    notifyWorking: "Inasasisha…",
+    notifyActive: "Arifa za mistari zimewashwa — kila dakika 15.",
+    notifyDenied:
+      "Arifa zimezuiwa. Ziruhusu katika mipangilio ya kivinjari au simu yako.",
   },
 } as const;
 

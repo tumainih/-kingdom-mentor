@@ -2,6 +2,10 @@ import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const root = process.cwd();
+const notificationSnippet = readFileSync(
+  path.join(root, "scripts", "sw-notifications.snippet.js"),
+  "utf8",
+);
 const nextDir = path.join(root, ".next");
 const buildId = readFileSync(path.join(nextDir, "BUILD_ID"), "utf8").trim();
 const staticDir = path.join(nextDir, "static");
@@ -32,6 +36,8 @@ const precache = [
   "/icon-512.png",
   "/data/hourly-en.json",
   "/data/hourly-sw.json",
+  "/data/notification-en.json",
+  "/data/notification-sw.json",
   ...staticAssets,
 ];
 
@@ -49,7 +55,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))),
-    ).then(() => self.clients.claim()),
+    ).then(() => self.clients.claim()).then(() => resumeVerseNotifications()),
   );
 });
 
@@ -116,9 +122,7 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(networkFirst(request));
 });
 
-self.addEventListener("message", (event) => {
-  if (event.data === "skipWaiting") self.skipWaiting();
-});
+${notificationSnippet}
 `;
 
 writeFileSync(path.join(root, "public", "sw.js"), sw);

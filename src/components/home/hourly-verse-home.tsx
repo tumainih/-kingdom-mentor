@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Check, Copy, MessageSquare } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/ui/button";
+import { VerseNotificationsToggle } from "@/components/pwa/verse-notifications-toggle";
 import { useLocale } from "@/context/locale-context";
 import type { HourlyThemeId } from "@/lib/bible/hourly-themes";
 
@@ -218,7 +219,8 @@ export function HourlyVerseHome() {
 
         {/* Footer — pinned bottom */}
         <div className="shrink-0 pt-2 text-center sm:pt-3">
-          <p className="mx-auto mb-2 hidden max-w-sm text-[10px] leading-snug text-muted-foreground sm:block sm:text-xs">
+          <VerseNotificationsToggle compact />
+          <p className="mx-auto mb-2 mt-2 hidden max-w-sm text-[10px] leading-snug text-muted-foreground sm:block sm:text-xs">
             {t("homeSubtitle")}
           </p>
           <Link

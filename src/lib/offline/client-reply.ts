@@ -25,6 +25,8 @@ export async function warmOfflineCache(): Promise<void> {
     "/data/swahili-index.json",
     "/data/hourly-en.json",
     "/data/hourly-sw.json",
+    "/data/notification-en.json",
+    "/data/notification-sw.json",
   ];
 
   await Promise.allSettled(

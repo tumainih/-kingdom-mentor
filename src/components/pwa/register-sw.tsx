@@ -2,6 +2,10 @@
 
 import { useEffect } from "react";
 import { warmOfflineCache } from "@/lib/offline/client-reply";
+import {
+  isVerseNotificationsEnabled,
+  syncVerseNotifications,
+} from "@/lib/notifications/verse-notifications";
 
 export function RegisterServiceWorker() {
   useEffect(() => {
@@ -20,6 +24,12 @@ export function RegisterServiceWorker() {
         });
 
         void warmOfflineCache();
+
+        if (isVerseNotificationsEnabled()) {
+          const locale =
+            (localStorage.getItem("kingdom-locale") as "en" | "sw" | null) ?? "en";
+          void syncVerseNotifications(locale);
+        }
       })
       .catch(() => {
         /* optional */

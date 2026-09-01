@@ -33,6 +33,12 @@ The install page automatically downloads the full Bible, verse pools, and app pa
 
 > Offline + install require **HTTPS in production** (`npm run build && npm start` locally also works). Dev mode (`npm run dev`) does not register the service worker.
 
+## Google Play (Trusted Web Activity)
+
+See **[PLAY_STORE.md](./PLAY_STORE.md)** for building an Android App Bundle with Bubblewrap, Digital Asset Links (`/.well-known/assetlinks.json`), and the privacy policy at `/privacy`.
+
+Hourly verse alerts when the app is closed require **Web Push** (VAPID + Upstash Redis) and an hourly cron — see `PLAY_STORE.md` and `/api/health`.
+
 ## Prerequisites
 
 - Node.js 18+

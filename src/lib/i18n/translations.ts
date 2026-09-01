@@ -137,6 +137,31 @@ export const translations = {
       "After an update: turn alerts off, then on again so your phone registers for background push.",
     notifySoundHint:
       "Sound uses your phone's default notification tone. In Settings, allow notifications and sound for Kingdom AI.",
+    notifyAndroidTitle: "Android tips for reliable alerts",
+    notifyAndroidBattery:
+      "Settings → Apps → Kingdom AI → Battery → Unrestricted (or Don't optimize). Some phones label this \"Allow background activity\".",
+    notifyAndroidPermission:
+      "Settings → Apps → Kingdom AI → Notifications — turn on all categories and sound.",
+    notifyPlayStoreHint:
+      "Installing from Google Play uses the same alerts — enable notifications after first open.",
+    privacyLink: "Privacy policy",
+    privacyTitle: "Privacy Policy",
+    privacyUpdated: "Last updated: September 2026",
+    privacySection1Title: "Overview",
+    privacySection1Body:
+      "Kingdom AI is a Scripture mentor app. Most data stays on your device. We do not sell personal information.",
+    privacySection2Title: "On your device",
+    privacySection2Body:
+      "Your language choice, notification hours, reading history, and development reports are stored locally in your browser or installed app (IndexedDB and local storage). The full Bible text is bundled in the app for offline use.",
+    privacySection3Title: "Push notifications",
+    privacySection3Body:
+      "If you enable verse alerts, we store a Web Push subscription (endpoint and encryption keys), your timezone, chosen alert hours, and an anonymous device ID on our server (Upstash Redis) so we can send hourly Scripture when the app is closed. You can disable alerts anytime in the app.",
+    privacySection4Title: "Optional AI chat",
+    privacySection4Body:
+      "When online and configured, chat messages may be sent to Google Gemini to generate replies. Offline mode uses only local Scripture search — no message leaves your device.",
+    privacySection5Title: "Contact & deletion",
+    privacySection5Body:
+      "Clear site data or uninstall the app to remove local data. Push subscriptions expire when you turn alerts off or uninstall. For questions, contact the app publisher listed on the Play Store listing.",
     reportPageTitle: "Self-development reports",
     reportPageSubtitle:
       "Reports build quietly in the background (no alerts). Open this page anytime. 1 hour → 3 → 6 → …",
@@ -335,6 +360,31 @@ export const translations = {
       "Baada ya sasisho: zima arifa, kisha washa tena ili simu ijisajili kwa push ya nyuma.",
     notifySoundHint:
       "Sauti hutumia mlio wa arifa wa simu. Katika Mipangilio, ruhusu arifa na sauti kwa Kingdom AI.",
+    notifyAndroidTitle: "Vidokezo vya Android kwa arifa thabiti",
+    notifyAndroidBattery:
+      "Mipangilio → Programu → Kingdom AI → Betri → Bila kizuizi (au Usiboreshwe). Baadhi ya simu huita \"Ruhusu shughuli ya nyuma\".",
+    notifyAndroidPermission:
+      "Mipangilio → Programu → Kingdom AI → Arifa — washa kategoria zote na sauti.",
+    notifyPlayStoreHint:
+      "Kusakinisha kutoka Google Play hutumia arifa sawa — washa arifa baada ya kufungua mara ya kwanza.",
+    privacyLink: "Sera ya faragha",
+    privacyTitle: "Sera ya Faragha",
+    privacyUpdated: "Imesasishwa: Septemba 2026",
+    privacySection1Title: "Muhtasari",
+    privacySection1Body:
+      "Kingdom AI ni programu ya mwongozo wa Biblia. Data nyingi hubaki kwenye kifaa chako. Hatuuzi taarifa za kibinafsi.",
+    privacySection2Title: "Kwenye kifaa chako",
+    privacySection2Body:
+      "Lugha uliyochagua, saa za arifa, historia ya kusoma, na ripoti za maendeleo huhifadhiwa ndani ya kivinjari au programu (IndexedDB na hifadhi ya ndani). Maandiko kamili yako ndani ya programu kwa matumizi bila mtandao.",
+    privacySection3Title: "Arifa za push",
+    privacySection3Body:
+      "Ukikiwasha arifa za mistari, tunahifadhi usajili wa Web Push (endpoint na funguo za usimbaji), ukanda wa saa, saa ulizochagua, na kitambulisho cha kifaa bila jina kwenye seva yetu (Upstash Redis) ili tuweze kutuma mistari kila saa programu imefungwa. Unaweza kuzima arifa wakati wowote.",
+    privacySection4Title: "Mazungumzo ya AI (hiari)",
+    privacySection4Body:
+      "Ukiwa mtandaoni na AI imesanidiwa, ujumbe wa mazungumzo unaweza kutumwa kwa Google Gemini. Hali ya nje ya mtandao hutumia utafutaji wa Biblia wa ndani tu — hakuna ujumbe unaondoka kwenye kifaa.",
+    privacySection5Title: "Mawasiliano na kufuta",
+    privacySection5Body:
+      "Futa data ya tovuti au ondoa programu ili kuondoa data ya ndani. Usajili wa push unaisha unapozima arifa au kuondoa programu. Kwa maswali, wasiliana na mchapishaji aliyeorodheshwa kwenye Google Play.",
     reportPageTitle: "Ripoti za maendeleo",
     reportPageSubtitle:
       "Ripoti hujengwa kimya (hakuna arifa). Fungua ukurasa huu wakati wowote. Saa 1 → 3 → 6 → …",

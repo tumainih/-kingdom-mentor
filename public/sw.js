@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build w5ahVQ-0VwbuwxughkJHa) */
-const CACHE = "kingdom-ai-w5ahVQ-0VwbuwxughkJHa";
+/* Kingdom AI — offline-capable service worker (build cj66DuX_0MGfFjNo1Paot) */
+const CACHE = "kingdom-ai-cj66DuX_0MGfFjNo1Paot";
 const PRECACHE = [
   "/",
   "/home",
@@ -41,26 +41,30 @@ const PRECACHE = [
   "/data/pools/strength.json",
   "/data/pools/trust.json",
   "/data/pools/wisdom.json",
-  "/_next/static/chunks/0c-ectuafg47u.js",
+  "/_next/static/chunks/0ajknyisuvam9.css",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
+  "/_next/static/chunks/1cmk72eecyy08.js",
   "/_next/static/chunks/1g179lcifdq15.js",
   "/_next/static/chunks/1h0lni661c03r.js",
+  "/_next/static/chunks/1ijjdsn2z-ov1.js",
   "/_next/static/chunks/1uj543fzv0-to.js",
   "/_next/static/chunks/1z99mlp5cofct.js",
   "/_next/static/chunks/24ihfyt9kr7mm.js",
   "/_next/static/chunks/24t7crwozt_yd.js",
+  "/_next/static/chunks/2n612fe5thts9.js",
   "/_next/static/chunks/2rzlk32zr9nnw.js",
-  "/_next/static/chunks/2x5oncyuqs3pt.js",
   "/_next/static/chunks/2ydnron3zbkwf.js",
   "/_next/static/chunks/373skgu07-_06.js",
   "/_next/static/chunks/38crxovcaonw3.js",
   "/_next/static/chunks/3adwt13tezgym.js",
   "/_next/static/chunks/3q576hlfnuh0n.js",
   "/_next/static/chunks/3xvapijkg6ty7.js",
-  "/_next/static/chunks/3y41qw5u5vb7j.css",
-  "/_next/static/chunks/456jxsty-hc-k.js",
+  "/_next/static/chunks/4399mcs732nz1.js",
   "/_next/static/chunks/turbopack-0snm50y8kpj5e.js",
+  "/_next/static/cj66DuX_0MGfFjNo1Paot/_buildManifest.js",
+  "/_next/static/cj66DuX_0MGfFjNo1Paot/_clientMiddlewareManifest.js",
+  "/_next/static/cj66DuX_0MGfFjNo1Paot/_ssgManifest.js",
   "/_next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2",
   "/_next/static/media/2bbe8d2671613f1f-s.0k62hbripvv8p.woff2",
   "/_next/static/media/2c55a0e60120577a-s.0-dom-5bn10r2.woff2",
@@ -76,10 +80,7 @@ const PRECACHE = [
   "/_next/static/media/e7150917543fc9da-s.0mybutugvu-lq.woff2",
   "/_next/static/media/e9457141811d41ae-s.02frcczqg7k-8.woff2",
   "/_next/static/media/favicon.2vob68tjqpejf.ico",
-  "/_next/static/media/icon.1v5cwft9ue97g.svg",
-  "/_next/static/w5ahVQ-0VwbuwxughkJHa/_buildManifest.js",
-  "/_next/static/w5ahVQ-0VwbuwxughkJHa/_clientMiddlewareManifest.js",
-  "/_next/static/w5ahVQ-0VwbuwxughkJHa/_ssgManifest.js"
+  "/_next/static/media/icon.1v5cwft9ue97g.svg"
 ];
 
 self.addEventListener("install", (event) => {
@@ -317,6 +318,21 @@ function notificationId() {
 
 function currentSlotKey() {
   return localDateString() + ":" + currentHour();
+}
+
+function hourNotificationTag(hour) {
+  return "kingdom-hour-" + hour + "-" + localDateString();
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
 }
 
 function readActionTitle(locale) {
@@ -559,7 +575,7 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours) {
     body: lineTitle + "\n\n" + body,
     icon: "/icon-192.png",
     badge: "/icon-192.png",
-    tag: "kingdom-hour-" + hour + "-" + localDateString(),
+    tag: hourNotificationTag(hour),
     renotify: true,
     silent: false,
     vibrate: alreadyRead ? [] : [180, 90, 180],
@@ -618,6 +634,19 @@ function clearVerseTimer() {
 
 async function scheduleHourlyNotification(locale, notifyHours, delayMs) {
   clearVerseTimer();
+  const existing = await readNotificationState();
+  if (existing?.pushEnabled) {
+    await writeNotificationState({
+      ...(existing || {}),
+      enabled: true,
+      locale,
+      notifyHours: notifyHours ?? [],
+      pushEnabled: true,
+      nextAt: 0,
+    });
+    return;
+  }
+
   const wait = delayMs ?? msUntilNextHour();
   const nextAt = Date.now() + wait;
   await writeNotificationState({
@@ -651,12 +680,14 @@ async function stopHourlyNotifications() {
     notifyHours: [],
     nextAt: 0,
     lastHour: -1,
+    pushEnabled: false,
   });
 }
 
 async function resumeHourlyNotifications() {
   const state = await readNotificationState();
   if (!state?.enabled) return;
+  if (state.pushEnabled) return;
 
   const hour = currentHour();
   const slot = currentSlotKey();
@@ -704,7 +735,7 @@ self.addEventListener("push", (event) => {
         body: payload.body,
         icon: "/icon-192.png",
         badge: "/icon-192.png",
-        tag: "kingdom-hour-push-" + hour + "-" + localDateString(),
+        tag: hourNotificationTag(hour),
         renotify: true,
         silent: false,
         vibrate: alreadyRead ? [] : [180, 90, 180],
@@ -745,6 +776,13 @@ self.addEventListener("push", (event) => {
           timezone,
         });
       }
+
+      const prev = await readNotificationState();
+      await writeNotificationState({
+        ...(prev || {}),
+        lastSlot: localDateString() + ":" + hour,
+        lastHour: hour,
+      });
     })(),
   );
 });
@@ -799,13 +837,19 @@ self.addEventListener("message", (event) => {
     event.waitUntil(
       (async () => {
         const prev = await readNotificationState();
+        const pushEnabled = Boolean(data.pushEnabled);
         await writeNotificationState({
           ...(prev || {}),
           enabled: true,
           locale: data.locale || "en",
           notifyHours: data.notifyHours || [],
           deviceId: data.deviceId || prev?.deviceId,
+          pushEnabled,
         });
+        if (pushEnabled) {
+          clearVerseTimer();
+          return;
+        }
         await scheduleHourlyNotification(
           data.locale || "en",
           data.notifyHours || [],
@@ -834,5 +878,46 @@ self.addEventListener("message", (event) => {
     event.waitUntil(stopHourlyNotifications());
     return;
   }
+});
+
+async function resubscribePushFromState() {
+  const state = await readNotificationState();
+  if (!state?.enabled) return;
+
+  try {
+    const res = await fetch("/api/push/vapid-public-key");
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.configured || !data.publicKey) return;
+
+    const registration = self.registration;
+    if (!registration?.pushManager) return;
+
+    let subscription = await registration.pushManager.getSubscription();
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(data.publicKey),
+      });
+    }
+
+    await fetch("/api/push/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        subscription: subscription.toJSON(),
+        locale: state.locale || "en",
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        notifyHours: state.notifyHours || [],
+        deviceId: state.deviceId,
+      }),
+    });
+  } catch {
+    /* renewal is best-effort */
+  }
+}
+
+self.addEventListener("pushsubscriptionchange", (event) => {
+  event.waitUntil(resubscribePushFromState());
 });
 

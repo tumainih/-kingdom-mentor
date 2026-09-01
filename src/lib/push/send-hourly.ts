@@ -5,7 +5,6 @@ import {
   listPushSubscriptions,
   localDateKeyInTimezone,
   localHourInTimezone,
-  localMinuteInTimezone,
   markPushSent,
   type PushSubscriptionRecord,
   wasPushSent,
@@ -75,11 +74,6 @@ export async function sendHourlyVersePush(): Promise<{
 
   for (const sub of subs) {
     const hour = localHourInTimezone(sub.timezone, now);
-    const minute = localMinuteInTimezone(sub.timezone, now);
-    if (minute > 15) {
-      skipped++;
-      continue;
-    }
 
     if (!shouldNotifySub(sub, hour)) {
       skipped++;

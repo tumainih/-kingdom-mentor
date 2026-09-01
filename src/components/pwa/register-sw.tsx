@@ -58,13 +58,27 @@ export function RegisterServiceWorker() {
         /* optional */
       });
 
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      if (!isVerseNotificationsEnabled()) return;
+      const locale =
+        (localStorage.getItem("kingdom-locale") as "en" | "sw" | null) ?? "en";
+      void syncVerseNotifications(locale).catch(() => {
+        /* notification sync is best-effort */
+      });
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
     const onOnline = () => {
       void warmOfflineCache().catch(() => {
         /* offline warm is best-effort */
       });
     };
     window.addEventListener("online", onOnline);
-    return () => window.removeEventListener("online", onOnline);
+    return () => {
+      window.removeEventListener("online", onOnline);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, []);
 
   return null;

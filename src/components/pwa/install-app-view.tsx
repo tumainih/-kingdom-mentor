@@ -320,6 +320,13 @@ export function InstallAppView() {
                 <Link2 className="h-4 w-4" />
                 {t("installOpenBrowser")}
               </Link>
+
+              <Link
+                href="/privacy"
+                className="mt-3 inline-flex h-7 w-full items-center justify-center gap-1 text-[11px] text-muted-foreground underline-offset-2 hover:underline"
+              >
+                {t("privacyLink")}
+              </Link>
             </div>
           )}
         </div>

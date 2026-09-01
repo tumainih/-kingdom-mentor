@@ -1,0 +1,43 @@
+{
+  "packageId": "com.kingdomai.app",
+  "host": "temporary-instant-onyx-uuarmez.vercel.app",
+  "name": "Kingdom AI",
+  "launcherName": "Kingdom AI",
+  "display": "standalone",
+  "themeColor": "#22C55E",
+  "themeColorDark": "#0A1628",
+  "navigationColor": "#0A1628",
+  "navigationColorDark": "#0A1628",
+  "navigationDividerColor": "#0A1628",
+  "navigationDividerColorDark": "#0A1628",
+  "backgroundColor": "#0A1628",
+  "enableNotifications": true,
+  "startUrl": "/home",
+  "iconUrl": "https://temporary-instant-onyx-uuarmez.vercel.app/icon-512.png",
+  "maskableIconUrl": "https://temporary-instant-onyx-uuarmez.vercel.app/icon-512.png",
+  "monochromeIconUrl": "https://temporary-instant-onyx-uuarmez.vercel.app/icon-192.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "kingdomai"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://temporary-instant-onyx-uuarmez.vercel.app/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "minSdkVersion": 23,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "appVersion": "1.0.0"
+}

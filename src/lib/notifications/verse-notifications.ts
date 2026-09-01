@@ -158,7 +158,8 @@ export async function enableVerseNotifications(
     return permission;
   }
 
-  await subscribeToPush(locale, notifyHours);
+  const pushSubscription = await subscribeToPush(locale, notifyHours);
+  const pushEnabled = Boolean(pushSubscription);
 
   await postToWorker({
     type: "START_HOURLY_NOTIFICATIONS",
@@ -166,6 +167,7 @@ export async function enableVerseNotifications(
     notifyHours,
     showNow: options?.showNow ?? false,
     deviceId: getOrCreateDeviceId(),
+    pushEnabled,
   });
 
   persistEnabled(true);
@@ -184,7 +186,8 @@ export async function syncVerseNotifications(locale: AppLocale): Promise<void> {
     if (Notification.permission !== "granted") return;
 
     const notifyHours = getNotifyHours();
-    await subscribeToPush(locale, notifyHours);
+    const pushSubscription = await subscribeToPush(locale, notifyHours);
+    const pushEnabled = Boolean(pushSubscription);
 
     await postToWorker({
       type: "START_HOURLY_NOTIFICATIONS",
@@ -192,20 +195,9 @@ export async function syncVerseNotifications(locale: AppLocale): Promise<void> {
       notifyHours,
       showNow: false,
       deviceId: getOrCreateDeviceId(),
+      pushEnabled,
     });
   } catch {
     /* background sync — push may be unavailable in dev */
   }
-}
-
-export async function showHourVerseNotification(
-  locale: AppLocale,
-  hour: number,
-): Promise<void> {
-  await postToWorker({
-    type: "SHOW_HOUR_VERSE",
-    locale,
-    hour,
-    notifyHours: getNotifyHours(),
-  });
 }

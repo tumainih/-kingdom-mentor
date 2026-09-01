@@ -125,9 +125,17 @@ Put **Caddy** or **nginx** in front for HTTPS, or expose port 3000 for testing.
 
 ## After deploy
 
-- **Install page:** `https://YOUR-DOMAIN/install`
-- **Home / History / Areas / Chat** — work offline after first visit (PWA)
+- **Install page:** `https://YOUR-DOMAIN/install` — share this link; it prepares offline data automatically
+- **Add to home screen** from `/install` (iPhone Safari or Android Chrome)
+- **Home / History / Areas / Chat** — work offline after one online visit (PWA + service worker)
 - Redeploy after changing env vars
+
+### Offline checklist
+
+1. Deploy to HTTPS (Render, Fly.io, etc.)
+2. Open `/install` once while online — wait for “Ready for offline”
+3. Add to home screen
+4. Turn on airplane mode and open the app from your home screen
 
 ---
 

@@ -20,12 +20,18 @@ Kingdom AI is an AI assistant, **not** God, Jesus, the Holy Spirit, a prophet, o
 
 ## Install on your phone (one link)
 
-Open **`/install`** on your deployed site (e.g. `https://your-app.onrender.com/install`). Same URL for iPhone and Android:
+Open **`/install`** on your **deployed HTTPS site** (e.g. `https://your-app.onrender.com/install`). Same URL for iPhone and Android:
 
-- **iPhone / iPad** — open in Safari → Share → Add to Home Screen
-- **Android** — open in Chrome → Install app (or menu → Add to Home screen)
+- **iPhone / iPad** — open in Safari → Share → **Add to Home Screen**
+- **Android** — open in Chrome → **Install app** (or menu → Add to Home screen)
 
-After one visit online, the app caches the full Bible locally and works offline for hourly verses, reference lookup (e.g. John 3:16), and Scripture-based guidance.
+The install page automatically downloads the full Bible, verse pools, and app pages for offline use. After that:
+
+- **Home, History, Areas** — hourly and past verses from local data
+- **Chat / Talk** — Scripture-based guidance from the bundled Bible (no API needed offline)
+- Works in airplane mode after one online visit
+
+> Offline + install require **HTTPS in production** (`npm run build && npm start` locally also works). Dev mode (`npm run dev`) does not register the service worker.
 
 ## Prerequisites
 

@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build MyAwAspYWXQfVVTjKeJcB) */
-const CACHE = "kingdom-ai-MyAwAspYWXQfVVTjKeJcB";
+/* Kingdom AI — offline-capable service worker (build CbLxu5e5nCsvPupcaf6Nb) */
+const CACHE = "kingdom-ai-CbLxu5e5nCsvPupcaf6Nb";
 const PRECACHE = [
   "/",
   "/home",
@@ -40,14 +40,13 @@ const PRECACHE = [
   "/data/pools/strength.json",
   "/data/pools/trust.json",
   "/data/pools/wisdom.json",
-  "/_next/static/MyAwAspYWXQfVVTjKeJcB/_buildManifest.js",
-  "/_next/static/MyAwAspYWXQfVVTjKeJcB/_clientMiddlewareManifest.js",
-  "/_next/static/MyAwAspYWXQfVVTjKeJcB/_ssgManifest.js",
-  "/_next/static/chunks/0amm57br_ndwa.js",
+  "/_next/static/CbLxu5e5nCsvPupcaf6Nb/_buildManifest.js",
+  "/_next/static/CbLxu5e5nCsvPupcaf6Nb/_clientMiddlewareManifest.js",
+  "/_next/static/CbLxu5e5nCsvPupcaf6Nb/_ssgManifest.js",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
   "/_next/static/chunks/1g179lcifdq15.js",
-  "/_next/static/chunks/1ha3d4buospca.js",
+  "/_next/static/chunks/1g39-lg_ukhpm.js",
   "/_next/static/chunks/1hsi7i8_qoc6w.js",
   "/_next/static/chunks/1uj543fzv0-to.js",
   "/_next/static/chunks/1z99mlp5cofct.js",
@@ -55,11 +54,12 @@ const PRECACHE = [
   "/_next/static/chunks/24ihfyt9kr7mm.js",
   "/_next/static/chunks/24t7crwozt_yd.js",
   "/_next/static/chunks/271y7z0stpu_5.js",
+  "/_next/static/chunks/2w4fbwkoiy-9y.js",
   "/_next/static/chunks/34kmwrswtbn9a.css",
   "/_next/static/chunks/373skgu07-_06.js",
   "/_next/static/chunks/3adwt13tezgym.js",
-  "/_next/static/chunks/3i9hutzr7ws6y.js",
   "/_next/static/chunks/3q576hlfnuh0n.js",
+  "/_next/static/chunks/3s5czxwxtdlak.js",
   "/_next/static/chunks/turbopack-0snm50y8kpj5e.js",
   "/_next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2",
   "/_next/static/media/2bbe8d2671613f1f-s.0k62hbripvv8p.woff2",
@@ -129,6 +129,25 @@ async function networkFirst(request) {
   }
 }
 
+async function navigateWithOfflineFallback(request) {
+  const cached = await caches.match(request);
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    if (cached) return cached;
+    return (
+      (await caches.match("/home")) ||
+      (await caches.match("/")) ||
+      Response.error()
+    );
+  }
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
@@ -152,7 +171,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (request.mode === "navigate") {
-    event.respondWith(networkFirst(request));
+    event.respondWith(navigateWithOfflineFallback(request));
     return;
   }
 

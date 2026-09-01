@@ -107,9 +107,9 @@ export const translations = {
       "Send this link to your phone, or scan it from another device. Works on iPhone (Safari) and Android (Chrome).",
     installOfflineTitle: "Works offline",
     installOfflineHint:
-      "After one visit online, hourly Scripture, verse lookup, and Bible guidance work without internet.",
-    installOfflinePreparing: "Preparing offline Bible…",
-    installOfflineReady: "Offline Bible ready",
+      "After one online visit (this page does it automatically), Home, History, Areas, Chat, and the full Bible work without internet.",
+    installOfflinePreparing: "Downloading Bible and app pages for offline use…",
+    installOfflineReady: "Ready for offline — open from your home screen anytime",
     offlineBanner: "Offline — hourly verses, Bible lookup, and guidance still work.",
     notifyTitle: "Hourly verse alerts",
     notifyHint:
@@ -260,9 +260,9 @@ export const translations = {
       "Tuma kiungo hiki kwenye simu yako. Kinafanya kazi iPhone (Safari) na Android (Chrome).",
     installOfflineTitle: "Inafanya kazi bila mtandao",
     installOfflineHint:
-      "Baada ya kutembelea mara moja ukiwa mtandaoni, mistari ya kila saa, utafutaji wa mistari, na mwongozo unafanya kazi bila intaneti.",
-    installOfflinePreparing: "Inaandaa Biblia ya nje ya mtandao…",
-    installOfflineReady: "Biblia ya nje ya mtandao iko tayari",
+      "Baada ya kutembelea mara moja ukiwa mtandaoni (ukurasa huu hufanya hivyo), Nyumbani, Historia, Maeneo, Mazungumzo, na Biblia kamili hufanya kazi bila intaneti.",
+    installOfflinePreparing: "Inapakua Biblia na kurasa za programu kwa matumizi bila mtandao…",
+    installOfflineReady: "Tayari bila mtandao — fungua kutoka skrini ya nyumbani wakati wowote",
     offlineBanner:
       "Nje ya mtandao — mistari ya kila saa, utafutaji wa mistari, na mwongozo bado vinafanya kazi.",
     notifyTitle: "Arifa za mstari kila saa",

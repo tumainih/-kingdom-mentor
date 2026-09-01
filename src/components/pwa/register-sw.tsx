@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { warmOfflineCache } from "@/lib/offline/client-reply";
+import { warmOfflineCache, ensureOfflineReady, markOfflineReady } from "@/lib/offline/client-reply";
 import {
   isVerseNotificationsEnabled,
   syncVerseNotifications,
@@ -23,7 +23,7 @@ export function RegisterServiceWorker() {
 
     void navigator.serviceWorker
       .register("/sw.js")
-      .then((registration) => {
+      .then(async (registration) => {
         registration.addEventListener("updatefound", () => {
           const worker = registration.installing;
           worker?.addEventListener("statechange", () => {
@@ -33,9 +33,18 @@ export function RegisterServiceWorker() {
           });
         });
 
-        void warmOfflineCache().catch(() => {
-          /* offline warm is best-effort */
-        });
+        try {
+          await navigator.serviceWorker.ready;
+        } catch {
+          /* first visit */
+        }
+
+        try {
+          await ensureOfflineReady();
+          markOfflineReady();
+        } catch {
+          /* best-effort */
+        }
 
         if (isVerseNotificationsEnabled()) {
           const locale =

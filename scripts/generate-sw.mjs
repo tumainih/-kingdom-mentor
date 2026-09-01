@@ -110,6 +110,25 @@ async function networkFirst(request) {
   }
 }
 
+async function navigateWithOfflineFallback(request) {
+  const cached = await caches.match(request);
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    if (cached) return cached;
+    return (
+      (await caches.match("/home")) ||
+      (await caches.match("/")) ||
+      Response.error()
+    );
+  }
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
@@ -133,7 +152,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (request.mode === "navigate") {
-    event.respondWith(networkFirst(request));
+    event.respondWith(navigateWithOfflineFallback(request));
     return;
   }
 

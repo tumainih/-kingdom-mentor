@@ -23,8 +23,11 @@ import {
   isStandaloneApp,
   type InstallPlatform,
 } from "@/lib/pwa/platform";
-import { RegisterServiceWorker } from "./register-sw";
-import { warmOfflineCache } from "@/lib/offline/client-reply";
+import {
+  ensureOfflineReady,
+  isOfflineReadyFlagSet,
+  markOfflineReady,
+} from "@/lib/offline/client-reply";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -92,12 +95,22 @@ export function InstallAppView() {
   }, []);
 
   useEffect(() => {
-    if (!navigator.onLine) return;
+    if (!navigator.onLine) {
+      setOfflineReady(isOfflineReadyFlagSet());
+      return;
+    }
     setOfflinePreparing(true);
-    void warmOfflineCache().finally(() => {
-      setOfflinePreparing(false);
-      setOfflineReady(true);
-    });
+    void ensureOfflineReady()
+      .then(() => {
+        markOfflineReady();
+        setOfflineReady(true);
+      })
+      .catch(() => {
+        setOfflineReady(isOfflineReadyFlagSet());
+      })
+      .finally(() => {
+        setOfflinePreparing(false);
+      });
   }, []);
 
   const install = useCallback(async () => {
@@ -161,7 +174,6 @@ export function InstallAppView() {
 
   return (
     <div className="canvas-gradient flex h-dvh min-h-0 flex-col overflow-hidden supports-[height:100dvh]:h-dvh">
-      <RegisterServiceWorker />
       <AppHeader aiReady showNav compactNav hideStatusOnMobile />
 
       <main className="mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2">

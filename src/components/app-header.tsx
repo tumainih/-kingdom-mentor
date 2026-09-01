@@ -42,20 +42,24 @@ export function AppHeader({
           </Link>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-0.5 overflow-hidden sm:gap-1.5">
           {showNav && (
-            <nav className="flex max-w-[min(100%,13.5rem)] items-center overflow-x-auto rounded-lg border border-border/60 bg-muted/40 p-0.5 sm:max-w-none">
+            <nav
+              className="flex min-w-0 shrink items-center overflow-x-auto rounded-lg border border-border/60 bg-muted/40 p-0.5 [scrollbar-width:none] sm:shrink-0 [&::-webkit-scrollbar]:hidden"
+              aria-label="Main"
+            >
               <Link
                 href="/home"
                 aria-label={t("navHome")}
+                title={t("navHome")}
                 className={cn(
-                  "flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-semibold transition-colors sm:px-2.5 sm:text-[11px]",
+                  "flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-semibold transition-colors sm:px-2.5 sm:text-[11px]",
                   pathname === "/home"
                     ? "bg-brand text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Home className="h-3.5 w-3.5" />
+                <Home className="h-3.5 w-3.5 shrink-0" />
                 {!compactNav && (
                   <span className="hidden min-[420px]:inline">{t("navHome")}</span>
                 )}
@@ -63,14 +67,15 @@ export function AppHeader({
               <Link
                 href="/history"
                 aria-label={t("navHistory")}
+                title={t("navHistory")}
                 className={cn(
-                  "flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-semibold transition-colors sm:px-2.5 sm:text-[11px]",
+                  "flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-semibold transition-colors sm:px-2.5 sm:text-[11px]",
                   pathname === "/history"
                     ? "bg-brand text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <History className="h-3.5 w-3.5" />
+                <History className="h-3.5 w-3.5 shrink-0" />
                 {!compactNav && (
                   <span className="hidden min-[420px]:inline">{t("navHistory")}</span>
                 )}
@@ -78,14 +83,15 @@ export function AppHeader({
               <Link
                 href="/notifications"
                 aria-label={t("navAlerts")}
+                title={t("navAlerts")}
                 className={cn(
-                  "flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-semibold transition-colors sm:px-2.5 sm:text-[11px]",
+                  "flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-semibold transition-colors sm:px-2.5 sm:text-[11px]",
                   pathname === "/notifications"
                     ? "bg-brand text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Bell className="h-3.5 w-3.5" />
+                <Bell className="h-3.5 w-3.5 shrink-0" />
                 {!compactNav && (
                   <span className="hidden min-[480px]:inline">{t("navAlerts")}</span>
                 )}
@@ -93,14 +99,15 @@ export function AppHeader({
               <Link
                 href="/"
                 aria-label={t("navChat")}
+                title={t("navChat")}
                 className={cn(
-                  "flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-semibold transition-colors sm:px-2.5 sm:text-[11px]",
+                  "flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-semibold transition-colors sm:px-2.5 sm:text-[11px]",
                   pathname === "/"
                     ? "bg-brand text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <MessageSquare className="h-3.5 w-3.5" />
+                <MessageSquare className="h-3.5 w-3.5 shrink-0" />
                 {!compactNav && (
                   <span className="hidden min-[420px]:inline">{t("navChat")}</span>
                 )}
@@ -109,7 +116,7 @@ export function AppHeader({
           )}
 
           <div
-            className="flex items-center rounded-lg border border-border/60 bg-muted/40 p-0.5"
+            className="flex shrink-0 items-center rounded-lg border border-border/60 bg-muted/40 p-0.5"
             role="group"
             aria-label={t("languageLabel")}
           >
@@ -147,10 +154,12 @@ export function AppHeader({
               variant="ghost"
               size="sm"
               onClick={onNewChat}
-              className="h-7 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground sm:h-8"
+              aria-label={t("newChat")}
+              title={t("newChat")}
+              className="h-7 shrink-0 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground sm:h-8"
             >
-              <Plus className="h-3.5 w-3.5" />
-              {t("newChat")}
+              <Plus className="h-3.5 w-3.5 shrink-0" />
+              <span className="hidden min-[400px]:inline">{t("newChat")}</span>
             </Button>
           )}
         </div>

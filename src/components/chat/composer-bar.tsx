@@ -19,6 +19,9 @@ interface ComposerBarProps {
   talkDisabled?: boolean;
 }
 
+const ACTION_BTN =
+  "flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all";
+
 export function ComposerBar({
   mode,
   onModeChange,
@@ -61,26 +64,28 @@ export function ComposerBar({
             isListening && "border-brand/50 ring-2 ring-brand/20",
           )}
         >
-          {mode === "chat" ? (
-            <textarea
-              ref={textareaRef}
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={resolvedPlaceholder}
-              disabled={disabled}
-              rows={1}
-              className="max-h-40 min-h-[44px] w-full resize-none bg-transparent text-[15px] leading-6 text-foreground outline-none placeholder:text-muted-foreground"
-            />
-          ) : (
-            <p className="min-h-[44px] py-1.5 text-left text-sm text-muted-foreground sm:text-[15px]">
-              {isListening ? t("talkListening") : t("talkHint")}
-            </p>
-          )}
+          <div className="min-h-[44px] max-h-40 overflow-y-auto overscroll-contain">
+            {mode === "chat" ? (
+              <textarea
+                ref={textareaRef}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={resolvedPlaceholder}
+                disabled={disabled}
+                rows={1}
+                className="block min-h-[44px] w-full resize-none bg-transparent text-[15px] leading-6 text-foreground outline-none placeholder:text-muted-foreground"
+              />
+            ) : (
+              <p className="py-1.5 text-left text-sm leading-6 text-muted-foreground sm:text-[15px]">
+                {isListening ? t("talkListening") : t("talkHint")}
+              </p>
+            )}
+          </div>
 
-          <div className="flex items-center justify-between gap-2">
+          <div className="grid grid-cols-[minmax(0,1fr)_2.5rem] items-center gap-3">
             <div
-              className="flex shrink-0 items-center rounded-2xl bg-muted/60 p-0.5"
+              className="flex min-w-0 items-center rounded-2xl bg-muted/60 p-0.5"
               role="tablist"
               aria-label="Mode"
             >
@@ -88,70 +93,76 @@ export function ComposerBar({
                 type="button"
                 role="tab"
                 aria-selected={mode === "chat"}
+                aria-label={t("chat")}
+                title={t("chat")}
                 onClick={() => onModeChange("chat")}
                 className={cn(
-                  "flex h-8 items-center gap-1 rounded-[14px] px-2.5 text-xs font-medium transition-colors sm:h-9 sm:px-3 sm:text-sm",
+                  "flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-[14px] px-2 text-xs font-medium transition-colors sm:h-9 sm:px-2.5 sm:text-sm",
                   mode === "chat"
                     ? "bg-brand text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                {t("chat")}
+                <MessageSquare className="h-4 w-4 shrink-0" />
+                <span className="hidden truncate min-[400px]:inline">{t("chat")}</span>
               </button>
               <button
                 type="button"
                 role="tab"
                 aria-selected={mode === "converse"}
+                aria-label={t("talk")}
+                title={t("talk")}
                 onClick={() => onModeChange("converse")}
                 className={cn(
-                  "flex h-8 items-center gap-1 rounded-[14px] px-2.5 text-xs font-medium transition-colors sm:h-9 sm:px-3 sm:text-sm",
+                  "flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-[14px] px-2 text-xs font-medium transition-colors sm:h-9 sm:px-2.5 sm:text-sm",
                   mode === "converse"
                     ? "bg-brand text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Mic className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                {t("talk")}
+                <Mic className="h-4 w-4 shrink-0" />
+                <span className="hidden truncate min-[400px]:inline">{t("talk")}</span>
               </button>
             </div>
 
-            {mode === "chat" ? (
-              <button
-                type="button"
-                onClick={onSend}
-                disabled={!canSend}
-                aria-label="Send"
-                className={cn(
-                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all sm:h-10 sm:w-10",
-                  canSend
-                    ? "bg-brand text-primary-foreground hover:bg-brand-light"
-                    : "cursor-not-allowed bg-muted text-muted-foreground",
-                )}
-              >
-                <ArrowUp className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={2.5} />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={onTalkToggle}
-                disabled={talkDisabled}
-                aria-label={isListening ? "Stop" : "Start talking"}
-                className={cn(
-                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all sm:h-11 sm:w-11",
-                  isListening
-                    ? "animate-pulse bg-red-500 text-white hover:bg-red-600"
-                    : "bg-brand text-primary-foreground hover:bg-brand-light",
-                  talkDisabled && "cursor-not-allowed opacity-50",
-                )}
-              >
-                {isListening ? (
-                  <MicOff className="h-5 w-5" />
-                ) : (
-                  <Mic className="h-5 w-5" />
-                )}
-              </button>
-            )}
+            <div className="flex h-10 w-10 items-center justify-center">
+              {mode === "chat" ? (
+                <button
+                  type="button"
+                  onClick={onSend}
+                  disabled={!canSend}
+                  aria-label="Send"
+                  className={cn(
+                    ACTION_BTN,
+                    canSend
+                      ? "bg-brand text-primary-foreground hover:bg-brand-light"
+                      : "cursor-not-allowed bg-muted text-muted-foreground",
+                  )}
+                >
+                  <ArrowUp className="h-[18px] w-[18px]" strokeWidth={2.5} />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onTalkToggle}
+                  disabled={talkDisabled}
+                  aria-label={isListening ? "Stop" : "Start talking"}
+                  className={cn(
+                    ACTION_BTN,
+                    isListening
+                      ? "animate-pulse bg-red-500 text-white hover:bg-red-600"
+                      : "bg-brand text-primary-foreground hover:bg-brand-light",
+                    talkDisabled && "cursor-not-allowed opacity-50",
+                  )}
+                >
+                  {isListening ? (
+                    <MicOff className="h-5 w-5" />
+                  ) : (
+                    <Mic className="h-5 w-5" />
+                  )}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -48,6 +48,8 @@ export function AppShell() {
         guidanceMode={guidanceMode}
         showNewChat
         showNav
+        compactNav
+        hideStatusOnMobile
         onNewChat={handleNewChat}
       />
 

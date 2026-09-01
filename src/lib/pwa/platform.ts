@@ -38,5 +38,14 @@ export function isStandaloneApp(): boolean {
 
 export function getInstallPageUrl(): string {
   if (typeof window === "undefined") return "/install";
-  return `${window.location.origin}/install`;
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  const origin = configured || window.location.origin;
+  return `${origin}/install`;
+}
+
+export function getSiteOrigin(): string {
+  if (typeof window === "undefined") {
+    return process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "";
+  }
+  return process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || window.location.origin;
 }

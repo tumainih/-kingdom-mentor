@@ -51,6 +51,18 @@ Copy from `.env.example`. After deploy, set hourly cron (all platforms):
 
 **Note:** Free tier sleeps after ~15 min idle; first visit may take 30–60 s to wake. HTTPS is included — required for **Add to Home Screen** and offline mode.
 
+### Change or set your link before sharing
+
+Nothing in the app is locked to one URL — but you can pin your link in Render so **Copy link** on `/install` always shows the right address:
+
+1. Render → your service → **Environment**
+2. Add: `NEXT_PUBLIC_SITE_URL` = `https://YOUR-APP.onrender.com` (no trailing slash)
+3. **Save** → **Manual Deploy** (redeploy required — Next.js bakes this in at build time)
+
+**Rename the Render subdomain:** Settings → change the service **name** → Render assigns a new `https://new-name.onrender.com` (old URL stops working).
+
+**Your own domain (optional):** Settings → **Custom Domains** → add e.g. `kingdom.example.com` → point DNS as Render shows → set `NEXT_PUBLIC_SITE_URL` to that domain and redeploy.
+
 ---
 
 ## Option 2: Fly.io (free allowance, always-on capable)

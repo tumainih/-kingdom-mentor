@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build s9U2gmYbSjNWphli9wKgQ) */
-const CACHE = "kingdom-ai-s9U2gmYbSjNWphli9wKgQ";
+/* Kingdom AI — offline-capable service worker (build MyAwAspYWXQfVVTjKeJcB) */
+const CACHE = "kingdom-ai-MyAwAspYWXQfVVTjKeJcB";
 const PRECACHE = [
   "/",
   "/home",
@@ -40,22 +40,25 @@ const PRECACHE = [
   "/data/pools/strength.json",
   "/data/pools/trust.json",
   "/data/pools/wisdom.json",
+  "/_next/static/MyAwAspYWXQfVVTjKeJcB/_buildManifest.js",
+  "/_next/static/MyAwAspYWXQfVVTjKeJcB/_clientMiddlewareManifest.js",
+  "/_next/static/MyAwAspYWXQfVVTjKeJcB/_ssgManifest.js",
   "/_next/static/chunks/0amm57br_ndwa.js",
-  "/_next/static/chunks/0bt137l__hjyy.js",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
-  "/_next/static/chunks/0m1ka-4yr9v1a.js",
+  "/_next/static/chunks/1g179lcifdq15.js",
   "/_next/static/chunks/1ha3d4buospca.js",
   "/_next/static/chunks/1hsi7i8_qoc6w.js",
-  "/_next/static/chunks/1sl6omu8ngnt5.js",
+  "/_next/static/chunks/1uj543fzv0-to.js",
   "/_next/static/chunks/1z99mlp5cofct.js",
+  "/_next/static/chunks/22yo5plex5kpv.js",
   "/_next/static/chunks/24ihfyt9kr7mm.js",
   "/_next/static/chunks/24t7crwozt_yd.js",
-  "/_next/static/chunks/26hpwyo9l3_o3.js",
   "/_next/static/chunks/271y7z0stpu_5.js",
-  "/_next/static/chunks/2celabbixlf8y.css",
-  "/_next/static/chunks/3_qcxdfi4zlnd.js",
+  "/_next/static/chunks/34kmwrswtbn9a.css",
+  "/_next/static/chunks/373skgu07-_06.js",
   "/_next/static/chunks/3adwt13tezgym.js",
+  "/_next/static/chunks/3i9hutzr7ws6y.js",
   "/_next/static/chunks/3q576hlfnuh0n.js",
   "/_next/static/chunks/turbopack-0snm50y8kpj5e.js",
   "/_next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2",
@@ -73,15 +76,15 @@ const PRECACHE = [
   "/_next/static/media/e7150917543fc9da-s.0mybutugvu-lq.woff2",
   "/_next/static/media/e9457141811d41ae-s.02frcczqg7k-8.woff2",
   "/_next/static/media/favicon.2vob68tjqpejf.ico",
-  "/_next/static/media/icon.1v5cwft9ue97g.svg",
-  "/_next/static/s9U2gmYbSjNWphli9wKgQ/_buildManifest.js",
-  "/_next/static/s9U2gmYbSjNWphli9wKgQ/_clientMiddlewareManifest.js",
-  "/_next/static/s9U2gmYbSjNWphli9wKgQ/_ssgManifest.js"
+  "/_next/static/media/icon.1v5cwft9ue97g.svg"
 ];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting()),
+    caches.open(CACHE).then(async (cache) => {
+      await Promise.allSettled(PRECACHE.map((url) => cache.add(url)));
+      await self.skipWaiting();
+    }),
   );
 });
 

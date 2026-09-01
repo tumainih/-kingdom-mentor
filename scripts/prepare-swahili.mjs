@@ -26,6 +26,7 @@ export const SWAHILI_TO_ENGLISH_BOOK = {
   "2 Mambo ya Nyakati": "2 Chronicles",
   Ezra: "Ezra",
   Nehemia: "Nehemiah",
+  Esta: "Esther",
   Estha: "Esther",
   Ayubu: "Job",
   Zaburi: "Psalms",
@@ -53,6 +54,7 @@ export const SWAHILI_TO_ENGLISH_BOOK = {
   Marko: "Mark",
   Luka: "Luke",
   Yohana: "John",
+  "Matendo ya Mitume": "Acts",
   Matendo: "Acts",
   Warumi: "Romans",
   "1 Wakorintho": "1 Corinthians",
@@ -75,6 +77,7 @@ export const SWAHILI_TO_ENGLISH_BOOK = {
   "2 Yohana": "2 John",
   "3 Yohana": "3 John",
   Yuda: "Jude",
+  "Ufunuo wa Yohana": "Revelation",
   Ufunuo: "Revelation",
 };
 

@@ -72,5 +72,12 @@ export async function resolveHourlyVerseFast(
   const fromApi = await fetchHourlyVerseFromApi(locale, hour, date);
   if (fromApi?.passage) return fromApi;
 
+  // Offline/stale snapshot: show today's bundled hour if API unavailable.
+  if (!fromApi?.passage) {
+    const snapshot = await loadHourlySnapshot(locale);
+    const byHour = snapshot.find((s) => s.hour === hour);
+    if (byHour?.passage) return byHour;
+  }
+
   return fromSnapshot ?? fromApi;
 }

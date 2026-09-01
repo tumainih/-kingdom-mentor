@@ -4,7 +4,7 @@ import type { ContentAreaId } from "./content-areas";
 import { AREA_LABELS } from "./content-areas";
 import type { HourlyThemeId } from "./hourly-themes";
 import { hourlyPoolSeed, pickPoolIndex } from "./pool-seed";
-import { normalizePoolRef } from "./pool-ref";
+import { normalizePoolRef, findVerseByPoolRef } from "./pool-ref";
 import type { BibleLocale } from "./locale";
 import type { BibleVerse, RetrievedPassage } from "./types";
 import { loadVerses } from "./verse-lookup";
@@ -87,16 +87,7 @@ function findVerseByRef(
   ref: string,
   locale: BibleLocale,
 ): BibleVerse | null {
-  const normalized = normalizePoolRef(ref);
-
-  if (locale === "sw") {
-    const byEn = verses.find(
-      (v) => v.refEn === normalized || v.refEn === ref,
-    );
-    if (byEn) return byEn;
-  }
-
-  return verses.find((v) => v.ref === normalized || v.ref === ref) ?? null;
+  return findVerseByPoolRef(verses, ref, locale);
 }
 
 export async function resolvePoolRef(

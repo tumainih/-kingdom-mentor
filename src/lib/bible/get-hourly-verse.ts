@@ -4,6 +4,7 @@ import { localDateString } from "./pool-seed";
 import type { RetrievedPassage } from "./types";
 import {
   getPoolCount,
+  getPoolRefs,
   pickHourlyRef,
   resolvePoolRef,
 } from "./verse-pools.server";
@@ -26,9 +27,25 @@ export async function getHourlyVerse(
   const resolvedHour = hour ?? new Date().getHours();
   const resolvedDate = date ?? localDateString();
   const slot = getSlotForHour(resolvedHour);
-  const scheduledRef =
+  let scheduledRef =
     pickHourlyRef(slot.theme, resolvedDate, slot.hour) ?? slot.ref;
-  const passage = await resolvePoolRef(scheduledRef, locale);
+  let passage = await resolvePoolRef(scheduledRef, locale);
+
+  if (!passage && scheduledRef !== slot.ref) {
+    scheduledRef = slot.ref;
+    passage = await resolvePoolRef(slot.ref, locale);
+  }
+
+  if (!passage) {
+    const refs = getPoolRefs(slot.theme);
+    for (const ref of refs) {
+      passage = await resolvePoolRef(ref, locale);
+      if (passage) {
+        scheduledRef = ref;
+        break;
+      }
+    }
+  }
 
   return {
     hour: slot.hour,

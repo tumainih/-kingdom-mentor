@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build cj66DuX_0MGfFjNo1Paot) */
-const CACHE = "kingdom-ai-cj66DuX_0MGfFjNo1Paot";
+/* Kingdom AI — offline-capable service worker (build ii9hDGXL0M4M5XAtrMTmm) */
+const CACHE = "kingdom-ai-ii9hDGXL0M4M5XAtrMTmm";
 const PRECACHE = [
   "/",
   "/home",
@@ -41,30 +41,30 @@ const PRECACHE = [
   "/data/pools/strength.json",
   "/data/pools/trust.json",
   "/data/pools/wisdom.json",
+  "/_next/static/chunks/0agw0djjpcmd8.js",
   "/_next/static/chunks/0ajknyisuvam9.css",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
+  "/_next/static/chunks/193o4sb852j3p.js",
   "/_next/static/chunks/1cmk72eecyy08.js",
-  "/_next/static/chunks/1g179lcifdq15.js",
   "/_next/static/chunks/1h0lni661c03r.js",
   "/_next/static/chunks/1ijjdsn2z-ov1.js",
-  "/_next/static/chunks/1uj543fzv0-to.js",
   "/_next/static/chunks/1z99mlp5cofct.js",
-  "/_next/static/chunks/24ihfyt9kr7mm.js",
   "/_next/static/chunks/24t7crwozt_yd.js",
   "/_next/static/chunks/2n612fe5thts9.js",
+  "/_next/static/chunks/2q9wd6nxy35ud.js",
   "/_next/static/chunks/2rzlk32zr9nnw.js",
+  "/_next/static/chunks/2tqfatyic5l1b.js",
   "/_next/static/chunks/2ydnron3zbkwf.js",
-  "/_next/static/chunks/373skgu07-_06.js",
   "/_next/static/chunks/38crxovcaonw3.js",
   "/_next/static/chunks/3adwt13tezgym.js",
   "/_next/static/chunks/3q576hlfnuh0n.js",
-  "/_next/static/chunks/3xvapijkg6ty7.js",
+  "/_next/static/chunks/3t6yomvgy4np0.js",
   "/_next/static/chunks/4399mcs732nz1.js",
   "/_next/static/chunks/turbopack-0snm50y8kpj5e.js",
-  "/_next/static/cj66DuX_0MGfFjNo1Paot/_buildManifest.js",
-  "/_next/static/cj66DuX_0MGfFjNo1Paot/_clientMiddlewareManifest.js",
-  "/_next/static/cj66DuX_0MGfFjNo1Paot/_ssgManifest.js",
+  "/_next/static/ii9hDGXL0M4M5XAtrMTmm/_buildManifest.js",
+  "/_next/static/ii9hDGXL0M4M5XAtrMTmm/_clientMiddlewareManifest.js",
+  "/_next/static/ii9hDGXL0M4M5XAtrMTmm/_ssgManifest.js",
   "/_next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2",
   "/_next/static/media/2bbe8d2671613f1f-s.0k62hbripvv8p.woff2",
   "/_next/static/media/2c55a0e60120577a-s.0-dom-5bn10r2.woff2",
@@ -169,8 +169,8 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (url.pathname.startsWith("/api/hourly-verse")) {
-    event.respondWith(cacheFirst(request));
+  if (url.pathname.startsWith("/api/hourly-verse") || url.pathname.startsWith("/api/area-verses")) {
+    event.respondWith(networkFirst(request));
     return;
   }
 

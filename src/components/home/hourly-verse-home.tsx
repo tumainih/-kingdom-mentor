@@ -6,15 +6,13 @@ import { Bell, Check, Copy, MessageSquare } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/context/locale-context";
-import { getSlotForHour, themeLabel, type HourlyThemeId } from "@/lib/bible/hourly-themes";
-import {
-  localDateString,
-  resolveHourlyVerseClient,
-} from "@/lib/bible/resolve-hourly-verse.client";
+import { getSlotForHour, themeLabel } from "@/lib/bible/hourly-themes";
+import { resolveHourlyVerseFast } from "@/lib/bible/hourly-snapshot.client";
+import { localDateString } from "@/lib/bible/pool-seed";
 
 interface HourlyVersePayload {
   hour: number;
-  theme: HourlyThemeId;
+  theme: import("@/lib/bible/hourly-themes").HourlyThemeId;
   themeLabel: string;
   scheduledRef: string;
   poolSize: number;
@@ -69,30 +67,28 @@ export function HourlyVerseHome() {
     async (hour: number, dateStr: string) => {
       setLoading(true);
       try {
-        const slot = getSlotForHour(hour);
-        const resolved = await resolveHourlyVerseClient(
-          slot.theme,
-          locale,
-          hour,
-          dateStr,
-        );
-        if (resolved.passage) {
+        const data = await resolveHourlyVerseFast(locale, hour, dateStr);
+        if (data?.passage) {
           setVerse({
-            hour: slot.hour,
-            theme: slot.theme,
-            themeLabel: themeLabel(slot.theme, locale),
-            scheduledRef: resolved.scheduledRef,
-            poolSize: resolved.poolSize,
-            passage: resolved.passage,
+            hour: data.hour,
+            theme: data.theme,
+            themeLabel: data.themeLabel,
+            scheduledRef: data.scheduledRef,
+            poolSize: data.poolSize,
+            passage: data.passage,
           });
           return;
         }
 
-        const res = await fetch(
-          `/api/hourly-verse?locale=${locale}&hour=${hour}&date=${dateStr}`,
-        );
-        const data = (await res.json()) as HourlyVersePayload;
-        setVerse(data);
+        const slot = getSlotForHour(hour);
+        setVerse({
+          hour: slot.hour,
+          theme: slot.theme,
+          themeLabel: themeLabel(slot.theme, locale),
+          scheduledRef: "",
+          poolSize: 0,
+          passage: null,
+        });
       } catch {
         setVerse(null);
       } finally {

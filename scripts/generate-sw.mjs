@@ -147,8 +147,8 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (url.pathname.startsWith("/api/hourly-verse")) {
-    event.respondWith(cacheFirst(request));
+  if (url.pathname.startsWith("/api/hourly-verse") || url.pathname.startsWith("/api/area-verses")) {
+    event.respondWith(networkFirst(request));
     return;
   }
 

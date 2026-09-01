@@ -130,6 +130,18 @@ export function AreasView() {
     void (async () => {
       setVersesLoading(true);
       try {
+        const res = await fetch(
+          `/api/area-verses?area=${encodeURIComponent(selected.id)}&locale=${locale}`,
+          { cache: "no-store" },
+        );
+        if (res.ok) {
+          const payload = (await res.json()) as { verses?: RetrievedPassage[] };
+          if (!cancelled && payload.verses?.length) {
+            setVerses(payload.verses);
+            return;
+          }
+        }
+
         const data = await resolveAreaPoolVerses(selected.id, locale);
         if (!cancelled) setVerses(data);
       } catch {

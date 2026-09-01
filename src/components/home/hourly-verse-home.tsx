@@ -118,11 +118,7 @@ export function HourlyVerseHome() {
 
   const copyVerse = useCallback(async () => {
     if (!verse?.passage) return;
-    const label =
-      verse.passage.refEn && verse.passage.refEn !== verse.passage.ref
-        ? `${verse.passage.ref} (${verse.passage.refEn})`
-        : verse.passage.ref;
-    const text = `${label}\n${verse.passage.text}`;
+    const text = `${verse.passage.ref}\n${verse.passage.text}`;
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -202,29 +198,10 @@ export function HourlyVerseHome() {
 
                 <p className="font-heading text-base font-semibold leading-snug text-brand-light sm:text-lg">
                   {verse.passage.ref}
-                  {verse.passage.refEn &&
-                  verse.passage.refEn !== verse.passage.ref ? (
-                    <span className="ml-1 block text-[11px] font-normal text-muted-foreground sm:ml-1.5 sm:inline sm:text-sm">
-                      ({verse.passage.refEn})
-                    </span>
-                  ) : null}
                 </p>
 
                 <p className="mt-2.5 text-sm leading-relaxed text-foreground/95 sm:mt-3 sm:text-base sm:leading-relaxed">
                   {verse.passage.text}
-                </p>
-
-                <p className="mt-3 text-[10px] text-muted-foreground sm:mt-4 sm:text-[11px]">
-                  {currentHour !== null
-                    ? t("homeChangesAt", {
-                        hour: pad((currentHour + 1) % 24),
-                      })
-                    : null}
-                  {verse.poolSize > 0 ? (
-                    <span className="mt-0.5 block">
-                      {t("homePoolSize", { count: verse.poolSize })}
-                    </span>
-                  ) : null}
                 </p>
               </div>
             ) : (

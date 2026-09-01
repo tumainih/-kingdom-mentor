@@ -89,6 +89,27 @@ export async function resolveHourlyVerseClient(
   };
 }
 
+export async function resolveAreaPoolVerses(
+  areaId: ContentAreaId,
+  locale: BibleLocale,
+): Promise<RetrievedPassage[]> {
+  const refs = await loadPoolRefs(areaId);
+  const verses = await loadVerseIndex(locale);
+  const result: RetrievedPassage[] = [];
+
+  for (const ref of refs) {
+    const verse = findVerse(verses, ref, locale);
+    if (!verse) continue;
+    result.push({
+      ref: verse.ref,
+      text: verse.text,
+      refEn: verse.refEn ?? (locale === "en" ? verse.ref : undefined),
+    });
+  }
+
+  return result;
+}
+
 export async function fetchPoolIndex(): Promise<
   { id: ContentAreaId; count: number; labelEn: string; labelSw: string; kind: string }[]
 > {

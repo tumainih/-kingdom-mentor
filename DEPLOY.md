@@ -1,19 +1,12 @@
-# Deploy Kingdom AI (free options — no Vercel Pro required)
+# Deploy Kingdom AI (free — no Vercel Pro, no Netlify)
 
 Latest code: **https://github.com/tumainih/-kingdom-mentor** (`main`)
 
+All options below run the same **Node.js** app (`npm run build` → `npm start`). Bible, Home, History, and Areas work without paid APIs. Add env vars for AI chat and push alerts.
+
 ---
 
-## Option 1: Render (recommended — free tier)
-
-1. Sign up at [render.com](https://render.com) (GitHub login works).
-2. **New → Blueprint** (or **Web Service → Connect repository**).
-3. Select **`tumainih/-kingdom-mentor`** and branch **`main`**.
-4. Render reads `render.yaml` automatically, or set manually:
-   - **Build command:** `npm install && npm run build`
-   - **Start command:** `npm start`
-   - **Plan:** Free
-5. Add **Environment** variables (Dashboard → your service → Environment):
+## Environment variables (all platforms)
 
 | Variable | Required | Notes |
 |----------|----------|--------|
@@ -25,40 +18,108 @@ Latest code: **https://github.com/tumainih/-kingdom-mentor** (`main`)
 | `UPSTASH_REDIS_REST_URL` | Optional | Push subscription storage |
 | `UPSTASH_REDIS_REST_TOKEN` | Optional | |
 
-6. Click **Deploy**. Your URL will look like `https://kingdom-mentor.onrender.com`.
+Copy from `.env.example`. After deploy, set hourly cron (all platforms):
 
-**Note:** Free Render apps sleep after ~15 minutes idle; first visit may take 30–60 seconds to wake.
-
-### Hourly notifications on Render
-
-Render free tier has no built-in cron. Use a free external scheduler:
-
-1. Sign up at [cron-job.org](https://cron-job.org) (free).
-2. Create a job every hour: `0 * * * *`
-3. URL: `https://YOUR-APP.onrender.com/api/cron/hourly-verse?secret=YOUR_CRON_SECRET`
+1. [cron-job.org](https://cron-job.org) (free) → schedule `0 * * * *`
+2. URL: `https://YOUR-DOMAIN/api/cron/hourly-verse?secret=YOUR_CRON_SECRET`
 
 ---
 
-## Option 2: Netlify (free tier)
+## Option 1: Render (easiest — free tier)
 
-1. Sign up at [netlify.com](https://netlify.com) → **Add new site → Import from Git**.
-2. Connect **`tumainih/-kingdom-mentor`**.
-3. Netlify uses `netlify.toml` (Next.js plugin runs automatically on install).
-4. Add the same environment variables as above in **Site settings → Environment variables**.
-5. Deploy. URL like `https://something.netlify.app`.
+1. Sign up at [render.com](https://render.com) (GitHub login).
+2. **New → Blueprint** (or **Web Service → Connect repository**).
+3. Select **`tumainih/-kingdom-mentor`**, branch **`main`**.
+4. Render reads `render.yaml`, or set manually:
+   - **Build:** `npm install && npm run build`
+   - **Start:** `npm start`
+   - **Plan:** Free
+5. Add environment variables (table above).
+6. Deploy → URL like `https://kingdom-mentor.onrender.com`.
 
-For hourly cron on Netlify, use the same [cron-job.org](https://cron-job.org) URL as Render.
+**Note:** Free tier sleeps after ~15 min idle; first visit may take 30–60 s to wake.
 
 ---
 
-## Option 3: Docker (Railway, Fly.io, any VPS)
+## Option 2: Fly.io (free allowance, always-on capable)
+
+Uses the repo `Dockerfile` and `fly.toml`.
+
+1. Install [flyctl](https://fly.io/docs/hands-on/install-flyctl/) and sign up at [fly.io](https://fly.io).
+2. From the project folder:
 
 ```bash
-docker build -t kingdom-mentor .
-docker run -p 3000:3000 -e GEMINI_API_KEY=... kingdom-mentor
+fly auth login
+fly launch --no-deploy   # pick a unique app name if kingdom-mentor is taken
+fly secrets set GEMINI_API_KEY=... VAPID_PUBLIC_KEY=... VAPID_PRIVATE_KEY=... VAPID_SUBJECT=mailto:you@example.com CRON_SECRET=...
+fly deploy
 ```
 
-Or push the repo to **Railway** ([railway.app](https://railway.app)) → New Project → Deploy from GitHub → uses `Dockerfile`.
+3. Open `https://YOUR-APP.fly.dev/install`.
+
+Machines can auto-stop when idle (`min_machines_running = 0` in `fly.toml`) to stay within free limits. Increase memory in `fly.toml` if the build or runtime OOMs.
+
+---
+
+## Option 3: Railway (free monthly credit)
+
+1. [railway.app](https://railway.app) → **New Project → Deploy from GitHub**.
+2. Select **`tumainih/-kingdom-mentor`**.
+3. Railway detects **`Dockerfile`** automatically.
+4. **Variables** tab → add env vars from the table above.
+5. **Settings → Networking → Generate domain**.
+
+Credit-based free tier; good for low-traffic personal use.
+
+---
+
+## Option 4: Koyeb (free tier, Git + Docker)
+
+1. [koyeb.com](https://www.koyeb.com) → **Create App → GitHub**.
+2. Repo: **`tumainih/-kingdom-mentor`**, branch **`main`**.
+3. **Builder:** Dockerfile (path `/Dockerfile`).
+4. **Port:** `3000`, **Instance type:** Free (Nano).
+5. Add environment variables → Deploy.
+
+URL like `https://your-app.koyeb.app`.
+
+---
+
+## Option 5: Google Cloud Run (generous free tier)
+
+Pay-per-request; often $0 for small apps. Requires a Google Cloud account.
+
+```bash
+gcloud auth login
+gcloud config set project YOUR_PROJECT_ID
+
+gcloud run deploy kingdom-mentor \
+  --source . \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --port 3000 \
+  --set-env-vars "GEMINI_API_KEY=...,CRON_SECRET=..."
+```
+
+Add remaining secrets via Cloud Console → Cloud Run → your service → Variables.
+
+---
+
+## Option 6: Any VPS (Oracle Always Free, Hetzner, etc.)
+
+Truly free forever on [Oracle Cloud Always Free](https://www.oracle.com/cloud/free/) (ARM VM) or any cheap VPS.
+
+```bash
+# On the server (Docker installed)
+git clone https://github.com/tumainih/-kingdom-mentor.git
+cd -kingdom-mentor
+cp .env.example .env.local   # edit with your keys
+docker compose up -d --build
+```
+
+Put **Caddy** or **nginx** in front for HTTPS, or expose port 3000 for testing.
+
+`docker-compose.yml` is included in the repo.
 
 ---
 
@@ -66,14 +127,22 @@ Or push the repo to **Railway** ([railway.app](https://railway.app)) → New Pro
 
 - **Install page:** `https://YOUR-DOMAIN/install`
 - **Home / History / Areas / Chat** — work offline after first visit (PWA)
-- Set env vars and redeploy if you add keys later
+- Redeploy after changing env vars
 
 ---
 
-## Vercel (optional)
-
-Only if you have Vercel Pro or a plan that supports your usage. Otherwise use Render or Netlify above.
+## Local production test
 
 ```bash
-npx vercel deploy --prod
+npm run build
+npm start
 ```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+---
+
+## Not recommended for this project
+
+- **Vercel** — may require Pro for your usage; use Render or Fly.io instead.
+- **Netlify** — supported via `netlify.toml` if you already use it, but Render/Fly/Railway are simpler for this Node server + cron setup.

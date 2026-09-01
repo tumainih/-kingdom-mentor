@@ -12,7 +12,8 @@
     "build": "npm run prepare-offline && next build && node scripts/generate-sw.mjs",
     "start": "next start -H 0.0.0.0 -p ${PORT:-3000}",
     "deploy:render": "echo 'Connect https://github.com/tumainih/-kingdom-mentor on Render — see DEPLOY.md'",
-    "deploy:netlify": "npm run build && npx netlify deploy --prod",
+    "deploy:fly": "fly deploy",
+    "deploy:railway": "echo 'Railway: New Project → GitHub → tumainih/-kingdom-mentor (uses Dockerfile) — see DEPLOY.md'",
     "lint": "eslint"
   },
   "dependencies": {

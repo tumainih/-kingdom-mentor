@@ -20,7 +20,7 @@ Kingdom AI is an AI assistant, **not** God, Jesus, the Holy Spirit, a prophet, o
 
 ## Install on your phone (one link)
 
-Open **`/install`** on your deployed site (e.g. `https://your-app.vercel.app/install`). Same URL for iPhone and Android:
+Open **`/install`** on your deployed site (e.g. `https://your-app.onrender.com/install`). Same URL for iPhone and Android:
 
 - **iPhone / iPad** — open in Safari → Share → Add to Home Screen
 - **Android** — open in Chrome → Install app (or menu → Add to Home screen)
@@ -66,21 +66,20 @@ Stories pull chapter ranges and key verses across the full 66-book canon.
 - **Chat** — type messages; replies stream as text only (no speech)
 - **Talk** — tap the mic to speak; Kingdom AI listens and **reads replies aloud**
 
-## Deploy (free — no Vercel Pro needed)
+## Deploy (free — no Vercel Pro, no Netlify required)
 
 **Full guide:** [DEPLOY.md](./DEPLOY.md)
 
-### Render (recommended)
+| Platform | Config in repo | Best for |
+|----------|----------------|----------|
+| [Render](https://render.com) | `render.yaml` | Easiest one-click deploy |
+| [Fly.io](https://fly.io) | `Dockerfile`, `fly.toml` | Always-on, global edge |
+| [Railway](https://railway.app) | `Dockerfile` | Simple GitHub → Docker |
+| [Koyeb](https://www.koyeb.com) | `Dockerfile` | Free Nano instances |
+| Google Cloud Run | `Dockerfile` | Pay-per-use, often $0 |
+| Any VPS | `docker-compose.yml` | Oracle Always Free, etc. |
 
-1. [render.com](https://render.com) → **New Blueprint** or **Web Service**
-2. Connect **https://github.com/tumainih/-kingdom-mentor**
-3. Uses `render.yaml` — build: `npm install && npm run build`, start: `npm start`
-4. Add env vars from `.env.example` in the Render dashboard
-
-### Netlify
-
-1. [netlify.com](https://netlify.com) → Import from Git → same repo
-2. Uses `netlify.toml` automatically
+Quick start (Render): connect **https://github.com/tumainih/-kingdom-mentor** → uses `render.yaml` → add env vars from `.env.example`.
 
 ### Local production test
 
@@ -96,7 +95,7 @@ Optional environment variables:
 - `GEMINI_API_KEY` — enables Gemini when quota allows; otherwise free mode
 - `GEMINI_MODEL` — optional (default: `gemini-3.6-flash`)
 - `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` — Web Push
-- `CRON_SECRET` — protects `/api/cron/hourly-verse` (use [cron-job.org](https://cron-job.org) on Render/Netlify)
+- `CRON_SECRET` — protects `/api/cron/hourly-verse` (use [cron-job.org](https://cron-job.org) on any host)
 
 ## Rebuild Bible indexes (optional)
 

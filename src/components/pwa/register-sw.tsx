@@ -23,19 +23,27 @@ export function RegisterServiceWorker() {
           });
         });
 
-        void warmOfflineCache();
+        void warmOfflineCache().catch(() => {
+          /* offline warm is best-effort */
+        });
 
         if (isVerseNotificationsEnabled()) {
           const locale =
             (localStorage.getItem("kingdom-locale") as "en" | "sw" | null) ?? "en";
-          void syncVerseNotifications(locale);
+          void syncVerseNotifications(locale).catch(() => {
+            /* notification sync is best-effort */
+          });
         }
       })
       .catch(() => {
         /* optional */
       });
 
-    const onOnline = () => void warmOfflineCache();
+    const onOnline = () => {
+      void warmOfflineCache().catch(() => {
+        /* offline warm is best-effort */
+      });
+    };
     window.addEventListener("online", onOnline);
     return () => window.removeEventListener("online", onOnline);
   }, []);

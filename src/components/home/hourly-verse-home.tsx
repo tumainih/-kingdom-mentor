@@ -113,7 +113,9 @@ export function HourlyVerseHome() {
 
   useEffect(() => {
     if (currentHour === null || !now) return;
-    void fetchVerse(currentHour, localDateString(now));
+    void fetchVerse(currentHour, localDateString(now)).catch(() => {
+      /* verse fetch handled inside fetchVerse */
+    });
   }, [currentHour, now, fetchVerse]);
 
   const copyVerse = useCallback(async () => {

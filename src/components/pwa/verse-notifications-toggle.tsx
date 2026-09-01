@@ -37,7 +37,9 @@ export function VerseNotificationsToggle({
 
   useEffect(() => {
     if (!enabled) return;
-    void syncVerseNotifications(locale);
+    void syncVerseNotifications(locale).catch(() => {
+      /* background sync is best-effort */
+    });
   }, [enabled, locale]);
 
   const toggle = useCallback(async () => {
@@ -57,6 +59,8 @@ export function VerseNotificationsToggle({
       });
       setDenied(permission === "denied");
       setEnabled(permission === "granted");
+    } catch {
+      /* permission or push setup failed */
     } finally {
       setBusy(false);
     }

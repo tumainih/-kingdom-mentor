@@ -212,10 +212,13 @@ export function VerseHistoryView() {
     let cancelled = false;
     void (async () => {
       setLoading(true);
-      const result = await resolveHistoryVerse(date, hour, locale);
-      if (!cancelled) {
-        setVerse(result);
-        setLoading(false);
+      try {
+        const result = await resolveHistoryVerse(date, hour, locale);
+        if (!cancelled) setVerse(result);
+      } catch {
+        if (!cancelled) setVerse(null);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
 
@@ -239,15 +242,19 @@ export function VerseHistoryView() {
     setLoading(true);
     setRangeMeta({ truncated, totalMatched });
 
-    if (slots.length === 0) {
-      setRangeVerses([]);
-      setLoading(false);
-      return;
-    }
+    try {
+      if (slots.length === 0) {
+        setRangeVerses([]);
+        return;
+      }
 
-    const results = await resolveHistoryVerseBatch(slots, locale);
-    setRangeVerses(results);
-    setLoading(false);
+      const results = await resolveHistoryVerseBatch(slots, locale);
+      setRangeVerses(results);
+    } catch {
+      setRangeVerses([]);
+    } finally {
+      setLoading(false);
+    }
   }, [
     now,
     fromDate,

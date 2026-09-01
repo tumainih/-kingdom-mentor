@@ -106,10 +106,13 @@ export function AreasView() {
     let cancelled = false;
     void (async () => {
       setLoading(true);
-      const data = await fetchPoolIndex();
-      if (!cancelled) {
-        setAreas(data as AreaRow[]);
-        setLoading(false);
+      try {
+        const data = await fetchPoolIndex();
+        if (!cancelled) setAreas(data as AreaRow[]);
+      } catch {
+        if (!cancelled) setAreas([]);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => {
@@ -126,10 +129,13 @@ export function AreasView() {
     let cancelled = false;
     void (async () => {
       setVersesLoading(true);
-      const data = await resolveAreaPoolVerses(selected.id, locale);
-      if (!cancelled) {
-        setVerses(data);
-        setVersesLoading(false);
+      try {
+        const data = await resolveAreaPoolVerses(selected.id, locale);
+        if (!cancelled) setVerses(data);
+      } catch {
+        if (!cancelled) setVerses([]);
+      } finally {
+        if (!cancelled) setVersesLoading(false);
       }
     })();
 

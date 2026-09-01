@@ -28,7 +28,9 @@ export function NotificationSettingsView() {
 
   useEffect(() => {
     if (!isVerseNotificationsEnabled()) return;
-    void syncVerseNotifications(locale);
+    void syncVerseNotifications(locale).catch(() => {
+      /* background sync is best-effort */
+    });
   }, [selectedHours, locale]);
 
   const toggleHour = useCallback((h: number) => {

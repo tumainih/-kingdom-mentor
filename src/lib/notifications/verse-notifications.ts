@@ -73,53 +73,66 @@ async function subscribeToPush(
 ): Promise<PushSubscription | null> {
   if (!isPushSupported()) return null;
 
-  const res = await fetch("/api/push/vapid-public-key");
-  const data = (await res.json()) as { configured?: boolean; publicKey?: string };
-  if (!data.configured || !data.publicKey) return null;
+  try {
+    const res = await fetch("/api/push/vapid-public-key");
+    if (!res.ok) return null;
+    const data = (await res.json()) as { configured?: boolean; publicKey?: string };
+    if (!data.configured || !data.publicKey) return null;
 
-  const registration = await getReadyRegistration();
-  if (!registration?.pushManager) return null;
+    const registration = await getReadyRegistration();
+    if (!registration?.pushManager) return null;
 
-  let subscription = await registration.pushManager.getSubscription();
-  if (!subscription) {
-    subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(data.publicKey),
+    let subscription = await registration.pushManager.getSubscription();
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(data.publicKey),
+      });
+    }
+
+    await fetch("/api/push/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        subscription,
+        locale,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        notifyHours,
+      }),
     });
+
+    return subscription;
+  } catch {
+    return null;
   }
-
-  await fetch("/api/push/subscribe", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      subscription,
-      locale,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      notifyHours,
-    }),
-  });
-
-  return subscription;
 }
 
 async function unsubscribeFromPush(): Promise<void> {
-  const registration = await getReadyRegistration();
-  const subscription = await registration?.pushManager?.getSubscription();
-  if (!subscription) return;
+  try {
+    const registration = await getReadyRegistration();
+    const subscription = await registration?.pushManager?.getSubscription();
+    if (!subscription) return;
 
-  await fetch("/api/push/subscribe", {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ endpoint: subscription.endpoint }),
-  });
+    await fetch("/api/push/subscribe", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ endpoint: subscription.endpoint }),
+    });
 
-  await subscription.unsubscribe();
+    await subscription.unsubscribe();
+  } catch {
+    /* push cleanup is best-effort */
+  }
 }
 
 function postToWorker(message: object): void {
-  void getReadyRegistration().then((registration) => {
-    registration?.active?.postMessage(message);
-  });
+  void getReadyRegistration()
+    .then((registration) => {
+      registration?.active?.postMessage(message);
+    })
+    .catch(() => {
+      /* worker not ready yet */
+    });
 }
 
 export async function enableVerseNotifications(
@@ -161,18 +174,22 @@ export async function disableVerseNotifications(): Promise<void> {
 }
 
 export async function syncVerseNotifications(locale: AppLocale): Promise<void> {
-  if (!isVerseNotificationsEnabled()) return;
-  if (Notification.permission !== "granted") return;
+  try {
+    if (!isVerseNotificationsEnabled()) return;
+    if (Notification.permission !== "granted") return;
 
-  const notifyHours = getNotifyHours();
-  await subscribeToPush(locale, notifyHours);
+    const notifyHours = getNotifyHours();
+    await subscribeToPush(locale, notifyHours);
 
-  postToWorker({
-    type: "START_HOURLY_NOTIFICATIONS",
-    locale,
-    notifyHours,
-    showNow: false,
-  });
+    postToWorker({
+      type: "START_HOURLY_NOTIFICATIONS",
+      locale,
+      notifyHours,
+      showNow: false,
+    });
+  } catch {
+    /* background sync — push may be unavailable in dev */
+  }
 }
 
 export async function showHourVerseNotification(

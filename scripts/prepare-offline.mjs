@@ -81,18 +81,6 @@ function findVerse(verses, ref, locale) {
   );
 }
 
-function findVerseWithOffset(verses, ref, locale, offset) {
-  const base = findVerse(verses, ref, locale);
-  if (!base || offset === 0) return base;
-  const next = verses.find(
-    (v) =>
-      v.book === base.book &&
-      v.chapter === base.chapter &&
-      v.verse === base.verse + offset,
-  );
-  return next ?? base;
-}
-
 for (const locale of ["en", "sw"]) {
   const verses = loadIndex(locale);
   const slots = HOURLY.map((slot) => {
@@ -115,32 +103,6 @@ for (const locale of ["en", "sw"]) {
   const out = path.join(publicData, `hourly-${locale}.json`);
   writeFileSync(out, JSON.stringify(slots));
   console.log(`Wrote ${out}`);
-
-  const notificationSlots = [];
-  for (let slot = 0; slot < 96; slot++) {
-    const hour = Math.floor(slot / 4);
-    const offset = slot % 4;
-    const hourly = HOURLY[hour];
-    const passage = findVerseWithOffset(verses, hourly.ref, locale, offset);
-    notificationSlots.push({
-      slot,
-      hour,
-      theme: hourly.theme,
-      themeLabel: THEME_LABELS[hourly.theme][locale],
-      scheduledRef: hourly.ref,
-      passage: passage
-        ? {
-            ref: passage.ref,
-            text: passage.text,
-            ...(passage.refEn ? { refEn: passage.refEn } : {}),
-          }
-        : null,
-    });
-  }
-
-  const notifyOut = path.join(publicData, `notification-${locale}.json`);
-  writeFileSync(notifyOut, JSON.stringify(notificationSlots));
-  console.log(`Wrote ${notifyOut}`);
 }
 
 console.log("Offline data ready in public/data/");

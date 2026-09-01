@@ -1,8 +1,9 @@
-/* Kingdom AI — offline-capable service worker (build hKGeILDSaW4PqEAhbRedE) */
-const CACHE = "kingdom-ai-hKGeILDSaW4PqEAhbRedE";
+/* Kingdom AI — offline-capable service worker (build aOqUW8D-2tFKOBpN70dWZ) */
+const CACHE = "kingdom-ai-aOqUW8D-2tFKOBpN70dWZ";
 const PRECACHE = [
   "/",
   "/home",
+  "/history",
   "/install",
   "/manifest.webmanifest",
   "/apple-touch-icon.png",
@@ -10,24 +11,23 @@ const PRECACHE = [
   "/icon-512.png",
   "/data/hourly-en.json",
   "/data/hourly-sw.json",
-  "/data/notification-en.json",
-  "/data/notification-sw.json",
-  "/_next/static/chunks/0au5rw_m_-1u4.js",
+  "/_next/static/aOqUW8D-2tFKOBpN70dWZ/_buildManifest.js",
+  "/_next/static/aOqUW8D-2tFKOBpN70dWZ/_clientMiddlewareManifest.js",
+  "/_next/static/aOqUW8D-2tFKOBpN70dWZ/_ssgManifest.js",
+  "/_next/static/chunks/07xzbkzzk3jq9.js",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
-  "/_next/static/chunks/1c3eo-o8kg6oi.css",
-  "/_next/static/chunks/1npistqcifhdm.js",
+  "/_next/static/chunks/1049adzs_4gk2.js",
+  "/_next/static/chunks/15u-h4l6ott78.js",
   "/_next/static/chunks/1z99mlp5cofct.js",
-  "/_next/static/chunks/2uvwrgeijuw0c.js",
   "/_next/static/chunks/2y1nd8vf7h77j.js",
-  "/_next/static/chunks/36yi4234-sc9-.js",
+  "/_next/static/chunks/33xpuduy7ro9l.js",
   "/_next/static/chunks/3adwt13tezgym.js",
+  "/_next/static/chunks/3bwsbywkvjc9k.css",
   "/_next/static/chunks/3q576hlfnuh0n.js",
+  "/_next/static/chunks/3qwowb4zsj5ll.js",
   "/_next/static/chunks/40_-th3l4iag_.js",
   "/_next/static/chunks/turbopack-0snm50y8kpj5e.js",
-  "/_next/static/hKGeILDSaW4PqEAhbRedE/_buildManifest.js",
-  "/_next/static/hKGeILDSaW4PqEAhbRedE/_clientMiddlewareManifest.js",
-  "/_next/static/hKGeILDSaW4PqEAhbRedE/_ssgManifest.js",
   "/_next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2",
   "/_next/static/media/2bbe8d2671613f1f-s.0k62hbripvv8p.woff2",
   "/_next/static/media/2c55a0e60120577a-s.0-dom-5bn10r2.woff2",
@@ -56,7 +56,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))),
-    ).then(() => self.clients.claim()).then(() => resumeVerseNotifications()),
+    ).then(() => self.clients.claim()).then(() => resumeHourlyNotifications()),
   );
 });
 
@@ -123,14 +123,21 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(networkFirst(request));
 });
 
-/** Inlined into public/sw.js by scripts/generate-sw.mjs */
-const VERSE_INTERVAL_MS = 15 * 60 * 1000;
+/** Inlined into public/sw.js — hourly verse notifications + Web Push */
 const NOTIFICATION_STATE_URL = "/__kingdom_notification_state__";
 
 let verseTimer = null;
 
-function slotForDate(date) {
-  return Math.floor((date.getHours() * 60 + date.getMinutes()) / 15) % 96;
+function msUntilNextHour() {
+  const now = new Date();
+  const next = new Date(now);
+  next.setMinutes(0, 0, 0);
+  next.setHours(next.getHours() + 1);
+  return Math.max(5000, next.getTime() - now.getTime());
+}
+
+function currentHour() {
+  return new Date().getHours();
 }
 
 async function readNotificationState() {
@@ -154,35 +161,36 @@ async function writeNotificationState(state) {
   );
 }
 
-async function loadNotificationVerse(locale, slot) {
-  const url = "/data/notification-" + locale + ".json";
+async function loadHourlyVerse(locale, hour) {
+  const url = "/data/hourly-" + locale + ".json";
   const res = await cacheFirst(new Request(url));
   if (!res || !res.ok) return null;
   const slots = await res.json();
-  if (!Array.isArray(slots) || slots.length === 0) return null;
-  return slots[slot % slots.length] ?? null;
+  if (!Array.isArray(slots)) return null;
+  return slots.find((s) => s.hour === hour) ?? null;
 }
 
-async function showVerseNotification(locale, slotOverride) {
-  if (!self.registration?.showNotification) return false;
-  const permission = self.Notification?.permission;
-  if (permission && permission !== "granted") return false;
+function shouldNotifyHour(state, hour) {
+  if (!state?.notifyHours?.length) return true;
+  return state.notifyHours.includes(hour);
+}
 
-  const slot =
-    typeof slotOverride === "number"
-      ? slotOverride
-      : slotForDate(new Date());
-  const entry = await loadNotificationVerse(locale, slot);
+async function showHourlyVerseNotification(locale, hourOverride, notifyHours) {
+  if (!self.registration?.showNotification) return false;
+  if (self.Notification?.permission && self.Notification.permission !== "granted") {
+    return false;
+  }
+
+  const hour = typeof hourOverride === "number" ? hourOverride : currentHour();
+  const state = await readNotificationState();
+  const hours = notifyHours ?? state?.notifyHours ?? [];
+  if (hours.length && !hours.includes(hour)) return false;
+
+  const entry = await loadHourlyVerse(locale, hour);
   if (!entry?.passage?.text) return false;
 
   const ref = entry.passage.ref;
-  const refEn = entry.passage.refEn;
-  const title =
-    entry.themeLabel && refEn && refEn !== ref
-      ? entry.themeLabel + " · " + ref
-      : entry.themeLabel
-        ? entry.themeLabel + " · " + ref
-        : ref;
+  const title = entry.themeLabel ? entry.themeLabel + " · " + ref : ref;
   const body = entry.passage.text.length > 180
     ? entry.passage.text.slice(0, 177) + "…"
     : entry.passage.text;
@@ -191,9 +199,11 @@ async function showVerseNotification(locale, slotOverride) {
     body: title + "\n\n" + body,
     icon: "/icon-192.png",
     badge: "/icon-192.png",
-    tag: "kingdom-verse-" + slot,
+    tag: "kingdom-hour-" + hour,
     renotify: true,
-    data: { url: "/home", locale, slot },
+    silent: false,
+    vibrate: [180, 90, 180],
+    data: { url: "/history?hour=" + hour, locale, hour },
   });
   return true;
 }
@@ -205,47 +215,89 @@ function clearVerseTimer() {
   }
 }
 
-async function scheduleVerseNotification(locale, delayMs) {
+async function scheduleHourlyNotification(locale, notifyHours, delayMs) {
   clearVerseTimer();
-  const wait = Math.max(5000, delayMs ?? VERSE_INTERVAL_MS);
+  const wait = delayMs ?? msUntilNextHour();
   const nextAt = Date.now() + wait;
-  await writeNotificationState({ enabled: true, locale, nextAt });
+  await writeNotificationState({
+    enabled: true,
+    locale,
+    notifyHours: notifyHours ?? [],
+    nextAt,
+    lastHour: currentHour(),
+  });
 
   verseTimer = setTimeout(async () => {
     try {
       const state = await readNotificationState();
       if (!state?.enabled) return;
-      await showVerseNotification(state.locale || locale);
-      await scheduleVerseNotification(state.locale || locale, VERSE_INTERVAL_MS);
+      const hour = currentHour();
+      if (shouldNotifyHour(state, hour)) {
+        await showHourlyVerseNotification(state.locale || locale, hour, state.notifyHours);
+      }
+      await scheduleHourlyNotification(state.locale || locale, state.notifyHours);
     } catch {
-      /* retry on next activate */
+      /* resume on activate */
     }
   }, wait);
 }
 
-async function stopVerseNotifications() {
+async function stopHourlyNotifications() {
   clearVerseTimer();
-  await writeNotificationState({ enabled: false, locale: "en", nextAt: 0 });
+  await writeNotificationState({
+    enabled: false,
+    locale: "en",
+    notifyHours: [],
+    nextAt: 0,
+    lastHour: -1,
+  });
 }
 
-async function resumeVerseNotifications() {
+async function resumeHourlyNotifications() {
   const state = await readNotificationState();
   if (!state?.enabled) return;
 
+  const hour = currentHour();
+  if (state.lastHour !== hour && shouldNotifyHour(state, hour)) {
+    await showHourlyVerseNotification(state.locale || "en", hour, state.notifyHours);
+    await writeNotificationState({ ...state, lastHour: hour });
+  }
+
   const now = Date.now();
   if (state.nextAt && state.nextAt <= now) {
-    await showVerseNotification(state.locale || "en");
-    await scheduleVerseNotification(state.locale || "en", VERSE_INTERVAL_MS);
+    await scheduleHourlyNotification(state.locale || "en", state.notifyHours);
     return;
   }
 
-  const delay = state.nextAt ? Math.max(1000, state.nextAt - now) : VERSE_INTERVAL_MS;
-  await scheduleVerseNotification(state.locale || "en", delay);
+  const delay = state.nextAt ? Math.max(1000, state.nextAt - now) : msUntilNextHour();
+  await scheduleHourlyNotification(state.locale || "en", state.notifyHours, delay);
 }
+
+self.addEventListener("push", (event) => {
+  let payload = { title: "Kingdom AI", body: "Scripture for this hour.", url: "/history" };
+  try {
+    if (event.data) payload = { ...payload, ...event.data.json() };
+  } catch {
+    /* use defaults */
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title || "Kingdom AI", {
+      body: payload.body,
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      tag: "kingdom-hour-push",
+      renotify: true,
+      silent: false,
+      vibrate: [180, 90, 180],
+      data: { url: payload.url || "/history", hour: payload.hour, locale: payload.locale },
+    }),
+  );
+});
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = event.notification.data?.url || "/home";
+  const target = event.notification.data?.url || "/history";
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {
@@ -266,23 +318,31 @@ self.addEventListener("message", (event) => {
   }
   if (!data || typeof data !== "object") return;
 
-  if (data.type === "START_VERSE_NOTIFICATIONS") {
+  if (data.type === "START_HOURLY_NOTIFICATIONS") {
     event.waitUntil(
       (async () => {
-        await scheduleVerseNotification(data.locale || "en", data.delayMs ?? VERSE_INTERVAL_MS);
-        if (data.showNow) await showVerseNotification(data.locale || "en");
+        await scheduleHourlyNotification(
+          data.locale || "en",
+          data.notifyHours || [],
+          data.delayMs,
+        );
+        if (data.showNow && shouldNotifyHour({ notifyHours: data.notifyHours || [] }, currentHour())) {
+          await showHourlyVerseNotification(data.locale || "en", currentHour(), data.notifyHours || []);
+        }
       })(),
     );
     return;
   }
 
-  if (data.type === "STOP_VERSE_NOTIFICATIONS") {
-    event.waitUntil(stopVerseNotifications());
+  if (data.type === "STOP_HOURLY_NOTIFICATIONS") {
+    event.waitUntil(stopHourlyNotifications());
     return;
   }
 
-  if (data.type === "SHOW_VERSE_NOW") {
-    event.waitUntil(showVerseNotification(data.locale || "en"));
+  if (data.type === "SHOW_HOUR_VERSE") {
+    event.waitUntil(
+      showHourlyVerseNotification(data.locale || "en", data.hour, data.notifyHours || []),
+    );
   }
 });
 

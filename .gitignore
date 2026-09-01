@@ -33,6 +33,7 @@ next-env.d.ts
 
 # Generated offline assets (copied at build)
 /public/data/
+/data/push-subscriptions.json
 
 # Vercel
 .vercel

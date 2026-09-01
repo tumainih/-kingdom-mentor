@@ -29,6 +29,7 @@ const staticAssets = walk(staticDir);
 const precache = [
   "/",
   "/home",
+  "/history",
   "/install",
   "/manifest.webmanifest",
   "/apple-touch-icon.png",
@@ -36,8 +37,6 @@ const precache = [
   "/icon-512.png",
   "/data/hourly-en.json",
   "/data/hourly-sw.json",
-  "/data/notification-en.json",
-  "/data/notification-sw.json",
   ...staticAssets,
 ];
 
@@ -55,7 +54,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))),
-    ).then(() => self.clients.claim()).then(() => resumeVerseNotifications()),
+    ).then(() => self.clients.claim()).then(() => resumeHourlyNotifications()),
   );
 });
 

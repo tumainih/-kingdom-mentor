@@ -7,6 +7,7 @@ import { useLocale } from "@/context/locale-context";
 import {
   disableVerseNotifications,
   enableVerseNotifications,
+  getNotifyHours,
   isVerseNotificationsEnabled,
   isVerseNotificationsSupported,
   syncVerseNotifications,
@@ -50,7 +51,10 @@ export function VerseNotificationsToggle({
         return;
       }
 
-      const permission = await enableVerseNotifications(locale, { showNow: true });
+      const permission = await enableVerseNotifications(locale, {
+        showNow: false,
+        notifyHours: getNotifyHours(),
+      });
       setDenied(permission === "denied");
       setEnabled(permission === "granted");
     } finally {

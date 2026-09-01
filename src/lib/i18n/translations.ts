@@ -59,6 +59,7 @@ export const translations = {
       "I can't reach the AI right now, so I can't give the thoughtful guidance this question deserves. Please try again in a moment.\n\nYou can still type a Bible reference in English or Swahili (e.g. **John 3:16** or **Yohana 3:16**).",
     navHome: "Home",
     navChat: "Chat",
+    navHistory: "History",
     homeHourLabel: "Hour {hour} · verse for this hour",
     homeLoading: "Loading this hour's verse…",
     homeChangesAt: "New verse at {hour}:00",
@@ -97,14 +98,24 @@ export const translations = {
     installOfflinePreparing: "Preparing offline Bible…",
     installOfflineReady: "Offline Bible ready",
     offlineBanner: "Offline — hourly verses, Bible lookup, and guidance still work.",
-    notifyTitle: "Verse every 15 minutes",
+    notifyTitle: "Hourly verse alerts",
     notifyHint:
-      "Get a Scripture notification every 15 minutes — hope, faith, love, and more. Works best when Kingdom AI is installed.",
-    notifyEnable: "Turn on verse notifications",
+      "Get a Scripture notification at the start of each selected hour — even when the app is closed (installed PWA + push). Uses your phone's notification sound.",
+    notifyEnable: "Turn on hourly notifications",
     notifyDisable: "Turn off notifications",
     notifyWorking: "Updating…",
-    notifyActive: "Verse notifications are on — every 15 minutes.",
+    notifyActive: "Hourly notifications are on for your selected hours.",
     notifyDenied: "Notifications blocked. Allow them in your browser or phone settings.",
+    historyTitle: "Verse by date & hour",
+    historySubtitle:
+      "Look up the Scripture for any past date and hour you missed while the app was closed.",
+    historyDate: "Date",
+    historyHour: "Hour",
+    historyHourLabel: "Hour {hour}",
+    historyNotifyHoursTitle: "Notification hours",
+    historyNotifyHoursHint:
+      "Tap the hours when you want a verse alert (e.g. 6am, 9am, 12pm, 3pm, 6pm). Default: 6 · 9 · 12 · 15 · 18.",
+    historyBackHome: "Back to live hour",
   },
   sw: {
     language: "Kiswahili",
@@ -165,6 +176,7 @@ export const translations = {
       "Siwezi kufikia AI kwa sasa, kwa hivyo siwezi kutoa mwongozo wa kina unaostahili swali hili. Tafadhali jaribu tena baada ya muda mfupi.\n\nUnaweza bado kuandika mstari kwa Kiingereza au Kiswahili (mf. **Yohana 3:16** au **John 3:16**).",
     navHome: "Nyumbani",
     navChat: "Maandishi",
+    navHistory: "Historia",
     homeHourLabel: "Saa {hour} · mstari wa saa hii",
     homeLoading: "Inapakia mstari wa saa hii…",
     homeChangesAt: "Mstari mpya saa {hour}:00",
@@ -208,15 +220,25 @@ export const translations = {
     installOfflineReady: "Biblia ya nje ya mtandao iko tayari",
     offlineBanner:
       "Nje ya mtandao — mistari ya kila saa, utafutaji wa mistari, na mwongozo bado vinafanya kazi.",
-    notifyTitle: "Mstari kila dakika 15",
+    notifyTitle: "Arifa za mstari kila saa",
     notifyHint:
-      "Pokea arifa ya mstari kila dakika 15 — matumaini, imani, upendo, na zaidi. Inafanya kazi vizuri ukiwa umesakinisha Kingdom AI.",
-    notifyEnable: "Washa arifa za mistari",
+      "Pokea arifa ya mstari mwanzoni mwa kila saa uliyochagua — hata app imefungwa (PWA + push). Inatumia sauti ya arifa ya simu.",
+    notifyEnable: "Washa arifa za kila saa",
     notifyDisable: "Zima arifa",
     notifyWorking: "Inasasisha…",
-    notifyActive: "Arifa za mistari zimewashwa — kila dakika 15.",
+    notifyActive: "Arifa za kila saa zimewashwa kwa saa ulizochagua.",
     notifyDenied:
       "Arifa zimezuiwa. Ziruhusu katika mipangilio ya kivinjari au simu yako.",
+    historyTitle: "Mstari kwa tarehe na saa",
+    historySubtitle:
+      "Tafuta mstari wa tarehe na saa yoyote uliyokosa app ilipokuwa imefungwa.",
+    historyDate: "Tarehe",
+    historyHour: "Saa",
+    historyHourLabel: "Saa {hour}",
+    historyNotifyHoursTitle: "Saa za arifa",
+    historyNotifyHoursHint:
+      "Gusa saa unazotaka arifa (mf. 6, 9, 12, 15, 18). Chaguo-msingi: 6 · 9 · 12 · 15 · 18.",
+    historyBackHome: "Rudi kwenye saa ya sasa",
   },
 } as const;
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MessageSquare, Plus } from "lucide-react";
+import { Home, History, MessageSquare, Plus } from "lucide-react";
 import { BrandLogo, BrandTitle } from "@/components/chat/brand";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -58,6 +58,21 @@ export function AppHeader({
                 <Home className="h-3.5 w-3.5" />
                 {!compactNav && (
                   <span className="hidden min-[420px]:inline">{t("navHome")}</span>
+                )}
+              </Link>
+              <Link
+                href="/history"
+                aria-label={t("navHistory")}
+                className={cn(
+                  "flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-semibold transition-colors sm:px-2.5 sm:text-[11px]",
+                  pathname === "/history"
+                    ? "bg-brand text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <History className="h-3.5 w-3.5" />
+                {!compactNav && (
+                  <span className="hidden min-[420px]:inline">{t("navHistory")}</span>
                 )}
               </Link>
               <Link

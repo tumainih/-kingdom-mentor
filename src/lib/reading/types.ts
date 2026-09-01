@@ -1,4 +1,5 @@
 export type ReportUnit =
+  | "1h"
   | "3h"
   | "6h"
   | "12h"

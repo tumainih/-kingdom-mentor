@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Bell, Home, Zap } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
@@ -20,31 +20,65 @@ function pad(n: number) {
   return n.toString().padStart(2, "0");
 }
 
+function defaultSendAtLocal(): string {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() + 1, 0, 0);
+  const p = (n: number) => n.toString().padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
 export function NotificationSettingsView() {
   const { locale, t } = useLocale();
   const [selectedHours, setSelectedHours] = useState<number[]>(DEFAULT_NOTIFY_HOURS);
+  const [testHour, setTestHour] = useState(() => new Date().getHours());
+  const [testAt, setTestAt] = useState(defaultSendAtLocal);
   const [testing, setTesting] = useState(false);
-  const [testMessage, setTestMessage] = useState<"sent" | "failed" | null>(null);
+  const [testMessage, setTestMessage] = useState<"sent" | "failed" | "scheduled" | null>(null);
   const [pushServerReady, setPushServerReady] = useState<boolean | null>(null);
   const [backgroundPushReady, setBackgroundPushReady] = useState<boolean | null>(null);
+  const scheduleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const testNotification = useCallback(async () => {
+  const sendTest = useCallback(async () => {
+    const shown = await previewHourVerseNotification(locale, testHour);
+    setTestMessage(shown ? "sent" : "failed");
+    setTesting(false);
+  }, [locale, testHour]);
+
+  const testNotification = useCallback(() => {
     if (typeof Notification === "undefined" || Notification.permission !== "granted") {
       setTestMessage("failed");
       return;
     }
+
+    if (scheduleRef.current) {
+      clearTimeout(scheduleRef.current);
+      scheduleRef.current = null;
+    }
+
     setTesting(true);
     setTestMessage(null);
-    try {
-      const hour = new Date().getHours();
-      const shown = await previewHourVerseNotification(locale, hour);
-      setTestMessage(shown ? "sent" : "failed");
-    } catch {
-      setTestMessage("failed");
-    } finally {
+
+    const targetMs = new Date(testAt).getTime();
+    const delay = targetMs - Date.now();
+
+    if (Number.isFinite(targetMs) && delay > 15_000) {
+      scheduleRef.current = setTimeout(() => {
+        scheduleRef.current = null;
+        void sendTest();
+      }, delay);
+      setTestMessage("scheduled");
       setTesting(false);
+      return;
     }
-  }, [locale]);
+
+    void sendTest();
+  }, [sendTest, testAt]);
+
+  useEffect(() => {
+    return () => {
+      if (scheduleRef.current) clearTimeout(scheduleRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     setSelectedHours(getNotifyHours());
@@ -110,20 +144,50 @@ export function NotificationSettingsView() {
           {typeof Notification !== "undefined" &&
           Notification.permission === "granted" &&
           isVerseNotificationsEnabled() ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-2 w-full gap-2 text-xs"
-              disabled={testing}
-              onClick={() => void testNotification()}
-            >
-              <Zap className="h-3.5 w-3.5" />
-              {testing ? t("notifyWorking") : t("notifyTestNow")}
-            </Button>
+            <div className="mt-2 rounded-lg border border-border/50 bg-card/40 p-3">
+              <p className="text-xs font-semibold">{t("notifyTestNow")}</p>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                <label className="text-[10px] text-muted-foreground">
+                  {t("notifyTestHour")}
+                  <select
+                    value={testHour}
+                    onChange={(e) => setTestHour(Number(e.target.value))}
+                    className="mt-1 w-full rounded-md border border-border/50 bg-background px-2 py-1.5 text-xs"
+                  >
+                    {Array.from({ length: 24 }, (_, h) => (
+                      <option key={h} value={h}>
+                        {pad(h)}:00
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-[10px] text-muted-foreground">
+                  {t("notifyTestAt")}
+                  <input
+                    type="datetime-local"
+                    value={testAt}
+                    onChange={(e) => setTestAt(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-border/50 bg-background px-2 py-1.5 text-xs"
+                  />
+                </label>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2 w-full gap-2 text-xs"
+                disabled={testing}
+                onClick={() => testNotification()}
+              >
+                <Zap className="h-3.5 w-3.5" />
+                {testing ? t("notifyWorking") : t("notifyTestSend")}
+              </Button>
+            </div>
           ) : null}
           {testMessage === "sent" ? (
             <p className="mt-2 text-[10px] text-brand-light">{t("notifyTestSent")}</p>
+          ) : testMessage === "scheduled" ? (
+            <p className="mt-2 text-[10px] text-brand-light">{t("notifyTestScheduled")}</p>
           ) : testMessage === "failed" ? (
             <p className="mt-2 text-[10px] text-amber-200/90">{t("notifyTestFailed")}</p>
           ) : null}

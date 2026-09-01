@@ -119,7 +119,11 @@ export const translations = {
     notifyDisable: "Turn off notifications",
     notifyWorking: "Updating…",
     notifyActive: "Hourly notifications are on for your selected hours.",
-    notifyTestNow: "Send test notification now",
+    notifyTestNow: "Send test notification",
+    notifyTestHour: "Verse hour",
+    notifyTestAt: "Send at",
+    notifyTestSend: "Send test",
+    notifyTestScheduled: "Test scheduled — keep this tab open until it fires.",
     notifyTestSent:
       "Test sent — tap Read (Nimesoma) on the notification to record your reading speed.",
     notifyTestFailed:
@@ -134,7 +138,7 @@ export const translations = {
       "Sound uses your phone's default notification tone. In Settings, allow notifications and sound for Kingdom AI.",
     reportPageTitle: "Self-development reports",
     reportPageSubtitle:
-      "All-time tracking from your selected alert hours. Unread or missed hours = rate 0 (brown). Reports use natural calendar periods.",
+      "Reports build up naturally: 1 hour → 3 → 6 → 12 → day → week → month. Missed hours = rate 0 (brown).",
     reportEmpty: "No reports yet. Mark verse notifications as Read to build your trend.",
     reportUnit: "Period",
     reportLapseAvg: "Avg unread time",
@@ -313,7 +317,11 @@ export const translations = {
     notifyDisable: "Zima arifa",
     notifyWorking: "Inasasisha…",
     notifyActive: "Arifa za kila saa zimewashwa kwa saa ulizochagua.",
-    notifyTestNow: "Tuma arifa ya majaribio sasa",
+    notifyTestNow: "Tuma arifa ya majaribio",
+    notifyTestHour: "Saa ya mstari",
+    notifyTestAt: "Tuma saa",
+    notifyTestSend: "Tuma jaribio",
+    notifyTestScheduled: "Jaribio limepangwa — weka kichupo hiki wazi hadi ifike.",
     notifyTestSent:
       "Jaribio limetumwa — gusa Nimesoma kwenye arifa ili kurekodi kasi yako ya kusoma.",
     notifyTestFailed:
@@ -328,7 +336,7 @@ export const translations = {
       "Sauti hutumia mlio wa arifa wa simu. Katika Mipangilio, ruhusu arifa na sauti kwa Kingdom AI.",
     reportPageTitle: "Ripoti za maendeleo",
     reportPageSubtitle:
-      "Ufuatiliaji wa muda wote kutoka saa ulizochagua. Haijasomwa au ukosefu = kiwango 0 (kahawia). Ripoti zinafuata kalenda asili.",
+      "Ripoti hujengwa asili: saa 1 → 3 → 6 → 12 → siku → wiki → mwezi. Saa ulizokosa = kiwango 0 (kahawia).",
     reportEmpty: "Hakuna ripoti bado. Weka alama Nimesoma kwenye arifa za mistari.",
     reportUnit: "Kipindi",
     reportLapseAvg: "Wastani wa muda",

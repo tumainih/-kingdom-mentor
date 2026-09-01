@@ -3,6 +3,7 @@ import { localDateKey, slotStartMs } from "@/lib/reading/slots";
 
 /** Hours (0–23) when each unit’s report is generated (local device timezone). */
 export const REPORT_TRIGGER_HOURS: Partial<Record<ReportUnit, number[]>> = {
+  "1h": Array.from({ length: 24 }, (_, i) => i),
   "3h": [3, 6, 9, 12, 15, 18, 21, 0],
   "6h": [6, 12, 18, 0],
   "12h": [12, 0],
@@ -10,6 +11,7 @@ export const REPORT_TRIGGER_HOURS: Partial<Record<ReportUnit, number[]>> = {
 };
 
 export const REPORT_UNIT_ORDER: ReportUnit[] = [
+  "1h",
   "3h",
   "6h",
   "12h",
@@ -25,6 +27,7 @@ export const REPORT_UNIT_ORDER: ReportUnit[] = [
 
 export function reportUnitLabel(unit: ReportUnit, locale: "en" | "sw"): string {
   const en: Record<ReportUnit, string> = {
+    "1h": "1 hour",
     "3h": "3 hours",
     "6h": "6 hours",
     "12h": "12 hours",
@@ -39,6 +42,7 @@ export function reportUnitLabel(unit: ReportUnit, locale: "en" | "sw"): string {
     custom: "Custom range",
   };
   const sw: Record<ReportUnit, string> = {
+    "1h": "Saa 1",
     "3h": "Saa 3",
     "6h": "Saa 6",
     "12h": "Saa 12",
@@ -53,6 +57,21 @@ export function reportUnitLabel(unit: ReportUnit, locale: "en" | "sw"): string {
     custom: "Masafa maalum",
   };
   return locale === "sw" ? sw[unit] : en[unit];
+}
+
+function blockHoursForUnit(unit: ReportUnit): number {
+  switch (unit) {
+    case "1h":
+      return 1;
+    case "3h":
+      return 3;
+    case "6h":
+      return 6;
+    case "12h":
+      return 12;
+    default:
+      return 24;
+  }
 }
 
 function localParts(date: Date, tz: string) {
@@ -122,7 +141,7 @@ export interface PeriodWindow {
   end: number;
 }
 
-/** Natural calendar-aligned report windows that close at the current local hour/day. */
+/** Natural calendar-aligned report windows — 1h → 3h → 6h → … */
 export function dueReportWindows(
   now: Date,
   timezone: string,
@@ -137,8 +156,7 @@ export function dueReportWindows(
     number[],
   ][]) {
     if (!hours.includes(hour)) continue;
-    const blockHours =
-      unit === "3h" ? 3 : unit === "6h" ? 6 : unit === "12h" ? 12 : 24;
+    const blockHours = blockHoursForUnit(unit);
     const start =
       unit === "24h"
         ? previousLocalDayStartMs(end, timezone)

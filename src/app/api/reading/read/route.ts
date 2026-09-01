@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { parseLocale } from "@/lib/bible/locale";
 import { buildReadEvent } from "@/lib/reading/reports";
-import { saveReadEvent, ensureDeviceMeta } from "@/lib/reading/store.server";
+import { removePendingNotification, saveReadEvent, ensureDeviceMeta } from "@/lib/reading/store.server";
 
 export const runtime = "nodejs";
 
@@ -16,6 +16,7 @@ interface ReadBody {
   themeLabel?: string;
   locale?: unknown;
   timezone?: string;
+  isTest?: boolean;
 }
 
 export async function POST(request: Request) {
@@ -40,12 +41,13 @@ export async function POST(request: Request) {
     notificationId: body.notificationId || `n-${readAt}`,
     shownAt,
     readAt,
-    hour: Number(body.hour) || new Date(readAt).getHours(),
+    hour: Number(body.hour) ?? new Date(readAt).getHours(),
     verseRef: body.verseRef || "",
     theme: body.theme || "",
     themeLabel: body.themeLabel || "",
     locale,
     timezone,
+    missed: false,
   });
 
   await saveReadEvent(event);

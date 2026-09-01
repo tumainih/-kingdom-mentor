@@ -231,6 +231,7 @@ export async function previewHourVerseNotification(
         hour,
         notifyHours: getNotifyHours(),
         force: true,
+        isTest: true,
         replyPort: true,
       },
       [channel.port2],

@@ -11,7 +11,7 @@ import {
   getDeviceTimezone,
   getOrCreateDeviceId,
 } from "@/lib/reading/device-id.client";
-import { formatLapse } from "@/lib/reading/rates";
+import { formatLapse, rateToColor, UNREAD_COLOR } from "@/lib/reading/rates";
 import { reportUnitLabel } from "@/lib/reading/periods";
 import type { DevelopmentReport, ReadEvent } from "@/lib/reading/types";
 
@@ -42,6 +42,10 @@ export function DevelopmentReportView() {
   const [loading, setLoading] = useState(true);
   const [activeReport, setActiveReport] = useState<DevelopmentReport | null>(null);
   const [note, setNote] = useState("");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [genMessage, setGenMessage] = useState<"ok" | "empty" | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const deviceId = useMemo(() => getOrCreateDeviceId(), []);
@@ -80,27 +84,55 @@ export function DevelopmentReportView() {
     }
   }, [pendingReportId, reports]);
 
+  useEffect(() => {
+    if (startedAt) {
+      const toLocal = (ts: number) => {
+        const d = new Date(ts);
+        const pad = (n: number) => n.toString().padStart(2, "0");
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      };
+      setCustomFrom(toLocal(startedAt));
+      setCustomTo(toLocal(Date.now()));
+    }
+  }, [startedAt]);
+
+  const generateCustom = useCallback(async () => {
+    if (!customFrom || !customTo) return;
+    setGenerating(true);
+    setGenMessage(null);
+    try {
+      const res = await fetch("/api/reading/reports/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deviceId,
+          start: new Date(customFrom).getTime(),
+          end: new Date(customTo).getTime(),
+          unit: "custom",
+          locale,
+          timezone,
+        }),
+      });
+      if (res.ok) {
+        setGenMessage("ok");
+        await load();
+      } else {
+        setGenMessage("empty");
+      }
+    } finally {
+      setGenerating(false);
+    }
+  }, [customFrom, customTo, deviceId, locale, load, timezone]);
+
   const calendarDays = useMemo(() => {
     const map = new Map<string, { totalRate: number; count: number; color: string }>();
     for (const e of events) {
-      const key = dayKey(e.readAt, timezone);
+      const key = dayKey(e.shownAt, timezone);
       const prev = map.get(key) ?? { totalRate: 0, count: 0, color: "#f8fafc" };
       prev.totalRate += e.rate;
       prev.count += 1;
       const avg = prev.totalRate / prev.count;
-      const color =
-        avg <= 1.5
-          ? "#f8fafc"
-          : avg <= 2.5
-            ? "#fde8e8"
-            : avg <= 3.5
-              ? "#fecaca"
-              : avg <= 4.5
-                ? "#fca5a5"
-                : avg <= 5.5
-                  ? "#ef4444"
-                  : "#b91c1c";
-      map.set(key, { ...prev, color });
+      map.set(key, { ...prev, color: rateToColor(Math.round(avg)) });
     }
     return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
   }, [events, timezone]);
@@ -146,19 +178,59 @@ export function DevelopmentReportView() {
 
         {loading ? (
           <p className="mt-6 text-center text-xs text-muted-foreground">{t("notifyWorking")}</p>
-        ) : reports.length === 0 && events.length === 0 ? (
-          <p className="mt-6 rounded-lg border border-border/50 bg-card/40 p-4 text-center text-xs text-muted-foreground">
-            {t("reportEmpty")}
-          </p>
         ) : (
           <>
+            <section className="mt-4 rounded-xl border border-border/50 bg-card/40 p-3">
+              <p className="text-xs font-semibold">{t("reportCustomTitle")}</p>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                <label className="text-[10px] text-muted-foreground">
+                  {t("reportFrom")}
+                  <input
+                    type="datetime-local"
+                    value={customFrom}
+                    onChange={(e) => setCustomFrom(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-border/50 bg-background px-2 py-1.5 text-xs"
+                  />
+                </label>
+                <label className="text-[10px] text-muted-foreground">
+                  {t("reportTo")}
+                  <input
+                    type="datetime-local"
+                    value={customTo}
+                    onChange={(e) => setCustomTo(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-border/50 bg-background px-2 py-1.5 text-xs"
+                  />
+                </label>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                className="mt-2 w-full text-xs"
+                disabled={generating || !customFrom || !customTo}
+                onClick={() => void generateCustom()}
+              >
+                {generating ? t("notifyWorking") : t("reportGenerate")}
+              </Button>
+              {genMessage === "ok" ? (
+                <p className="mt-2 text-[10px] text-brand-light">{t("reportGenerated")}</p>
+              ) : genMessage === "empty" ? (
+                <p className="mt-2 text-[10px] text-amber-200/90">{t("reportNoActivity")}</p>
+              ) : null}
+            </section>
+
+            {reports.length === 0 && events.length === 0 ? (
+              <p className="mt-4 rounded-lg border border-border/50 bg-card/40 p-4 text-center text-xs text-muted-foreground">
+                {t("reportEmpty")}
+              </p>
+            ) : (
+              <>
             <section className="mt-4 rounded-xl border border-border/50 bg-card/40 p-3">
               <p className="flex items-center gap-2 text-xs font-semibold">
                 <CalendarDays className="h-3.5 w-3.5 text-brand" />
                 {t("reportCalendar")}
               </p>
               <div className="mt-2 grid grid-cols-7 gap-1">
-                {calendarDays.slice(-28).map(([date, cell]) => (
+                {calendarDays.map(([date, cell]) => (
                   <div
                     key={date}
                     title={`${date} · ${cell.count} · avg ${(cell.totalRate / cell.count).toFixed(1)}`}
@@ -189,7 +261,9 @@ export function DevelopmentReportView() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-xs font-semibold text-foreground">
-                        {reportUnitLabel(report.unit, locale)}
+                        {report.unit === "custom"
+                          ? t("reportCustomTitle")
+                          : reportUnitLabel(report.unit, locale)}
                       </p>
                       <p className="mt-0.5 text-[10px] text-muted-foreground">
                         {formatDate(report.periodStart, locale)} — {formatDate(report.periodEnd, locale)}
@@ -197,14 +271,18 @@ export function DevelopmentReportView() {
                     </div>
                     <span
                       className="shrink-0 rounded-md px-2 py-1 text-[10px] font-bold text-foreground"
-                      style={{ backgroundColor: report.color }}
+                      style={{
+                        backgroundColor:
+                          report.avgRate <= 0 ? UNREAD_COLOR : report.color,
+                      }}
                     >
                       {report.avgRate}
                     </span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-3 text-[10px] text-muted-foreground">
                     <span>
-                      {t("reportLapseAvg")}: {formatLapse(report.avgLapseMs)}
+                      {t("reportLapseAvg")}:{" "}
+                      {report.avgRate <= 0 ? t("reportUnread") : formatLapse(report.avgLapseMs)}
                     </span>
                     <span>
                       {t("reportEvents")}: {report.eventCount}
@@ -216,6 +294,8 @@ export function DevelopmentReportView() {
                 </button>
               ))}
             </section>
+              </>
+            )}
           </>
         )}
       </main>
@@ -227,8 +307,11 @@ export function DevelopmentReportView() {
               {reportUnitLabel(activeReport.unit, locale)}
             </p>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              {t("reportLapseAvg")}: {formatLapse(activeReport.avgLapseMs)} · {t("reportScaleAvg")}:{" "}
-              {activeReport.avgRate}
+              {t("reportLapseAvg")}:{" "}
+              {activeReport.avgRate <= 0
+                ? t("reportUnread")
+                : formatLapse(activeReport.avgLapseMs)}{" "}
+              · {t("reportScaleAvg")}: {activeReport.avgRate}
             </p>
             <label className="mt-3 block text-[11px] font-medium">{t("reportWhatHappened")}</label>
             <Textarea

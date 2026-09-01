@@ -9,7 +9,8 @@ export type ReportUnit =
   | "quarter"
   | "year"
   | "4year"
-  | "10year";
+  | "10year"
+  | "custom";
 
 export interface ReadEvent {
   id: string;
@@ -25,6 +26,21 @@ export interface ReadEvent {
   themeLabel: string;
   locale: "en" | "sw";
   timezone: string;
+  missed?: boolean;
+}
+
+export interface PendingNotification {
+  notificationId: string;
+  deviceId: string;
+  shownAt: number;
+  hour: number;
+  hourEndsAt: number;
+  verseRef: string;
+  theme: string;
+  themeLabel: string;
+  locale: "en" | "sw";
+  timezone: string;
+  isTest?: boolean;
 }
 
 export interface DevelopmentReport {
@@ -41,6 +57,7 @@ export interface DevelopmentReport {
   note: string | null;
   submittedAt: number | null;
   notifiedAt: number | null;
+  customLabel?: string;
 }
 
 export interface DeviceReadingMeta {

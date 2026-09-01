@@ -35,6 +35,7 @@ export function reportUnitLabel(unit: ReportUnit, locale: "en" | "sw"): string {
     year: "Yearly",
     "4year": "4 years",
     "10year": "10 years",
+    custom: "Custom range",
   };
   const sw: Record<ReportUnit, string> = {
     "3h": "Saa 3",
@@ -48,6 +49,7 @@ export function reportUnitLabel(unit: ReportUnit, locale: "en" | "sw"): string {
     year: "Kila mwaka",
     "4year": "Miaka 4",
     "10year": "Miaka 10",
+    custom: "Masafa maalum",
   };
   return locale === "sw" ? sw[unit] : en[unit];
 }
@@ -190,5 +192,6 @@ export function dueReportWindows(
 }
 
 export function periodKey(unit: ReportUnit, start: number, end: number): string {
+  if (unit === "custom") return `custom:${start}:${end}`;
   return `${unit}:${start}:${end}`;
 }

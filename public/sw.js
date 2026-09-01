@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build 1_c3EqGg67OsPVJt8Y1FZ) */
-const CACHE = "kingdom-ai-1_c3EqGg67OsPVJt8Y1FZ";
+/* Kingdom AI — offline-capable service worker (build Tfz06TPd9q7k_0LZ0INWJ) */
+const CACHE = "kingdom-ai-Tfz06TPd9q7k_0LZ0INWJ";
 const PRECACHE = [
   "/",
   "/home",
@@ -40,27 +40,27 @@ const PRECACHE = [
   "/data/pools/strength.json",
   "/data/pools/trust.json",
   "/data/pools/wisdom.json",
-  "/_next/static/1_c3EqGg67OsPVJt8Y1FZ/_buildManifest.js",
-  "/_next/static/1_c3EqGg67OsPVJt8Y1FZ/_clientMiddlewareManifest.js",
-  "/_next/static/1_c3EqGg67OsPVJt8Y1FZ/_ssgManifest.js",
+  "/_next/static/Tfz06TPd9q7k_0LZ0INWJ/_buildManifest.js",
+  "/_next/static/Tfz06TPd9q7k_0LZ0INWJ/_clientMiddlewareManifest.js",
+  "/_next/static/Tfz06TPd9q7k_0LZ0INWJ/_ssgManifest.js",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
   "/_next/static/chunks/0rsnbqltz8cn0.css",
-  "/_next/static/chunks/1fqmwa10ac1gx.js",
   "/_next/static/chunks/1g179lcifdq15.js",
   "/_next/static/chunks/1h0lni661c03r.js",
   "/_next/static/chunks/1uj543fzv0-to.js",
   "/_next/static/chunks/1z99mlp5cofct.js",
   "/_next/static/chunks/24ihfyt9kr7mm.js",
   "/_next/static/chunks/24t7crwozt_yd.js",
+  "/_next/static/chunks/2_aw_yckvsg3t.js",
   "/_next/static/chunks/2fdae8o94lfgi.js",
   "/_next/static/chunks/2w4fbwkoiy-9y.js",
   "/_next/static/chunks/2x5oncyuqs3pt.js",
   "/_next/static/chunks/373skgu07-_06.js",
   "/_next/static/chunks/38crxovcaonw3.js",
   "/_next/static/chunks/3adwt13tezgym.js",
-  "/_next/static/chunks/3gxcvi-5brnhb.js",
   "/_next/static/chunks/3q576hlfnuh0n.js",
+  "/_next/static/chunks/3x0o3p-hz16s5.js",
   "/_next/static/chunks/turbopack-0snm50y8kpj5e.js",
   "/_next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2",
   "/_next/static/media/2bbe8d2671613f1f-s.0k62hbripvv8p.woff2",
@@ -349,7 +349,31 @@ async function postReadEvent(data, readAt) {
   }
 }
 
-async function showHourlyVerseNotification(locale, hourOverride, notifyHours, force) {
+async function postPendingNotification(data, isTest) {
+  if (!data.deviceId || !data.notificationId) return;
+  try {
+    await fetch("/api/reading/pending", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        deviceId: data.deviceId,
+        notificationId: data.notificationId,
+        shownAt: data.shownAt,
+        hour: data.hour,
+        verseRef: data.verseRef || "",
+        theme: data.theme || "",
+        themeLabel: data.themeLabel || "",
+        locale: data.locale || "en",
+        timezone: data.timezone || "UTC",
+        isTest: Boolean(isTest),
+      }),
+    });
+  } catch {
+    /* offline */
+  }
+}
+
+async function showHourlyVerseNotification(locale, hourOverride, notifyHours, force, isTest) {
   if (!self.registration?.showNotification) return false;
   if (self.Notification?.permission && self.Notification.permission !== "granted") {
     return false;
@@ -397,6 +421,20 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours, fo
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
     },
   });
+  await postPendingNotification(
+    {
+      deviceId,
+      notificationId: nid,
+      shownAt,
+      hour,
+      verseRef: ref,
+      theme: entry.theme,
+      themeLabel: entry.themeLabel,
+      locale,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+    },
+    isTest,
+  );
   return true;
 }
 
@@ -425,7 +463,7 @@ async function scheduleHourlyNotification(locale, notifyHours, delayMs) {
       if (!state?.enabled) return;
       const hour = currentHour();
       if (shouldNotifyHour(state, hour)) {
-        await showHourlyVerseNotification(state.locale || locale, hour, state.notifyHours);
+        await showHourlyVerseNotification(state.locale || locale, hour, state.notifyHours, false, false);
       }
       await scheduleHourlyNotification(state.locale || locale, state.notifyHours);
     } catch {
@@ -451,7 +489,7 @@ async function resumeHourlyNotifications() {
 
   const hour = currentHour();
   if (state.lastHour !== hour && shouldNotifyHour(state, hour)) {
-    await showHourlyVerseNotification(state.locale || "en", hour, state.notifyHours);
+    await showHourlyVerseNotification(state.locale || "en", hour, state.notifyHours, false, false);
     await writeNotificationState({ ...state, lastHour: hour });
   }
 
@@ -479,34 +517,52 @@ self.addEventListener("push", (event) => {
   const isReport = payload.type === "report";
 
   event.waitUntil(
-    self.registration.showNotification(payload.title || "Kingdom AI", {
-      body: payload.body,
-      icon: "/icon-192.png",
-      badge: "/icon-192.png",
-      tag: isReport ? "kingdom-report-" + (payload.reportId || nid) : "kingdom-hour-push-" + nid,
-      renotify: true,
-      silent: false,
-      vibrate: [180, 90, 180],
-      requireInteraction: true,
-      actions: isReport
-        ? [{ action: "open-report", title: locale === "sw" ? "Fungua ripoti" : "Open report" }]
-        : [{ action: "read", title: readActionTitle(locale) }],
-      data: {
-        url: payload.url || (isReport ? "/reports" : "/notifications"),
-        hour: payload.hour,
-        locale,
-        type: payload.type || "verse",
-        verseRef: payload.verseRef || "",
-        theme: payload.theme || "",
-        themeLabel: payload.themeLabel || "",
-        verseText: payload.verseText || "",
-        reportId: payload.reportId || "",
-        deviceId: payload.deviceId || "",
-        shownAt,
-        notificationId: nid,
-        timezone: payload.timezone || "UTC",
-      },
-    }),
+    (async () => {
+      await self.registration.showNotification(payload.title || "Kingdom AI", {
+        body: payload.body,
+        icon: "/icon-192.png",
+        badge: "/icon-192.png",
+        tag: isReport ? "kingdom-report-" + (payload.reportId || nid) : "kingdom-hour-push-" + nid,
+        renotify: true,
+        silent: false,
+        vibrate: [180, 90, 180],
+        requireInteraction: true,
+        actions: isReport
+          ? [{ action: "open-report", title: locale === "sw" ? "Fungua ripoti" : "Open report" }]
+          : [{ action: "read", title: readActionTitle(locale) }],
+        data: {
+          url: payload.url || (isReport ? "/reports" : "/notifications"),
+          hour: payload.hour,
+          locale,
+          type: payload.type || "verse",
+          verseRef: payload.verseRef || "",
+          theme: payload.theme || "",
+          themeLabel: payload.themeLabel || "",
+          verseText: payload.verseText || "",
+          reportId: payload.reportId || "",
+          deviceId: payload.deviceId || "",
+          shownAt,
+          notificationId: nid,
+          timezone: payload.timezone || "UTC",
+        },
+      });
+      if (payload.type !== "report") {
+        await postPendingNotification(
+          {
+            deviceId: payload.deviceId,
+            notificationId: nid,
+            shownAt,
+            hour: payload.hour,
+            verseRef: payload.verseRef || "",
+            theme: payload.theme || "",
+            themeLabel: payload.themeLabel || "",
+            locale,
+            timezone: payload.timezone || "UTC",
+          },
+          false,
+        );
+      }
+    })(),
   );
 });
 
@@ -588,6 +644,7 @@ self.addEventListener("message", (event) => {
             currentHour(),
             data.notifyHours || [],
             true,
+            true,
           );
         }
       })(),
@@ -622,6 +679,7 @@ self.addEventListener("message", (event) => {
           data.hour,
           data.notifyHours || [],
           data.force === true,
+          data.isTest === true,
         );
         if (data.replyPort && event.ports?.[0]) {
           event.ports[0].postMessage({ shown });

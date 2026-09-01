@@ -2,6 +2,7 @@ import { Redis } from "@upstash/redis";
 import type {
   DeviceReadingMeta,
   DevelopmentReport,
+  PendingNotification,
   ReadEvent,
 } from "@/lib/reading/types";
 
@@ -73,9 +74,58 @@ export async function ensureDeviceMeta(
   return meta;
 }
 
+function pendingKey(deviceId: string) {
+  return `kingdom:reading:${deviceId}:pending`;
+}
+
+export async function listPendingNotifications(
+  deviceId: string,
+): Promise<PendingNotification[]> {
+  const redis = redisClient();
+  if (!redis) return [];
+  return (await redis.get<PendingNotification[]>(pendingKey(deviceId))) ?? [];
+}
+
+export async function savePendingNotification(
+  pending: PendingNotification,
+): Promise<void> {
+  const redis = redisClient();
+  await ensureDeviceMeta(pending.deviceId, pending.timezone, pending.locale);
+  if (!redis) return;
+
+  const list = await listPendingNotifications(pending.deviceId);
+  const next = list.filter((p) => p.notificationId !== pending.notificationId);
+  next.push(pending);
+  await redis.set(pendingKey(pending.deviceId), next);
+  await trackDevice(pending.deviceId);
+}
+
+export async function removePendingNotification(
+  deviceId: string,
+  notificationId: string,
+): Promise<void> {
+  const redis = redisClient();
+  if (!redis) return;
+  const list = await listPendingNotifications(deviceId);
+  await redis.set(
+    pendingKey(deviceId),
+    list.filter((p) => p.notificationId !== notificationId),
+  );
+}
+
+export async function listAllPendingNotifications(): Promise<PendingNotification[]> {
+  const ids = await listReadingDeviceIds();
+  const all: PendingNotification[] = [];
+  for (const id of ids) {
+    all.push(...(await listPendingNotifications(id)));
+  }
+  return all;
+}
+
 export async function saveReadEvent(event: ReadEvent): Promise<void> {
   const redis = redisClient();
   await ensureDeviceMeta(event.deviceId, event.timezone, event.locale);
+  await removePendingNotification(event.deviceId, event.notificationId);
   if (!redis) return;
 
   const events = (await redis.get<ReadEvent[]>(eventsKey(event.deviceId))) ?? [];
@@ -133,5 +183,9 @@ export async function eventsInRange(
   end: number,
 ): Promise<ReadEvent[]> {
   const events = await listReadEvents(deviceId);
-  return events.filter((e) => e.readAt >= start && e.readAt <= end);
+  return events.filter(
+    (e) =>
+      (e.shownAt >= start && e.shownAt <= end) ||
+      (e.readAt >= start && e.readAt <= end),
+  );
 }

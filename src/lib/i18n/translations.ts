@@ -120,7 +120,8 @@ export const translations = {
     notifyWorking: "Updating…",
     notifyActive: "Hourly notifications are on for your selected hours.",
     notifyTestNow: "Send test notification now",
-    notifyTestSent: "Test notification sent — check your notification shade.",
+    notifyTestSent:
+      "Test sent — tap Read (Nimesoma) on the notification to record your reading speed.",
     notifyTestFailed:
       "Could not show a notification. Install the app, allow alerts, and open it once online.",
     notifyPushServerOff:
@@ -147,7 +148,15 @@ export const translations = {
     reportTrend: "Report trend",
     reportSince: "Tracking since",
     reportOpen: "Open",
-    reportRateHint: "Scale 1 (fast) → 6+ (slow). Color: light = quick read, red = longer.",
+    reportRateHint:
+      "Scale 0 (brown) = unread by hour end. 1 (fast) → 6+ (slow). Light = quick, red = longer.",
+    reportCustomTitle: "Report for any time",
+    reportFrom: "From",
+    reportTo: "To",
+    reportGenerate: "Generate report",
+    reportGenerated: "Report ready — see below.",
+    reportNoActivity: "No alerts in this range yet.",
+    reportUnread: "Unread",
     reportClose: "Close",
     notifyDenied: "Notifications blocked. Allow them in your browser or phone settings.",
     notifyPageTitle: "Verse alerts",
@@ -305,7 +314,8 @@ export const translations = {
     notifyWorking: "Inasasisha…",
     notifyActive: "Arifa za kila saa zimewashwa kwa saa ulizochagua.",
     notifyTestNow: "Tuma arifa ya majaribio sasa",
-    notifyTestSent: "Arifa ya majaribio imetumwa — angalia arifa za simu.",
+    notifyTestSent:
+      "Jaribio limetumwa — gusa Nimesoma kwenye arifa ili kurekodi kasi yako ya kusoma.",
     notifyTestFailed:
       "Imeshindwa kuonyesha arifa. Sakinisha app, ruhusu arifa, na ufungue mara moja ukiwa mtandaoni.",
     notifyPushServerOff:
@@ -332,7 +342,15 @@ export const translations = {
     reportTrend: "Mwenendo wa ripoti",
     reportSince: "Kufuatilia tangu",
     reportOpen: "Fungua",
-    reportRateHint: "Kiwango 1 (haraka) → 6+ (polepole). Rangi: nyepesi = haraka, nyekundu = muda mrefu.",
+    reportRateHint:
+      "Kiwango 0 (kahawia) = haijasomwa ndani ya saa. 1 (haraka) → 6+ (polepole).",
+    reportCustomTitle: "Ripoti kwa muda wowote",
+    reportFrom: "Kutoka",
+    reportTo: "Hadi",
+    reportGenerate: "Tengeneza ripoti",
+    reportGenerated: "Ripoti iko tayari — angalia hapa chini.",
+    reportNoActivity: "Hakuna arifa katika masafa haya bado.",
+    reportUnread: "Haijasomwa",
     reportClose: "Funga",
     notifyDenied:
       "Arifa zimezuiwa. Ziruhusu katika mipangilio ya kivinjari au simu yako.",

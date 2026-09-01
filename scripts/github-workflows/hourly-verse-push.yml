@@ -1,0 +1,33 @@
+name: Hourly verse push
+
+on:
+  schedule:
+    # Every hour at :00 UTC — sends Web Push even when the app is closed
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  send-hourly-verse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request OIDC token
+        uses: actions/github-script@v7
+        id: oidc
+        with:
+          script: |
+            const audience = "https://temporary-instant-onyx-uuarmez.vercel.app";
+            const token = await core.getIDToken(audience);
+            core.setOutput("token", token);
+
+      - name: Trigger server push cron
+        env:
+          SITE_URL: https://temporary-instant-onyx-uuarmez.vercel.app
+          OIDC_TOKEN: ${{ steps.oidc.outputs.token }}
+        run: |
+          curl -sfS \
+            -H "Authorization: Bearer ${OIDC_TOKEN}" \
+            "${SITE_URL}/api/cron/hourly-verse"

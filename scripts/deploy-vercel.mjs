@@ -47,10 +47,12 @@ Anonymous temporary deploys cannot reuse the same URL after the session ends.
 let vercelConfigStripped = false;
 if (existsSync(vercelJson)) {
   const raw = readFileSync(vercelJson, "utf8");
-  if (raw.includes("crons")) {
+  // Hobby allows daily crons only — block sub-daily expressions like `0 * * * *`
+  if (/"\s*0\s+\*\s+\*\s+\*\s+\*"/.test(raw)) {
     writeFileSync(vercelBackup, raw);
     writeFileSync(vercelJson, "{}");
     vercelConfigStripped = true;
+    console.warn("Stripped sub-daily vercel.json crons (Hobby plan). Use 24 daily UTC crons instead.");
   }
 }
 

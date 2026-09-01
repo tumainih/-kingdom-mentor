@@ -90,7 +90,9 @@ const vapid =
         pub: process.env.VAPID_PUBLIC_KEY,
         priv: process.env.VAPID_PRIVATE_KEY,
       }
-    : generateVapid();
+    : process.env.GENERATE_VAPID === "1"
+      ? generateVapid()
+      : null;
 
 const cronSecret =
   process.env.CRON_SECRET?.trim() ||
@@ -100,15 +102,23 @@ const cronSecret =
 const geminiKey = readEnvLocal("GEMINI_API_KEY");
 
 const vars = {
-  VAPID_PUBLIC_KEY: vapid.pub,
-  VAPID_PRIVATE_KEY: vapid.priv,
   VAPID_SUBJECT: process.env.VAPID_SUBJECT || "mailto:notifications@kingdom-ai.app",
   NEXT_PUBLIC_SITE_URL: siteUrl,
   CRON_SECRET: cronSecret,
   GEMINI_MODEL: readEnvLocal("GEMINI_MODEL") || "gemini-3.6-flash",
 };
 
+if (vapid) {
+  vars.VAPID_PUBLIC_KEY = vapid.pub;
+  vars.VAPID_PRIVATE_KEY = vapid.priv;
+}
+
 if (geminiKey) vars.GEMINI_API_KEY = geminiKey;
+
+const upstashUrl = process.env.UPSTASH_REDIS_REST_URL?.trim();
+const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
+if (upstashUrl) vars.UPSTASH_REDIS_REST_URL = upstashUrl;
+if (upstashToken) vars.UPSTASH_REDIS_REST_TOKEN = upstashToken;
 
 for (const [key, value] of Object.entries(vars)) {
   if (!value) continue;

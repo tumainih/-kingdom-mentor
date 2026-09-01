@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build J9PzrWIoMz4dBeRw7oVaR) */
-const CACHE = "kingdom-ai-J9PzrWIoMz4dBeRw7oVaR";
+/* Kingdom AI — offline-capable service worker (build zZeEKYUj2doVWNbQJsI6R) */
+const CACHE = "kingdom-ai-zZeEKYUj2doVWNbQJsI6R";
 const PRECACHE = [
   "/",
   "/home",
@@ -40,12 +40,10 @@ const PRECACHE = [
   "/data/pools/strength.json",
   "/data/pools/trust.json",
   "/data/pools/wisdom.json",
-  "/_next/static/J9PzrWIoMz4dBeRw7oVaR/_buildManifest.js",
-  "/_next/static/J9PzrWIoMz4dBeRw7oVaR/_clientMiddlewareManifest.js",
-  "/_next/static/J9PzrWIoMz4dBeRw7oVaR/_ssgManifest.js",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
-  "/_next/static/chunks/0qvnzw2-u7bbl.js",
+  "/_next/static/chunks/0g3n-n8ycbl0d.js",
+  "/_next/static/chunks/0v2cxs4utdqu9.css",
   "/_next/static/chunks/1g179lcifdq15.js",
   "/_next/static/chunks/1h0lni661c03r.js",
   "/_next/static/chunks/1uj543fzv0-to.js",
@@ -53,10 +51,9 @@ const PRECACHE = [
   "/_next/static/chunks/24ihfyt9kr7mm.js",
   "/_next/static/chunks/24t7crwozt_yd.js",
   "/_next/static/chunks/271y7z0stpu_5.js",
+  "/_next/static/chunks/2fdae8o94lfgi.js",
   "/_next/static/chunks/2w4fbwkoiy-9y.js",
   "/_next/static/chunks/2x5oncyuqs3pt.js",
-  "/_next/static/chunks/31_d3vznkzvbq.js",
-  "/_next/static/chunks/34kmwrswtbn9a.css",
   "/_next/static/chunks/373skgu07-_06.js",
   "/_next/static/chunks/3adwt13tezgym.js",
   "/_next/static/chunks/3q576hlfnuh0n.js",
@@ -76,7 +73,10 @@ const PRECACHE = [
   "/_next/static/media/e7150917543fc9da-s.0mybutugvu-lq.woff2",
   "/_next/static/media/e9457141811d41ae-s.02frcczqg7k-8.woff2",
   "/_next/static/media/favicon.2vob68tjqpejf.ico",
-  "/_next/static/media/icon.1v5cwft9ue97g.svg"
+  "/_next/static/media/icon.1v5cwft9ue97g.svg",
+  "/_next/static/zZeEKYUj2doVWNbQJsI6R/_buildManifest.js",
+  "/_next/static/zZeEKYUj2doVWNbQJsI6R/_clientMiddlewareManifest.js",
+  "/_next/static/zZeEKYUj2doVWNbQJsI6R/_ssgManifest.js"
 ];
 
 self.addEventListener("install", (event) => {

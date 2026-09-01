@@ -124,6 +124,10 @@ export const translations = {
       "Could not show a notification. Install the app, allow alerts, and open it once online.",
     notifyPushServerOff:
       "Background push is not configured on the server yet — alerts work while the app is installed and has been opened recently.",
+    notifyBackgroundReady:
+      "Background alerts are on — you'll get Scripture even when the app is closed (re-enable alerts once after updates).",
+    notifyReEnable:
+      "After an update: turn alerts off, then on again so your phone registers for background push.",
     notifySoundHint:
       "Sound uses your phone's default notification tone. In Settings, allow notifications and sound for Kingdom AI.",
     notifyDenied: "Notifications blocked. Allow them in your browser or phone settings.",
@@ -286,6 +290,10 @@ export const translations = {
       "Imeshindwa kuonyesha arifa. Sakinisha app, ruhusu arifa, na ufungue mara moja ukiwa mtandaoni.",
     notifyPushServerOff:
       "Push ya nyuma haijasanidiwa bado — arifa zinafanya kazi app imesakinishwa na imefunguliwa hivi karibuni.",
+    notifyBackgroundReady:
+      "Arifa za nyuma zimewashwa — utapokea mistari hata app imefungwa (washa tena arifa mara moja baada ya sasisho).",
+    notifyReEnable:
+      "Baada ya sasisho: zima arifa, kisha washa tena ili simu ijisajili kwa push ya nyuma.",
     notifySoundHint:
       "Sauti hutumia mlio wa arifa wa simu. Katika Mipangilio, ruhusu arifa na sauti kwa Kingdom AI.",
     notifyDenied:

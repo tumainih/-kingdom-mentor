@@ -14,6 +14,8 @@
     "deploy": "node scripts/deploy-render.mjs",
     "deploy:render": "node scripts/deploy-render.mjs",
     "deploy:vercel": "node scripts/deploy-vercel.mjs",
+    "deploy:vercel:env": "node scripts/sync-vercel-env.mjs",
+    "setup:background-push": "node scripts/setup-background-push.mjs",
     "deploy:fly": "fly deploy",
     "deploy:railway": "echo 'Railway: New Project → GitHub → tumainih/-kingdom-mentor (uses Dockerfile) — see DEPLOY.md'",
     "lint": "eslint"
@@ -25,6 +27,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "fuse.js": "^7.5.0",
+    "jose": "^6.2.10",
     "lucide-react": "^1.38.0",
     "next": "16.3.3",
     "react": "19.2.8",

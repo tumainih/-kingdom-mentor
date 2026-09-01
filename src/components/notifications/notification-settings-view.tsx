@@ -26,6 +26,7 @@ export function NotificationSettingsView() {
   const [testing, setTesting] = useState(false);
   const [testMessage, setTestMessage] = useState<"sent" | "failed" | null>(null);
   const [pushServerReady, setPushServerReady] = useState<boolean | null>(null);
+  const [backgroundPushReady, setBackgroundPushReady] = useState<boolean | null>(null);
 
   const testNotification = useCallback(async () => {
     if (typeof Notification === "undefined" || Notification.permission !== "granted") {
@@ -50,10 +51,21 @@ export function NotificationSettingsView() {
   }, []);
 
   useEffect(() => {
-    void fetch("/api/push/vapid-public-key")
+    void fetch("/api/health")
       .then((res) => res.json())
-      .then((data: { configured?: boolean }) => setPushServerReady(Boolean(data.configured)))
-      .catch(() => setPushServerReady(false));
+      .then(
+        (data: {
+          pushConfigured?: boolean;
+          backgroundPushReady?: boolean;
+        }) => {
+          setPushServerReady(Boolean(data.pushConfigured));
+          setBackgroundPushReady(Boolean(data.backgroundPushReady));
+        },
+      )
+      .catch(() => {
+        setPushServerReady(false);
+        setBackgroundPushReady(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -115,11 +127,18 @@ export function NotificationSettingsView() {
           ) : testMessage === "failed" ? (
             <p className="mt-2 text-[10px] text-amber-200/90">{t("notifyTestFailed")}</p>
           ) : null}
-          {pushServerReady === false ? (
+          {backgroundPushReady ? (
+            <p className="mt-2 text-[10px] leading-snug text-brand-light">
+              {t("notifyBackgroundReady")}
+            </p>
+          ) : pushServerReady === false ? (
             <p className="mt-2 text-[10px] leading-snug text-muted-foreground">
               {t("notifyPushServerOff")}
             </p>
           ) : null}
+          <p className="mt-2 text-[10px] leading-snug text-muted-foreground">
+            {t("notifyReEnable")}
+          </p>
           <p className="mt-2 text-[10px] leading-snug text-muted-foreground">
             {t("notifySoundHint")}
           </p>

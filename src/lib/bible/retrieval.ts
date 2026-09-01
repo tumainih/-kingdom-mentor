@@ -1,5 +1,6 @@
 import Fuse from "fuse.js";
 import type { BibleLocale } from "./locale";
+import type { ContentAreaId } from "./content-areas";
 import { AREA_KEYWORDS } from "./content-areas";
 import { loadVerses } from "./verse-lookup";
 import {
@@ -10,6 +11,7 @@ import {
 import type { BibleVerse, RetrievedPassage } from "./types";
 import { lookupVerseReference } from "./verse-lookup";
 import { detectContentAreas } from "./verse-pools-detect";
+import { bridgeSearchTerms } from "./topic-bridges";
 import { retrieveFromPools as retrieveFromPoolsClient } from "./retrieve-pools.client";
 
 export type { BibleLocale };
@@ -39,6 +41,11 @@ const STOP_WORDS = new Set([
 ]);
 
 const fuseCache = new Map<BibleLocale, Fuse<BibleVerse>>();
+
+const STRONG_MATCH_MAX_SCORE = 0.28;
+const FALLBACK_MAX_SCORE = 0.38;
+const LAST_RESORT_MAX_SCORE = 0.55;
+const MIN_PASSAGES = 4;
 
 async function getFuse(locale: BibleLocale): Promise<Fuse<BibleVerse>> {
   const cached = fuseCache.get(locale);
@@ -89,12 +96,94 @@ function extractSearchQueries(userText: string): string[] {
     }
   }
 
+  for (const term of bridgeSearchTerms(userText)) {
+    queries.add(term);
+  }
+
   const refMatch = userText.match(
     /(\d?\s?[A-Za-z\u00C0-\u024F]+)\s+(\d+):(\d+)(?:-(\d+))?/,
   );
   if (refMatch) queries.add(refMatch[0]);
 
-  return [...queries].slice(0, 6);
+  return [...queries].slice(0, 10);
+}
+
+function fuseRankedPassages(
+  fuse: Fuse<BibleVerse>,
+  queries: string[],
+  limit: number,
+  locale: BibleLocale,
+): RetrievedPassage[] {
+  const scored = new Map<string, { verse: BibleVerse; score: number }>();
+
+  for (const query of queries) {
+    const perQueryLimit = query.split(/\s+/).length >= 2 ? 8 : 5;
+    for (const result of fuse.search(query, { limit: perQueryLimit })) {
+      const existing = scored.get(result.item.ref);
+      const score = result.score ?? 1;
+      if (!existing || score < existing.score) {
+        scored.set(result.item.ref, { verse: result.item, score });
+      }
+    }
+  }
+
+  let ranked = [...scored.values()]
+    .filter(({ score }) => score <= STRONG_MATCH_MAX_SCORE)
+    .sort((a, b) => a.score - b.score);
+
+  if (ranked.length < MIN_PASSAGES) {
+    const fallback = [...scored.values()]
+      .filter(({ score }) => score <= FALLBACK_MAX_SCORE)
+      .sort((a, b) => a.score - b.score);
+    ranked = dedupeRanked([...ranked, ...fallback]);
+  }
+
+  if (ranked.length < MIN_PASSAGES) {
+    const lastResort = [...scored.values()]
+      .filter(({ score }) => score <= LAST_RESORT_MAX_SCORE)
+      .sort((a, b) => a.score - b.score);
+    ranked = dedupeRanked([...ranked, ...lastResort]);
+  }
+
+  if (ranked.length < MIN_PASSAGES) {
+    ranked = [...scored.values()].sort((a, b) => a.score - b.score);
+  }
+
+  return dedupeByRef(ranked.slice(0, limit).map(({ verse }) => verse)).map(
+    (v) => ({
+      ref: v.ref,
+      text: v.text,
+      refEn: v.refEn ?? (locale === "en" ? v.ref : undefined),
+    }),
+  );
+}
+
+function dedupeRanked(
+  ranked: { verse: BibleVerse; score: number }[],
+): { verse: BibleVerse; score: number }[] {
+  const seen = new Set<string>();
+  const out: { verse: BibleVerse; score: number }[] = [];
+  for (const item of ranked) {
+    if (seen.has(item.verse.ref)) continue;
+    seen.add(item.verse.ref);
+    out.push(item);
+  }
+  return out;
+}
+
+async function retrieveFromPoolAreas(
+  areas: ContentAreaId[],
+  locale: BibleLocale,
+  limit: number,
+  userText: string,
+): Promise<RetrievedPassage[]> {
+  if (areas.length === 0) return [];
+  if (typeof window !== "undefined") {
+    return retrieveFromPoolsClient(areas, locale, limit, userText);
+  }
+  return (
+    await import("./verse-pools.server")
+  ).retrieveFromPoolsServer(areas, locale, limit, userText);
 }
 
 function dedupeByRef(verses: BibleVerse[]): BibleVerse[] {
@@ -109,6 +198,22 @@ function dedupeByRef(verses: BibleVerse[]): BibleVerse[] {
   return result;
 }
 
+function mergePassages(
+  primary: RetrievedPassage[],
+  extra: RetrievedPassage[],
+  limit: number,
+): RetrievedPassage[] {
+  const seen = new Set(primary.map((p) => p.ref));
+  const merged = [...primary];
+  for (const p of extra) {
+    if (seen.has(p.ref)) continue;
+    seen.add(p.ref);
+    merged.push(p);
+    if (merged.length >= limit) break;
+  }
+  return merged.slice(0, limit);
+}
+
 export function buildRetrievalQueryFromMessages(
   messages: { role: string; content: string }[],
 ): string {
@@ -119,9 +224,6 @@ export function buildRetrievalQueryFromMessages(
   }
   return messages[messages.length - 1]?.content.trim() ?? "";
 }
-
-const STRONG_MATCH_MAX_SCORE = 0.28;
-const FALLBACK_MAX_SCORE = 0.38;
 
 export async function getBibleStats(locale: BibleLocale = "en") {
   const verses = await loadVerses(locale);
@@ -150,94 +252,31 @@ export async function retrieveScripture(
   }
 
   const areas = detectContentAreas(userText);
-  if (areas.length > 0) {
-    const poolPassages =
-      typeof window !== "undefined"
-        ? await retrieveFromPoolsClient(areas, locale, limit, userText)
-        : await (
-            await import("./verse-pools.server")
-          ).retrieveFromPoolsServer(areas, locale, limit, userText);
-    if (poolPassages.length >= limit) {
-      return poolPassages.slice(0, limit);
-    }
-
-    const fuse = await getFuse(locale);
-    const queries = extractSearchQueries(userText);
-    const scored = new Map<string, { verse: BibleVerse; score: number }>();
-
-    for (const query of queries) {
-      const perQueryLimit = query.split(/\s+/).length >= 2 ? 6 : 4;
-      for (const result of fuse.search(query, { limit: perQueryLimit })) {
-        const existing = scored.get(result.item.ref);
-        const score = result.score ?? 1;
-        if (!existing || score < existing.score) {
-          scored.set(result.item.ref, { verse: result.item, score });
-        }
-      }
-    }
-
-    let ranked = [...scored.values()]
-      .filter(({ score }) => score <= STRONG_MATCH_MAX_SCORE)
-      .sort((a, b) => a.score - b.score);
-
-    if (ranked.length === 0) {
-      ranked = [...scored.values()]
-        .filter(({ score }) => score <= FALLBACK_MAX_SCORE)
-        .sort((a, b) => a.score - b.score);
-    }
-
-    const fusePassages = dedupeByRef(ranked.map(({ verse }) => verse)).map(
-      (v) => ({
-        ref: v.ref,
-        text: v.text,
-        refEn: v.refEn ?? (locale === "en" ? v.ref : undefined),
-      }),
-    );
-
-    const seen = new Set(poolPassages.map((p) => p.ref));
-    const merged = [...poolPassages];
-    for (const p of fusePassages) {
-      if (seen.has(p.ref)) continue;
-      merged.push(p);
-      if (merged.length >= limit) break;
-    }
-    return merged.slice(0, limit);
-  }
-
   const fuse = await getFuse(locale);
   const queries = extractSearchQueries(userText);
-  if (queries.length === 0) return [];
 
-  const scored = new Map<string, { verse: BibleVerse; score: number }>();
+  let passages: RetrievedPassage[] = [];
 
-  for (const query of queries) {
-    const perQueryLimit = query.split(/\s+/).length >= 2 ? 6 : 4;
-    for (const result of fuse.search(query, { limit: perQueryLimit })) {
-      const existing = scored.get(result.item.ref);
-      const score = result.score ?? 1;
-      if (!existing || score < existing.score) {
-        scored.set(result.item.ref, { verse: result.item, score });
-      }
-    }
+  if (areas.length > 0) {
+    passages = await retrieveFromPoolAreas(areas, locale, limit, userText);
   }
 
-  let ranked = [...scored.values()]
-    .filter(({ score }) => score <= STRONG_MATCH_MAX_SCORE)
-    .sort((a, b) => a.score - b.score);
-
-  if (ranked.length === 0) {
-    ranked = [...scored.values()]
-      .filter(({ score }) => score <= FALLBACK_MAX_SCORE)
-      .sort((a, b) => a.score - b.score);
+  if (queries.length > 0) {
+    const fusePassages = fuseRankedPassages(fuse, queries, limit, locale);
+    passages = mergePassages(passages, fusePassages, limit);
   }
 
-  return dedupeByRef(ranked.slice(0, limit).map(({ verse }) => verse)).map(
-    (v) => ({
-      ref: v.ref,
-      text: v.text,
-      refEn: v.refEn ?? (locale === "en" ? v.ref : undefined),
-    }),
-  );
+  if (passages.length < MIN_PASSAGES && areas.length === 0) {
+    const wisdomFallback = await retrieveFromPoolAreas(
+      ["wisdom", "guidance", "trust"],
+      locale,
+      limit,
+      userText,
+    );
+    passages = mergePassages(passages, wisdomFallback, limit);
+  }
+
+  return passages.slice(0, limit);
 }
 
 export function formatScriptureBlock(

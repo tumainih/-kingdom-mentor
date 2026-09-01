@@ -11,6 +11,11 @@ import type { RetrievedPassage } from "@/lib/bible/types";
 
 const TOPIC_STEPS: Array<{ re: RegExp; en: string; sw: string }> = [
   {
+    re: /\b(bet|betting|gambl|casino|lottery|wager|kamari|bashiri)\b/i,
+    en: "Ask whether this builds trust in God or love of quick gain. Consider stewardship, honesty, and what love requires toward those affected.",
+    sw: "Jiulize kama hii inajenga tumaini kwa Mungu au tamaa ya mali ya haraka. Fikiria uaminifu, uadilifu, na upendo unaohitaji kwa wale wanaohusika.",
+  },
+  {
     re: /\b(forgive|forgiveness|hurt|betray|msamaha|samehe|umewaumiza)\b/i,
     en: "Forgiveness does not mean pretending the wound didn't happen — it means refusing to carry revenge. Start with honest prayer.",
     sw: "Msamaha si kufanya kama hukuumizwa — ni kuacha kulipa kisasi moyoni. Anza kwa sala ya uaminifu.",
@@ -84,11 +89,23 @@ ${scripture}
   }
 
   if (!scripture) {
+    const retry = await retrieveScripture(question, 8, locale);
+    const retryBlock = formatScriptureBlock(retry, locale);
+    if (retryBlock) {
+      return {
+        passages: retry,
+        text: `${serverMessage(locale, "heardYou")}
+
+${retryBlock}
+
+**${stepLabel}:** ${step}`,
+      };
+    }
     return {
       passages: [],
       text: `${serverMessage(locale, "noPassagesYet")}
 
-${step}`,
+**${stepLabel}:** ${step}`,
     };
   }
 

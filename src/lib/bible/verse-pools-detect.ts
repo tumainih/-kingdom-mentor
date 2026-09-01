@@ -1,5 +1,6 @@
 import type { ContentAreaId } from "./content-areas";
 import { AREA_KEYWORDS, CONTENT_AREA_IDS } from "./content-areas";
+import { bridgeAreas } from "./topic-bridges";
 
 export function detectContentAreas(text: string): ContentAreaId[] {
   const cleaned = text.toLowerCase().trim();
@@ -15,5 +16,10 @@ export function detectContentAreas(text: string): ContentAreaId[] {
       matched.push(areaId);
     }
   }
+
+  for (const area of bridgeAreas(text)) {
+    if (!matched.includes(area)) matched.push(area);
+  }
+
   return matched;
 }

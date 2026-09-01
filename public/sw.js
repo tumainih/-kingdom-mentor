@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build aBCVHu4kHJc3-K4RjU6eU) */
-const CACHE = "kingdom-ai-aBCVHu4kHJc3-K4RjU6eU";
+/* Kingdom AI — offline-capable service worker (build BhthNTHZ4e_eke0_GFnoU) */
+const CACHE = "kingdom-ai-BhthNTHZ4e_eke0_GFnoU";
 const PRECACHE = [
   "/",
   "/home",
@@ -40,15 +40,15 @@ const PRECACHE = [
   "/data/pools/strength.json",
   "/data/pools/trust.json",
   "/data/pools/wisdom.json",
-  "/_next/static/aBCVHu4kHJc3-K4RjU6eU/_buildManifest.js",
-  "/_next/static/aBCVHu4kHJc3-K4RjU6eU/_clientMiddlewareManifest.js",
-  "/_next/static/aBCVHu4kHJc3-K4RjU6eU/_ssgManifest.js",
+  "/_next/static/BhthNTHZ4e_eke0_GFnoU/_buildManifest.js",
+  "/_next/static/BhthNTHZ4e_eke0_GFnoU/_clientMiddlewareManifest.js",
+  "/_next/static/BhthNTHZ4e_eke0_GFnoU/_ssgManifest.js",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
   "/_next/static/chunks/1g179lcifdq15.js",
-  "/_next/static/chunks/1g39-lg_ukhpm.js",
-  "/_next/static/chunks/1hsi7i8_qoc6w.js",
+  "/_next/static/chunks/1h0lni661c03r.js",
   "/_next/static/chunks/1uj543fzv0-to.js",
+  "/_next/static/chunks/1v_pjl-smq2s4.js",
   "/_next/static/chunks/1z99mlp5cofct.js",
   "/_next/static/chunks/22yo5plex5kpv.js",
   "/_next/static/chunks/24ihfyt9kr7mm.js",

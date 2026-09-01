@@ -25,7 +25,19 @@ function run(cmd) {
 }
 
 const token = process.env.VERCEL_TOKEN?.trim();
-const projectId = process.env.VERCEL_PROJECT_ID?.trim();
+let projectId = process.env.VERCEL_PROJECT_ID?.trim() || process.env.VERCEL_PROJECT?.trim();
+let orgId = process.env.VERCEL_ORG_ID?.trim();
+
+const linkedProject = path.join(root, ".vercel", "project.json");
+if (existsSync(linkedProject)) {
+  try {
+    const linked = JSON.parse(readFileSync(linkedProject, "utf8"));
+    projectId = projectId || linked.projectId;
+    orgId = orgId || linked.orgId;
+  } catch {
+    /* ignore */
+  }
+}
 
 if (!token) {
   console.error(`
@@ -57,10 +69,13 @@ if (existsSync(vercelJson)) {
 }
 
 try {
-  let cmd = `npx vercel deploy --prod --yes --force --token "${token}"`;
-  if (projectId) cmd += ` --project "${projectId}"`;
+  const env = { ...process.env };
+  if (projectId) env.VERCEL_PROJECT_ID = projectId;
+  if (orgId) env.VERCEL_ORG_ID = orgId;
 
-  const out = run(cmd);
+  let cmd = `npx vercel deploy --prod --yes --force --token "${token}"`;
+  console.log(`> ${cmd.replace(/(token|VERCEL_TOKEN=)\S+/gi, "$1***")}`);
+  const out = execSync(cmd, { encoding: "utf8", cwd: root, env });
   const urlMatch = out.match(/https:\/\/[^\s]+\.vercel\.app/);
   if (urlMatch) {
     console.log(`\nLive: ${urlMatch[0]}`);

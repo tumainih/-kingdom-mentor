@@ -5,22 +5,22 @@ import {
   iterExpectedSlots,
 } from "@/lib/reading/slots";
 import {
-  getDeviceMeta,
-  listReadEvents,
-  saveReadEvent,
-  updateDeviceNotifyHours,
-} from "@/lib/reading/store.server";
+  ensureDeviceMetaClient,
+  getDeviceMetaClient,
+  listReadEventsClient,
+  saveReadEventClient,
+} from "@/lib/reading/store.client";
 
-export async function backfillAbsentSlots(
+export async function backfillAbsentSlotsClient(
   deviceId: string,
   now = Date.now(),
 ): Promise<number> {
-  const meta = await getDeviceMeta(deviceId);
+  const meta = await getDeviceMetaClient(deviceId);
   if (!meta) return 0;
 
   const notifyHours =
     meta.notifyHours?.length ? meta.notifyHours : DEFAULT_TRACKING_HOURS;
-  const events = await listReadEvents(deviceId);
+  const events = await listReadEventsClient(deviceId);
   const covered = coveredSlotKeys(events);
   let added = 0;
 
@@ -32,7 +32,7 @@ export async function backfillAbsentSlots(
   )) {
     if (covered.has(slot.slotKey)) continue;
 
-    await saveReadEvent(
+    await saveReadEventClient(
       buildReadEvent({
         deviceId,
         notificationId: `absent:${slot.slotKey}`,
@@ -54,20 +54,12 @@ export async function backfillAbsentSlots(
   return added;
 }
 
-export async function backfillAllDevices(now = Date.now()): Promise<number> {
-  const { listReadingDeviceIds } = await import("@/lib/reading/store.server");
-  const deviceIds = await listReadingDeviceIds();
-  let total = 0;
-  for (const deviceId of deviceIds) {
-    total += await backfillAbsentSlots(deviceId, now);
-  }
-  return total;
-}
-
-export async function syncDeviceNotifyHours(
+export async function ensureReadingMetaClient(
   deviceId: string,
-  notifyHours: number[],
+  timezone: string,
+  locale: "en" | "sw",
+  notifyHours?: number[],
 ): Promise<void> {
-  if (!notifyHours.length) return;
-  await updateDeviceNotifyHours(deviceId, notifyHours);
+  await ensureDeviceMetaClient(deviceId, timezone, locale, notifyHours);
+  await backfillAbsentSlotsClient(deviceId);
 }

@@ -108,10 +108,11 @@ export const translations = {
       "Send this link to your phone, or scan it from another device. Works on iPhone (Safari) and Android (Chrome).",
     installOfflineTitle: "Works offline",
     installOfflineHint:
-      "After one online visit (this page does it automatically), Home, History, Areas, Chat, and the full Bible work without internet.",
+      "After one online visit (this page does it automatically), Home, History, Areas, Reports, alerts, Chat (local), and the full Bible work without internet. Only AI needs a connection.",
     installOfflinePreparing: "Downloading Bible and app pages for offline use…",
     installOfflineReady: "Ready for offline — open from your home screen anytime",
-    offlineBanner: "Offline — hourly verses, Bible lookup, and guidance still work.",
+    offlineBanner:
+      "Offline — verses, history, reports, alerts, and local guidance still work. Only AI chat needs internet.",
     notifyTitle: "Hourly verse alerts",
     notifyHint:
       "Get a Scripture notification at the start of each selected hour — even when the app is closed (installed PWA + push). Uses your phone's notification sound.",
@@ -305,11 +306,11 @@ export const translations = {
       "Tuma kiungo hiki kwenye simu yako. Kinafanya kazi iPhone (Safari) na Android (Chrome).",
     installOfflineTitle: "Inafanya kazi bila mtandao",
     installOfflineHint:
-      "Baada ya kutembelea mara moja ukiwa mtandaoni (ukurasa huu hufanya hivyo), Nyumbani, Historia, Maeneo, Mazungumzo, na Biblia kamili hufanya kazi bila intaneti.",
+      "Baada ya kutembelea mara moja ukiwa mtandaoni (ukurasa huu hufanya hivyo), Nyumbani, Historia, Maeneo, Ripoti, arifa, Mazungumzo (ya ndani), na Biblia kamili hufanya kazi bila intaneti. AI pekee inahitaji mtandao.",
     installOfflinePreparing: "Inapakua Biblia na kurasa za programu kwa matumizi bila mtandao…",
     installOfflineReady: "Tayari bila mtandao — fungua kutoka skrini ya nyumbani wakati wowote",
     offlineBanner:
-      "Nje ya mtandao — mistari ya kila saa, utafutaji wa mistari, na mwongozo bado vinafanya kazi.",
+      "Nje ya mtandao — mistari, historia, ripoti, arifa, na mwongozo wa ndani bado vinafanya kazi. AI pekee inahitaji intaneti.",
     notifyTitle: "Arifa za mstari kila saa",
     notifyHint:
       "Pokea arifa ya mstari mwanzoni mwa kila saa uliyochagua — hata app imefungwa (PWA + push). Inatumia sauti ya arifa ya simu.",

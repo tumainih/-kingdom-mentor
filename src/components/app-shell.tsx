@@ -22,6 +22,11 @@ export function AppShell() {
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setGuidanceMode("unavailable");
+      return;
+    }
     fetch(`/api/status?locale=${locale}`)
       .then((r) => r.json())
       .then(
@@ -34,7 +39,7 @@ export function AppShell() {
         },
       )
       .catch(() => setGuidanceMode("unavailable"));
-  }, [locale]);
+  }, [locale, mounted]);
 
   const handleNewChat = useCallback(() => {
     setChatKey((k) => k + 1);

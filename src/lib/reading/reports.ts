@@ -1,11 +1,6 @@
-import { randomUUID } from "node:crypto";
 import { backfillAbsentSlots } from "@/lib/reading/backfill";
 import { dueReportWindows, periodKey, reportUnitLabel } from "@/lib/reading/periods";
-import {
-  averageRate,
-  lapseMsToRate,
-  rateToColor,
-} from "@/lib/reading/rates";
+import { aggregateReport, buildReadEvent } from "@/lib/reading/report-math";
 import {
   eventsInRange,
   getDeviceMeta,
@@ -21,39 +16,7 @@ import type { DevelopmentReport, PendingNotification, ReadEvent, ReportUnit } fr
 import { ensureWebPush, webpush } from "@/lib/push/vapid";
 import { listPushSubscriptions } from "@/lib/push/store";
 
-export function buildReadEvent(input: {
-  deviceId: string;
-  notificationId: string;
-  shownAt: number;
-  readAt: number;
-  hour: number;
-  verseRef: string;
-  theme: string;
-  themeLabel: string;
-  locale: "en" | "sw";
-  timezone: string;
-  missed?: boolean;
-}): ReadEvent {
-  const missed = Boolean(input.missed);
-  const lapseMs = missed ? 0 : Math.max(0, input.readAt - input.shownAt);
-  const rate = lapseMsToRate(lapseMs, missed);
-  return {
-    id: randomUUID(),
-    deviceId: input.deviceId,
-    notificationId: input.notificationId,
-    shownAt: input.shownAt,
-    readAt: input.readAt,
-    lapseMs,
-    rate,
-    hour: input.hour,
-    verseRef: input.verseRef,
-    theme: input.theme,
-    themeLabel: input.themeLabel,
-    locale: input.locale,
-    timezone: input.timezone,
-    missed,
-  };
-}
+export { buildReadEvent, aggregateReport } from "@/lib/reading/report-math";
 
 function buildMissedFromPending(pending: PendingNotification, readAt: number): ReadEvent {
   return buildReadEvent({
@@ -94,39 +57,6 @@ export async function closeMissedNotifications(now = Date.now()): Promise<number
   }
 
   return closed;
-}
-
-export function aggregateReport(
-  deviceId: string,
-  unit: ReportUnit,
-  periodStart: number,
-  periodEnd: number,
-  events: ReadEvent[],
-  customLabel?: string,
-): DevelopmentReport | null {
-  if (!events.length) return null;
-
-  const avgLapseMs =
-    events.reduce((sum, e) => sum + (e.missed ? 0 : e.lapseMs), 0) / events.length;
-  const avgRate = averageRate(events.map((e) => e.rate));
-  const roundedRate = Math.round(avgRate * 10) / 10;
-
-  return {
-    id: periodKey(unit, periodStart, periodEnd),
-    deviceId,
-    unit,
-    periodStart,
-    periodEnd,
-    generatedAt: Date.now(),
-    eventCount: events.length,
-    avgLapseMs,
-    avgRate: roundedRate,
-    color: rateToColor(Math.round(avgRate)),
-    note: null,
-    submittedAt: null,
-    notifiedAt: null,
-    customLabel,
-  };
 }
 
 export async function generateReportForRange(

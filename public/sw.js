@@ -1,11 +1,12 @@
-/* Kingdom AI — offline-capable service worker (build fLvG508plrQQWlqWb68rS) */
-const CACHE = "kingdom-ai-fLvG508plrQQWlqWb68rS";
+/* Kingdom AI — offline-capable service worker (build 49allUn65Vr9n3ooFCaoT) */
+const CACHE = "kingdom-ai-49allUn65Vr9n3ooFCaoT";
 const PRECACHE = [
   "/",
   "/home",
   "/history",
   "/areas",
   "/notifications",
+  "/reports",
   "/install",
   "/manifest.webmanifest",
   "/apple-touch-icon.png",
@@ -40,28 +41,29 @@ const PRECACHE = [
   "/data/pools/strength.json",
   "/data/pools/trust.json",
   "/data/pools/wisdom.json",
+  "/_next/static/49allUn65Vr9n3ooFCaoT/_buildManifest.js",
+  "/_next/static/49allUn65Vr9n3ooFCaoT/_clientMiddlewareManifest.js",
+  "/_next/static/49allUn65Vr9n3ooFCaoT/_ssgManifest.js",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
-  "/_next/static/chunks/0v-jrbses_9y8.js",
-  "/_next/static/chunks/11licf-gz3vxm.js",
   "/_next/static/chunks/1g179lcifdq15.js",
   "/_next/static/chunks/1h0lni661c03r.js",
   "/_next/static/chunks/1uj543fzv0-to.js",
   "/_next/static/chunks/1z99mlp5cofct.js",
   "/_next/static/chunks/24ihfyt9kr7mm.js",
   "/_next/static/chunks/24t7crwozt_yd.js",
+  "/_next/static/chunks/2rzlk32zr9nnw.js",
   "/_next/static/chunks/2vw8t6u-2ywit.js",
-  "/_next/static/chunks/2w4fbwkoiy-9y.js",
   "/_next/static/chunks/2x5oncyuqs3pt.js",
+  "/_next/static/chunks/2ydnron3zbkwf.js",
+  "/_next/static/chunks/36dam2qbr6oth.js",
   "/_next/static/chunks/373skgu07-_06.js",
   "/_next/static/chunks/38crxovcaonw3.js",
   "/_next/static/chunks/3adwt13tezgym.js",
   "/_next/static/chunks/3q576hlfnuh0n.js",
   "/_next/static/chunks/3rqun10tu03ye.css",
+  "/_next/static/chunks/3xvapijkg6ty7.js",
   "/_next/static/chunks/turbopack-0snm50y8kpj5e.js",
-  "/_next/static/fLvG508plrQQWlqWb68rS/_buildManifest.js",
-  "/_next/static/fLvG508plrQQWlqWb68rS/_clientMiddlewareManifest.js",
-  "/_next/static/fLvG508plrQQWlqWb68rS/_ssgManifest.js",
   "/_next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2",
   "/_next/static/media/2bbe8d2671613f1f-s.0k62hbripvv8p.woff2",
   "/_next/static/media/2c55a0e60120577a-s.0-dom-5bn10r2.woff2",
@@ -327,10 +329,94 @@ async function readDeviceId() {
   return state?.deviceId || null;
 }
 
+const READING_DB = "kingdom-reading";
+const READING_DB_VERSION = 1;
+
+function openReadingDb() {
+  return new Promise(function (resolve, reject) {
+    var req = indexedDB.open(READING_DB, READING_DB_VERSION);
+    req.onupgradeneeded = function (e) {
+      var db = e.target.result;
+      if (!db.objectStoreNames.contains("events")) {
+        var store = db.createObjectStore("events", { keyPath: "id" });
+        store.createIndex("deviceId", "deviceId", { unique: false });
+        store.createIndex("notificationId", "notificationId", { unique: false });
+      }
+      if (!db.objectStoreNames.contains("reports")) {
+        var reports = db.createObjectStore("reports", { keyPath: "id" });
+        reports.createIndex("deviceId", "deviceId", { unique: false });
+      }
+      if (!db.objectStoreNames.contains("meta")) {
+        db.createObjectStore("meta", { keyPath: "deviceId" });
+      }
+    };
+    req.onsuccess = function () {
+      resolve(req.result);
+    };
+    req.onerror = function () {
+      reject(req.error);
+    };
+  });
+}
+
+function lapseMsToRate(lapseMs, missed) {
+  if (missed) return 0;
+  return Math.floor(Math.max(0, lapseMs / 1000) / 10) + 1;
+}
+
+function saveReadingEventLocal(event) {
+  return openReadingDb().then(function (db) {
+    return new Promise(function (resolve, reject) {
+      var tx = db.transaction("events", "readwrite");
+      var store = tx.objectStore("events");
+      var idx = store.index("notificationId");
+      var lookup = idx.getAll(event.notificationId);
+      lookup.onsuccess = function () {
+        var hits = lookup.result || [];
+        if (hits.some(function (e) { return e.deviceId === event.deviceId; })) {
+          resolve();
+          return;
+        }
+        store.put(event);
+      };
+      tx.oncomplete = function () {
+        resolve();
+      };
+      tx.onerror = function () {
+        reject(tx.error);
+      };
+    });
+  });
+}
+
 async function postReadEvent(data, readAt) {
   const shownAt = data.shownAt || readAt;
   const deviceId = data.deviceId || (await readDeviceId());
   if (!deviceId) return;
+
+  const lapseMs = Math.max(0, readAt - shownAt);
+  const event = {
+    id: "kn-" + Date.now() + "-" + Math.random().toString(36).slice(2, 9),
+    deviceId: deviceId,
+    notificationId: data.notificationId || "n-" + readAt,
+    shownAt: shownAt,
+    readAt: readAt,
+    lapseMs: lapseMs,
+    rate: lapseMsToRate(lapseMs, false),
+    hour: data.hour,
+    verseRef: data.verseRef || "",
+    theme: data.theme || "",
+    themeLabel: data.themeLabel || "",
+    locale: data.locale || "en",
+    timezone: data.timezone || "UTC",
+    missed: false,
+  };
+
+  try {
+    await saveReadingEventLocal(event);
+  } catch {
+    /* storage unavailable */
+  }
 
   try {
     await fetch("/api/reading/read", {
@@ -338,7 +424,7 @@ async function postReadEvent(data, readAt) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         deviceId,
-        notificationId: data.notificationId,
+        notificationId: event.notificationId,
         shownAt,
         readAt,
         hour: data.hour,
@@ -350,7 +436,7 @@ async function postReadEvent(data, readAt) {
       }),
     });
   } catch {
-    /* offline — app syncs later */
+    /* saved locally — syncs when back online */
   }
 }
 

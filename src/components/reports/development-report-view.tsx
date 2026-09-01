@@ -12,6 +12,11 @@ import {
   getOrCreateDeviceId,
 } from "@/lib/reading/device-id.client";
 import { getNotifyHours } from "@/lib/notifications/verse-notifications";
+import {
+  generateCustomReportClient,
+  loadReadingData,
+  saveReportNoteClient,
+} from "@/lib/reading/data.client";
 import { formatLapse, rateToColor, UNREAD_COLOR } from "@/lib/reading/rates";
 import { localDateKey } from "@/lib/reading/slots";
 import { reportUnitLabel } from "@/lib/reading/periods";
@@ -56,22 +61,9 @@ export function DevelopmentReportView() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `/api/reading/events?${new URLSearchParams({
-          deviceId,
-          timezone,
-          locale,
-          notifyHours: JSON.stringify(getNotifyHours()),
-        })}`,
-      );
-      if (!res.ok) return;
-      const data = (await res.json()) as {
-        meta?: { startedAt?: number };
-        events?: ReadEvent[];
-        reports?: DevelopmentReport[];
-      };
-      setEvents(data.events ?? []);
-      setReports(data.reports ?? []);
+      const data = await loadReadingData(deviceId, timezone, locale, getNotifyHours());
+      setEvents(data.events);
+      setReports(data.reports);
       setStartedAt(data.meta?.startedAt ?? null);
     } finally {
       setLoading(false);
@@ -108,19 +100,14 @@ export function DevelopmentReportView() {
     setGenerating(true);
     setGenMessage(null);
     try {
-      const res = await fetch("/api/reading/reports/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          deviceId,
-          start: new Date(customFrom).getTime(),
-          end: new Date(customTo).getTime(),
-          unit: "custom",
-          locale,
-          timezone,
-        }),
-      });
-      if (res.ok) {
+      const report = await generateCustomReportClient(
+        deviceId,
+        new Date(customFrom).getTime(),
+        new Date(customTo).getTime(),
+        timezone,
+        locale,
+      );
+      if (report) {
         setGenMessage("ok");
         await load();
       } else {
@@ -162,12 +149,8 @@ export function DevelopmentReportView() {
     if (!activeReport) return;
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/reading/reports/${encodeURIComponent(activeReport.id)}/note`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId, note }),
-      });
-      if (res.ok) {
+      const ok = await saveReportNoteClient(deviceId, activeReport.id, note);
+      if (ok) {
         setActiveReport(null);
         await load();
       }

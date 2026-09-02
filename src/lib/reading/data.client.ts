@@ -120,8 +120,6 @@ export async function generateDueReportsClient(
 
   for (const window of windows) {
     const id = periodKey(window.unit, window.start, window.end);
-    if (existingIds.has(id)) continue;
-
     const report = generateReportFromEvents(
       deviceId,
       window.unit,
@@ -132,8 +130,10 @@ export async function generateDueReportsClient(
     if (!report) continue;
 
     await saveReportClient(report);
-    existingIds.add(id);
-    created++;
+    if (!existingIds.has(id)) {
+      existingIds.add(id);
+      created++;
+    }
   }
 
   return created;

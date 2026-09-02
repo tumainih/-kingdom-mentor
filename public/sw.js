@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build TsSAjv_c625ACdwScAUuJ) */
-const CACHE = "kingdom-ai-TsSAjv_c625ACdwScAUuJ";
+/* Kingdom AI — offline-capable service worker (build MHnX2mawJxf1nuBPduw-N) */
+const CACHE = "kingdom-ai-MHnX2mawJxf1nuBPduw-N";
 const PRECACHE = [
   "/",
   "/home",
@@ -88,22 +88,22 @@ const PRECACHE = [
   "/data/areas/sw/strength.json",
   "/data/areas/sw/trust.json",
   "/data/areas/sw/wisdom.json",
-  "/_next/static/TsSAjv_c625ACdwScAUuJ/_buildManifest.js",
-  "/_next/static/TsSAjv_c625ACdwScAUuJ/_clientMiddlewareManifest.js",
-  "/_next/static/TsSAjv_c625ACdwScAUuJ/_ssgManifest.js",
+  "/_next/static/MHnX2mawJxf1nuBPduw-N/_buildManifest.js",
+  "/_next/static/MHnX2mawJxf1nuBPduw-N/_clientMiddlewareManifest.js",
+  "/_next/static/MHnX2mawJxf1nuBPduw-N/_ssgManifest.js",
   "/_next/static/chunks/0cmru_xxc1fyi.js",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
   "/_next/static/chunks/0hxpm9lodtva4.js",
   "/_next/static/chunks/0hyie6vy1j-zd.js",
   "/_next/static/chunks/0q9rxjqie92o6.js",
-  "/_next/static/chunks/0vsl-m8sr-8wo.js",
   "/_next/static/chunks/1-x51v34sn-b8.js",
+  "/_next/static/chunks/10egrjm4uuq07.js",
   "/_next/static/chunks/15jkndep3zfaa.js",
   "/_next/static/chunks/1g181p9nyr1iy.js",
   "/_next/static/chunks/1h0lni661c03r.js",
   "/_next/static/chunks/1z99mlp5cofct.js",
-  "/_next/static/chunks/2xk3g9dlxuqw5.js",
+  "/_next/static/chunks/27ginq27ve0_9.js",
   "/_next/static/chunks/2y1bz30at5vuk.css",
   "/_next/static/chunks/2ykf5qkb66igv.js",
   "/_next/static/chunks/2ylvm6fgkxodi.js",
@@ -527,6 +527,94 @@ async function readDeviceId() {
   return state?.deviceId || null;
 }
 
+function idbGetAllMeta(db) {
+  return new Promise(function (resolve, reject) {
+    var tx = db.transaction("meta", "readonly");
+    var req = tx.objectStore("meta").getAll();
+    req.onsuccess = function () {
+      resolve(req.result || []);
+    };
+    req.onerror = function () {
+      reject(req.error);
+    };
+  });
+}
+
+async function ensureDeviceMetaLocal(deviceId, timezone, locale) {
+  var db = await openReadingDb();
+  return new Promise(function (resolve, reject) {
+    var tx = db.transaction("meta", "readwrite");
+    var store = tx.objectStore("meta");
+    var req = store.get(deviceId);
+    req.onsuccess = function () {
+      if (req.result) {
+        resolve(req.result);
+        return;
+      }
+      store.put({
+        deviceId: deviceId,
+        startedAt: Date.now(),
+        timezone: timezone || "UTC",
+        locale: locale || "en",
+      });
+    };
+    tx.oncomplete = function () {
+      resolve();
+    };
+    tx.onerror = function () {
+      reject(tx.error);
+    };
+  });
+}
+
+async function resolveDeviceId(data) {
+  if (data && data.deviceId) return data.deviceId;
+  var state = await readNotificationState();
+  if (state && state.deviceId) return state.deviceId;
+  try {
+    var db = await openReadingDb();
+    var metas = await idbGetAllMeta(db);
+    for (var i = 0; i < metas.length; i++) {
+      if (metas[i].deviceId) return metas[i].deviceId;
+    }
+  } catch {
+    /* idb unavailable */
+  }
+  var id =
+    self.crypto && self.crypto.randomUUID
+      ? self.crypto.randomUUID()
+      : "dev-" + Date.now() + "-" + Math.random().toString(36).slice(2, 9);
+  var tz =
+    (data && data.timezone) ||
+    (state && state.timezone) ||
+    Intl.DateTimeFormat().resolvedOptions().timeZone ||
+    "UTC";
+  var loc = (data && data.locale) || (state && state.locale) || "en";
+  await ensureDeviceMetaLocal(id, tz, loc);
+  await writeNotificationState({
+    ...(state || {}),
+    deviceId: id,
+    timezone: tz,
+    locale: loc,
+  });
+  return id;
+}
+
+function notifyReadingUpdated(deviceId) {
+  try {
+    var channel = new BroadcastChannel("kingdom-reading");
+    channel.postMessage({ type: "READING_UPDATED", deviceId: deviceId });
+    channel.close();
+  } catch {
+    /* BroadcastChannel unavailable */
+  }
+  return self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (clients) {
+    clients.forEach(function (client) {
+      client.postMessage({ type: "READING_UPDATED", deviceId: deviceId });
+    });
+  });
+}
+
 const READING_DB = "kingdom-reading";
 const READING_DB_VERSION = 1;
 
@@ -589,8 +677,12 @@ function saveReadingEventLocal(event) {
 
 async function postReadEvent(data, readAt) {
   const shownAt = data.shownAt || readAt;
-  const deviceId = data.deviceId || (await readDeviceId());
-  if (!deviceId) return;
+  const deviceId = await resolveDeviceId(data);
+  const timezone =
+    data.timezone ||
+    Intl.DateTimeFormat().resolvedOptions().timeZone ||
+    "UTC";
+  const locale = data.locale || "en";
 
   const lapseMs = Math.max(0, readAt - shownAt);
   const event = {
@@ -605,13 +697,15 @@ async function postReadEvent(data, readAt) {
     verseRef: data.verseRef || "",
     theme: data.theme || "",
     themeLabel: data.themeLabel || "",
-    locale: data.locale || "en",
-    timezone: data.timezone || "UTC",
+    locale: locale,
+    timezone: timezone,
     missed: false,
   };
 
   try {
+    await ensureDeviceMetaLocal(deviceId, timezone, locale);
     await saveReadingEventLocal(event);
+    await notifyReadingUpdated(deviceId);
   } catch {
     /* storage unavailable */
   }
@@ -629,8 +723,8 @@ async function postReadEvent(data, readAt) {
         verseRef: data.verseRef || "",
         theme: data.theme || "",
         themeLabel: data.themeLabel || "",
-        locale: data.locale || "en",
-        timezone: data.timezone || "UTC",
+        locale: locale,
+        timezone: timezone,
       }),
     });
   } catch {
@@ -686,7 +780,7 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours) {
     : entry.passage.text;
   const shownAt = Date.now();
   const nid = notificationId();
-  const deviceId = state?.deviceId || (await readDeviceId());
+  const deviceId = await resolveDeviceId(state);
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   const alreadyRead = await isHourSlotAlreadyRead(deviceId, hour, timezone);
   const lineTitle = alreadyRead ? title + " · " + alreadyReadLabel(locale) : title;
@@ -869,7 +963,7 @@ self.addEventListener("push", (event) => {
 
   event.waitUntil(
     (async () => {
-      const deviceId = payload.deviceId || (await readDeviceId());
+      const deviceId = await resolveDeviceId(payload);
       const timezone = payload.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
       const hour = typeof payload.hour === "number" ? payload.hour : currentHour();
       const alreadyRead = await isHourSlotAlreadyRead(deviceId, hour, timezone);
@@ -901,7 +995,7 @@ self.addEventListener("push", (event) => {
           theme: payload.theme || "",
           themeLabel: payload.themeLabel || "",
           verseText: payload.verseText || "",
-          deviceId: payload.deviceId || "",
+          deviceId: deviceId,
           shownAt,
           notificationId: nid,
           timezone,
@@ -911,7 +1005,7 @@ self.addEventListener("push", (event) => {
 
       if (!alreadyRead) {
         await postPendingNotification({
-          deviceId: payload.deviceId,
+          deviceId: deviceId,
           notificationId: nid,
           shownAt,
           hour: payload.hour,
@@ -948,10 +1042,10 @@ self.addEventListener("notificationclick", (event) => {
     event.notification.close();
     event.waitUntil(
       (async () => {
-        const deviceId = data.deviceId || (await readDeviceId());
+        const deviceId = await resolveDeviceId(data);
         const already = await isNotificationAlreadyRead(deviceId, data.notificationId);
         if (already) return;
-        await postReadEvent(data, readAt);
+        await postReadEvent({ ...data, deviceId: deviceId }, readAt);
       })(),
     );
     return;

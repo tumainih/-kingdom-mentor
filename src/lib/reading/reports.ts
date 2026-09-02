@@ -85,8 +85,6 @@ export async function generateDueReportsForDevice(
 
   for (const window of windows) {
     const id = periodKey(window.unit, window.start, window.end);
-    if (existingIds.has(id)) continue;
-
     const report = await generateReportForRange(
       deviceId,
       window.unit,
@@ -95,8 +93,13 @@ export async function generateDueReportsForDevice(
     );
     if (!report) continue;
 
-    await saveReport(report);
-    created.push(report);
+    if (!existingIds.has(id)) {
+      await saveReport(report);
+      created.push(report);
+      existingIds.add(id);
+    } else {
+      await saveReport(report);
+    }
   }
 
   return created;

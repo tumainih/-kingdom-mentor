@@ -223,6 +223,94 @@ async function readDeviceId() {
   return state?.deviceId || null;
 }
 
+function idbGetAllMeta(db) {
+  return new Promise(function (resolve, reject) {
+    var tx = db.transaction("meta", "readonly");
+    var req = tx.objectStore("meta").getAll();
+    req.onsuccess = function () {
+      resolve(req.result || []);
+    };
+    req.onerror = function () {
+      reject(req.error);
+    };
+  });
+}
+
+async function ensureDeviceMetaLocal(deviceId, timezone, locale) {
+  var db = await openReadingDb();
+  return new Promise(function (resolve, reject) {
+    var tx = db.transaction("meta", "readwrite");
+    var store = tx.objectStore("meta");
+    var req = store.get(deviceId);
+    req.onsuccess = function () {
+      if (req.result) {
+        resolve(req.result);
+        return;
+      }
+      store.put({
+        deviceId: deviceId,
+        startedAt: Date.now(),
+        timezone: timezone || "UTC",
+        locale: locale || "en",
+      });
+    };
+    tx.oncomplete = function () {
+      resolve();
+    };
+    tx.onerror = function () {
+      reject(tx.error);
+    };
+  });
+}
+
+async function resolveDeviceId(data) {
+  if (data && data.deviceId) return data.deviceId;
+  var state = await readNotificationState();
+  if (state && state.deviceId) return state.deviceId;
+  try {
+    var db = await openReadingDb();
+    var metas = await idbGetAllMeta(db);
+    for (var i = 0; i < metas.length; i++) {
+      if (metas[i].deviceId) return metas[i].deviceId;
+    }
+  } catch {
+    /* idb unavailable */
+  }
+  var id =
+    self.crypto && self.crypto.randomUUID
+      ? self.crypto.randomUUID()
+      : "dev-" + Date.now() + "-" + Math.random().toString(36).slice(2, 9);
+  var tz =
+    (data && data.timezone) ||
+    (state && state.timezone) ||
+    Intl.DateTimeFormat().resolvedOptions().timeZone ||
+    "UTC";
+  var loc = (data && data.locale) || (state && state.locale) || "en";
+  await ensureDeviceMetaLocal(id, tz, loc);
+  await writeNotificationState({
+    ...(state || {}),
+    deviceId: id,
+    timezone: tz,
+    locale: loc,
+  });
+  return id;
+}
+
+function notifyReadingUpdated(deviceId) {
+  try {
+    var channel = new BroadcastChannel("kingdom-reading");
+    channel.postMessage({ type: "READING_UPDATED", deviceId: deviceId });
+    channel.close();
+  } catch {
+    /* BroadcastChannel unavailable */
+  }
+  return self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (clients) {
+    clients.forEach(function (client) {
+      client.postMessage({ type: "READING_UPDATED", deviceId: deviceId });
+    });
+  });
+}
+
 const READING_DB = "kingdom-reading";
 const READING_DB_VERSION = 1;
 
@@ -285,8 +373,12 @@ function saveReadingEventLocal(event) {
 
 async function postReadEvent(data, readAt) {
   const shownAt = data.shownAt || readAt;
-  const deviceId = data.deviceId || (await readDeviceId());
-  if (!deviceId) return;
+  const deviceId = await resolveDeviceId(data);
+  const timezone =
+    data.timezone ||
+    Intl.DateTimeFormat().resolvedOptions().timeZone ||
+    "UTC";
+  const locale = data.locale || "en";
 
   const lapseMs = Math.max(0, readAt - shownAt);
   const event = {
@@ -301,13 +393,15 @@ async function postReadEvent(data, readAt) {
     verseRef: data.verseRef || "",
     theme: data.theme || "",
     themeLabel: data.themeLabel || "",
-    locale: data.locale || "en",
-    timezone: data.timezone || "UTC",
+    locale: locale,
+    timezone: timezone,
     missed: false,
   };
 
   try {
+    await ensureDeviceMetaLocal(deviceId, timezone, locale);
     await saveReadingEventLocal(event);
+    await notifyReadingUpdated(deviceId);
   } catch {
     /* storage unavailable */
   }
@@ -325,8 +419,8 @@ async function postReadEvent(data, readAt) {
         verseRef: data.verseRef || "",
         theme: data.theme || "",
         themeLabel: data.themeLabel || "",
-        locale: data.locale || "en",
-        timezone: data.timezone || "UTC",
+        locale: locale,
+        timezone: timezone,
       }),
     });
   } catch {
@@ -382,7 +476,7 @@ async function showHourlyVerseNotification(locale, hourOverride, notifyHours) {
     : entry.passage.text;
   const shownAt = Date.now();
   const nid = notificationId();
-  const deviceId = state?.deviceId || (await readDeviceId());
+  const deviceId = await resolveDeviceId(state);
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   const alreadyRead = await isHourSlotAlreadyRead(deviceId, hour, timezone);
   const lineTitle = alreadyRead ? title + " · " + alreadyReadLabel(locale) : title;
@@ -565,7 +659,7 @@ self.addEventListener("push", (event) => {
 
   event.waitUntil(
     (async () => {
-      const deviceId = payload.deviceId || (await readDeviceId());
+      const deviceId = await resolveDeviceId(payload);
       const timezone = payload.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
       const hour = typeof payload.hour === "number" ? payload.hour : currentHour();
       const alreadyRead = await isHourSlotAlreadyRead(deviceId, hour, timezone);
@@ -597,7 +691,7 @@ self.addEventListener("push", (event) => {
           theme: payload.theme || "",
           themeLabel: payload.themeLabel || "",
           verseText: payload.verseText || "",
-          deviceId: payload.deviceId || "",
+          deviceId: deviceId,
           shownAt,
           notificationId: nid,
           timezone,
@@ -607,7 +701,7 @@ self.addEventListener("push", (event) => {
 
       if (!alreadyRead) {
         await postPendingNotification({
-          deviceId: payload.deviceId,
+          deviceId: deviceId,
           notificationId: nid,
           shownAt,
           hour: payload.hour,
@@ -644,10 +738,10 @@ self.addEventListener("notificationclick", (event) => {
     event.notification.close();
     event.waitUntil(
       (async () => {
-        const deviceId = data.deviceId || (await readDeviceId());
+        const deviceId = await resolveDeviceId(data);
         const already = await isNotificationAlreadyRead(deviceId, data.notificationId);
         if (already) return;
-        await postReadEvent(data, readAt);
+        await postReadEvent({ ...data, deviceId: deviceId }, readAt);
       })(),
     );
     return;

@@ -1,6 +1,6 @@
 import type { AppLocale } from "@/lib/i18n/translations";
 import { fetchWithTimeout, isBrowserOffline } from "@/lib/network";
-import { getOrCreateDeviceId } from "@/lib/reading/device-id.client";
+import { getOrCreateDeviceId, syncDeviceIdToWorker } from "@/lib/reading/device-id.client";
 
 const ENABLED_KEY = "kingdom-verse-notifications";
 const HOURS_KEY = "kingdom-notify-hours";
@@ -190,6 +190,8 @@ export async function enableVerseNotifications(
     : await subscribeToPush(locale, notifyHours);
   const pushEnabled = Boolean(pushSubscription);
 
+  syncDeviceIdToWorker();
+
   await startWorkerNotifications(
     locale,
     notifyHours,
@@ -211,6 +213,8 @@ export async function syncVerseNotifications(locale: AppLocale): Promise<void> {
   try {
     if (!isVerseNotificationsEnabled()) return;
     if (Notification.permission !== "granted") return;
+
+    syncDeviceIdToWorker();
 
     const notifyHours = getNotifyHours();
     const pushSubscription = isBrowserOffline()

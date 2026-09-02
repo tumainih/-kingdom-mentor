@@ -18,6 +18,8 @@ import {
   refreshReadingData,
   saveReportNoteClient,
 } from "@/lib/reading/data.client";
+import { formatLapse } from "@/lib/reading/rates";
+import { subscribeReadingUpdates } from "@/lib/reading/reading-sync.client";
 import { reportUnitLabel } from "@/lib/reading/periods";
 import type { ScaleCell } from "@/lib/reading/report-hierarchy";
 import type { DevelopmentReport } from "@/lib/reading/types";
@@ -79,6 +81,17 @@ export function DevelopmentReportView() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeReadingUpdates(() => {
+      void refreshReadingData(deviceId, timezone, locale).then((data) => {
+        setEvents(data.events);
+        setReports(data.reports);
+        setStartedAt(data.meta?.startedAt ?? null);
+      });
+    });
+    return unsubscribe;
+  }, [deviceId, locale, timezone]);
 
   useEffect(() => {
     if (!pendingReportId || !reports.length) return;
@@ -254,8 +267,29 @@ export function DevelopmentReportView() {
                 </div>
                 <p className="text-[11px] text-muted-foreground">
                   {t("reportLapseAvg")}:{" "}
-                  {activeCell.avgRate <= 0 ? t("reportUnread") : "—"} · {t("reportScaleAvg")}:{" "}
-                  {activeCell.avgRate} · {t("reportEvents")}: {activeCell.eventCount}
+                  {activeCell.avgRate <= 0
+                    ? t("reportUnread")
+                    : formatLapse(
+                        events
+                          .filter(
+                            (e) =>
+                              !e.missed &&
+                              e.shownAt >= activeCell.start &&
+                              e.shownAt < activeCell.end,
+                          )
+                          .reduce((sum, e) => sum + e.lapseMs, 0) /
+                          Math.max(
+                            1,
+                            events.filter(
+                              (e) =>
+                                !e.missed &&
+                                e.shownAt >= activeCell.start &&
+                                e.shownAt < activeCell.end,
+                            ).length,
+                          ),
+                      )}{" "}
+                  · {t("reportScaleAvg")}: {activeCell.avgRate} · {t("reportEvents")}:{" "}
+                  {activeCell.eventCount}
                 </p>
               </>
             ) : null}

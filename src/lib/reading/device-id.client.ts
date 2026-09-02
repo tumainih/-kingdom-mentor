@@ -20,3 +20,13 @@ export function getDeviceTimezone(): string {
     return "UTC";
   }
 }
+
+/** Share device id with the service worker so notification Read works offline. */
+export function syncDeviceIdToWorker(): void {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+  const deviceId = getOrCreateDeviceId();
+  const timezone = getDeviceTimezone();
+  void navigator.serviceWorker.ready.then((reg) => {
+    reg.active?.postMessage({ type: "SET_DEVICE_ID", deviceId, timezone });
+  });
+}

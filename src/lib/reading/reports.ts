@@ -1,5 +1,5 @@
 import { backfillAbsentSlots } from "@/lib/reading/backfill";
-import { dueReportWindows, periodKey } from "@/lib/reading/periods";
+import { completedReportWindows, periodKey } from "@/lib/reading/periods";
 import { aggregateReport, buildReadEvent } from "@/lib/reading/report-math";
 import {
   eventsInRange,
@@ -78,7 +78,7 @@ export async function generateDueReportsForDevice(
 
   await backfillAbsentSlots(deviceId, now.getTime());
 
-  const windows = dueReportWindows(now, meta.timezone, meta.startedAt);
+  const windows = completedReportWindows(meta.startedAt, now.getTime(), meta.timezone);
   const existing = await listReports(deviceId);
   const existingIds = new Set(existing.map((r) => r.id));
   const created: DevelopmentReport[] = [];

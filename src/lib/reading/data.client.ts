@@ -1,7 +1,7 @@
 import { idbPut } from "@/lib/reading/idb";
 import { getNotifyHours } from "@/lib/notifications/verse-notifications";
 import { backfillAbsentSlotsClient, ensureReadingMetaClient } from "@/lib/reading/backfill.client";
-import { dueReportWindows, periodKey } from "@/lib/reading/periods";
+import { completedReportWindows, periodKey } from "@/lib/reading/periods";
 import { generateReportFromEvents } from "@/lib/reading/report-math";
 import {
   ensureDeviceMetaClient,
@@ -112,7 +112,7 @@ export async function generateDueReportsClient(
   const meta = await getDeviceMetaClient(deviceId);
   if (!meta) return 0;
 
-  const windows = dueReportWindows(now, meta.timezone, meta.startedAt);
+  const windows = completedReportWindows(meta.startedAt, now.getTime(), meta.timezone);
   const existing = await listReportsClient(deviceId);
   const existingIds = new Set(existing.map((r) => r.id));
   const events = await listReadEventsClient(deviceId);

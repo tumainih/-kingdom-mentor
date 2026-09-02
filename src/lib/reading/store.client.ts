@@ -62,7 +62,7 @@ export async function saveReadEventClient(event: ReadEvent): Promise<void> {
 export async function listReportsClient(deviceId: string): Promise<DevelopmentReport[]> {
   try {
     const reports = await idbGetByIndex<DevelopmentReport>("reports", "deviceId", deviceId);
-    return reports.sort((a, b) => b.generatedAt - a.generatedAt);
+    return reports.sort((a, b) => b.periodEnd - a.periodEnd || b.periodStart - a.periodStart);
   } catch {
     return [];
   }

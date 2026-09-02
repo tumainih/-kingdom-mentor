@@ -165,7 +165,7 @@ export async function listReports(deviceId: string): Promise<DevelopmentReport[]
   const redis = redisClient();
   if (!redis) return [];
   const reports = await redis.get<DevelopmentReport[]>(reportsKey(deviceId));
-  return (reports ?? []).sort((a, b) => b.generatedAt - a.generatedAt);
+  return (reports ?? []).sort((a, b) => b.periodEnd - a.periodEnd || b.periodStart - a.periodStart);
 }
 
 export async function getReport(

@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build sQ-sofkPy1jIM28YvdnhH) */
-const CACHE = "kingdom-ai-sQ-sofkPy1jIM28YvdnhH";
+/* Kingdom AI — offline-capable service worker (build TsSAjv_c625ACdwScAUuJ) */
+const CACHE = "kingdom-ai-TsSAjv_c625ACdwScAUuJ";
 const PRECACHE = [
   "/",
   "/home",
@@ -88,24 +88,27 @@ const PRECACHE = [
   "/data/areas/sw/strength.json",
   "/data/areas/sw/trust.json",
   "/data/areas/sw/wisdom.json",
-  "/_next/static/chunks/0ajknyisuvam9.css",
+  "/_next/static/TsSAjv_c625ACdwScAUuJ/_buildManifest.js",
+  "/_next/static/TsSAjv_c625ACdwScAUuJ/_clientMiddlewareManifest.js",
+  "/_next/static/TsSAjv_c625ACdwScAUuJ/_ssgManifest.js",
   "/_next/static/chunks/0cmru_xxc1fyi.js",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
   "/_next/static/chunks/0hxpm9lodtva4.js",
   "/_next/static/chunks/0hyie6vy1j-zd.js",
-  "/_next/static/chunks/0ogenn51xm4o4.js",
+  "/_next/static/chunks/0q9rxjqie92o6.js",
+  "/_next/static/chunks/0vsl-m8sr-8wo.js",
   "/_next/static/chunks/1-x51v34sn-b8.js",
   "/_next/static/chunks/15jkndep3zfaa.js",
   "/_next/static/chunks/1g181p9nyr1iy.js",
   "/_next/static/chunks/1h0lni661c03r.js",
   "/_next/static/chunks/1z99mlp5cofct.js",
-  "/_next/static/chunks/2ch34h4uxvyen.js",
+  "/_next/static/chunks/2xk3g9dlxuqw5.js",
+  "/_next/static/chunks/2y1bz30at5vuk.css",
   "/_next/static/chunks/2ykf5qkb66igv.js",
   "/_next/static/chunks/2ylvm6fgkxodi.js",
   "/_next/static/chunks/3adwt13tezgym.js",
   "/_next/static/chunks/3bvjcy6cs_rb6.js",
-  "/_next/static/chunks/3iyz9wjxnlwcv.js",
   "/_next/static/chunks/3q576hlfnuh0n.js",
   "/_next/static/chunks/3w4cftoeva8_6.js",
   "/_next/static/chunks/3wtl5qdkwgu5z.js",
@@ -125,10 +128,7 @@ const PRECACHE = [
   "/_next/static/media/e7150917543fc9da-s.0mybutugvu-lq.woff2",
   "/_next/static/media/e9457141811d41ae-s.02frcczqg7k-8.woff2",
   "/_next/static/media/favicon.2vob68tjqpejf.ico",
-  "/_next/static/media/icon.1v5cwft9ue97g.svg",
-  "/_next/static/sQ-sofkPy1jIM28YvdnhH/_buildManifest.js",
-  "/_next/static/sQ-sofkPy1jIM28YvdnhH/_clientMiddlewareManifest.js",
-  "/_next/static/sQ-sofkPy1jIM28YvdnhH/_ssgManifest.js"
+  "/_next/static/media/icon.1v5cwft9ue97g.svg"
 ];
 
 self.addEventListener("install", (event) => {

@@ -137,16 +137,6 @@ async function navigateHandler(request) {
       Response.error()
     );
   }
-  if (cached) {
-    fetchWithTimeout(request).then(function (response) {
-      if (response.ok) {
-        caches.open(CACHE).then(function (cache) {
-          cache.put(request, response.clone());
-        });
-      }
-    }).catch(function () {});
-    return cached;
-  }
   try {
     const response = await fetchWithTimeout(request);
     if (response.ok) {
@@ -156,6 +146,7 @@ async function navigateHandler(request) {
     return response;
   } catch {
     return (
+      cached ||
       (await caches.match("/home")) ||
       (await caches.match("/")) ||
       Response.error()
@@ -213,7 +204,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  event.respondWith(cacheFirst(request));
+  // Leave RSC and other Next.js requests to the browser (avoids stale cached flights).
 });
 
 ${notificationSnippet}

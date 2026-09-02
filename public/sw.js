@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build SoN44gKyrJGZIUHkQrMKq) */
-const CACHE = "kingdom-ai-SoN44gKyrJGZIUHkQrMKq";
+/* Kingdom AI — offline-capable service worker (build szPy3Pa1MS24E1-7nXChS) */
+const CACHE = "kingdom-ai-szPy3Pa1MS24E1-7nXChS";
 const PRECACHE = [
   "/",
   "/home",
@@ -42,21 +42,18 @@ const PRECACHE = [
   "/data/pools/strength.json",
   "/data/pools/trust.json",
   "/data/pools/wisdom.json",
-  "/_next/static/SoN44gKyrJGZIUHkQrMKq/_buildManifest.js",
-  "/_next/static/SoN44gKyrJGZIUHkQrMKq/_clientMiddlewareManifest.js",
-  "/_next/static/SoN44gKyrJGZIUHkQrMKq/_ssgManifest.js",
-  "/_next/static/chunks/0462_jaccswmq.js",
   "/_next/static/chunks/04krbzd2lmnmg.js",
   "/_next/static/chunks/09zymofzcq9yo.js",
   "/_next/static/chunks/0ajknyisuvam9.css",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
   "/_next/static/chunks/0gi0fs-foriyd.js",
+  "/_next/static/chunks/0pii_50ieyxbh.js",
+  "/_next/static/chunks/14e1ow85_mnlp.js",
   "/_next/static/chunks/1cmk72eecyy08.js",
   "/_next/static/chunks/1h0lni661c03r.js",
   "/_next/static/chunks/1ijjdsn2z-ov1.js",
   "/_next/static/chunks/1z99mlp5cofct.js",
-  "/_next/static/chunks/20ak3ty27pfwb.js",
   "/_next/static/chunks/24t7crwozt_yd.js",
   "/_next/static/chunks/27m_hem7j38nc.js",
   "/_next/static/chunks/2n612fe5thts9.js",
@@ -64,7 +61,7 @@ const PRECACHE = [
   "/_next/static/chunks/3adwt13tezgym.js",
   "/_next/static/chunks/3q576hlfnuh0n.js",
   "/_next/static/chunks/3wtl5qdkwgu5z.js",
-  "/_next/static/chunks/3z7kiq7lb_rtu.js",
+  "/_next/static/chunks/437ipb-buspo7.js",
   "/_next/static/chunks/turbopack-0snm50y8kpj5e.js",
   "/_next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2",
   "/_next/static/media/2bbe8d2671613f1f-s.0k62hbripvv8p.woff2",
@@ -81,7 +78,10 @@ const PRECACHE = [
   "/_next/static/media/e7150917543fc9da-s.0mybutugvu-lq.woff2",
   "/_next/static/media/e9457141811d41ae-s.02frcczqg7k-8.woff2",
   "/_next/static/media/favicon.2vob68tjqpejf.ico",
-  "/_next/static/media/icon.1v5cwft9ue97g.svg"
+  "/_next/static/media/icon.1v5cwft9ue97g.svg",
+  "/_next/static/szPy3Pa1MS24E1-7nXChS/_buildManifest.js",
+  "/_next/static/szPy3Pa1MS24E1-7nXChS/_clientMiddlewareManifest.js",
+  "/_next/static/szPy3Pa1MS24E1-7nXChS/_ssgManifest.js"
 ];
 
 self.addEventListener("install", (event) => {
@@ -159,16 +159,6 @@ async function navigateHandler(request) {
       Response.error()
     );
   }
-  if (cached) {
-    fetchWithTimeout(request).then(function (response) {
-      if (response.ok) {
-        caches.open(CACHE).then(function (cache) {
-          cache.put(request, response.clone());
-        });
-      }
-    }).catch(function () {});
-    return cached;
-  }
   try {
     const response = await fetchWithTimeout(request);
     if (response.ok) {
@@ -178,6 +168,7 @@ async function navigateHandler(request) {
     return response;
   } catch {
     return (
+      cached ||
       (await caches.match("/home")) ||
       (await caches.match("/")) ||
       Response.error()
@@ -235,7 +226,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  event.respondWith(cacheFirst(request));
+  // Leave RSC and other Next.js requests to the browser (avoids stale cached flights).
 });
 
 /** Inlined into public/sw.js — hourly verse notifications + Web Push */

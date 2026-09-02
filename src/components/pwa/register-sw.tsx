@@ -21,6 +21,14 @@ export function RegisterServiceWorker() {
       return;
     }
 
+    let refreshing = false;
+    const onControllerChange = () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    };
+    navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
+
     void navigator.serviceWorker
       .register("/sw.js")
       .then((registration) => {
@@ -89,6 +97,7 @@ export function RegisterServiceWorker() {
     window.addEventListener("online", onOnline);
     window.addEventListener("offline", onOffline);
     return () => {
+      navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
       window.removeEventListener("online", onOnline);
       window.removeEventListener("offline", onOffline);
       document.removeEventListener("visibilitychange", onVisible);

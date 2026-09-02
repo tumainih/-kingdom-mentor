@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { Bell, Check, Copy, Home } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
+import { AppLink } from "@/components/app-link";
 import { Button } from "@/components/ui/button";
 import { useLocale } from "@/context/locale-context";
 import {
@@ -568,20 +568,20 @@ export function VerseHistoryView() {
         </div>
 
         <div className="mt-2 shrink-0 flex justify-center gap-2 pt-1">
-          <Link
+          <AppLink
             href="/home"
             className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-brand/30 px-3 text-xs font-medium"
           >
             <Home className="h-3.5 w-3.5" />
             {t("navHome")}
-          </Link>
-          <Link
+          </AppLink>
+          <AppLink
             href="/notifications"
             className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border/50 px-3 text-xs font-medium text-muted-foreground"
           >
             <Bell className="h-3.5 w-3.5" />
             {t("navAlerts")}
-          </Link>
+          </AppLink>
         </div>
       </main>
     </div>

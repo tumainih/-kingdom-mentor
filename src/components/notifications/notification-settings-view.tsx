@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { Bell, Home, Shield } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
+import { AppLink } from "@/components/app-link";
 import { VerseNotificationsToggle } from "@/components/pwa/verse-notifications-toggle";
 import { useLocale } from "@/context/locale-context";
 import { detectInstallPlatform } from "@/lib/pwa/platform";
@@ -166,27 +166,27 @@ export function NotificationSettingsView() {
 
         <div className="mt-3 flex flex-col items-center gap-2 pb-1">
           <div className="flex justify-center gap-2">
-            <Link
+            <AppLink
               href="/home"
               className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-brand/30 px-3 text-xs font-medium"
             >
               <Home className="h-3.5 w-3.5" />
               {t("navHome")}
-            </Link>
-            <Link
+            </AppLink>
+            <AppLink
               href="/history"
               className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border/50 px-3 text-xs font-medium text-muted-foreground"
             >
               {t("navHistory")}
-            </Link>
+            </AppLink>
           </div>
-          <Link
+          <AppLink
             href="/privacy"
             className="inline-flex h-7 items-center gap-1 text-[10px] text-muted-foreground underline-offset-2 hover:underline"
           >
             <Shield className="h-3 w-3" />
             {t("privacyLink")}
-          </Link>
+          </AppLink>
         </div>
       </main>
     </div>

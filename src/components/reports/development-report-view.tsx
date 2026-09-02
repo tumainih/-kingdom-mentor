@@ -15,6 +15,7 @@ import { getNotifyHours } from "@/lib/notifications/verse-notifications";
 import {
   generateCustomReportClient,
   loadReadingData,
+  refreshReadingData,
   saveReportNoteClient,
 } from "@/lib/reading/data.client";
 import { formatLapse, rateToColor, UNREAD_COLOR } from "@/lib/reading/rates";
@@ -68,6 +69,16 @@ export function DevelopmentReportView() {
     } finally {
       setLoading(false);
     }
+
+    void refreshReadingData(deviceId, timezone, locale)
+      .then((data) => {
+        setEvents(data.events);
+        setReports(data.reports);
+        setStartedAt(data.meta?.startedAt ?? null);
+      })
+      .catch(() => {
+        /* background refresh is best-effort */
+      });
   }, [deviceId, locale, timezone]);
 
   useEffect(() => {

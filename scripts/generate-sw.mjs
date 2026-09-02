@@ -36,6 +36,20 @@ try {
   /* pools not built yet */
 }
 
+const areaAssets = [];
+const areasDir = path.join(root, "public", "data", "areas");
+try {
+  for (const locale of readdirSync(areasDir)) {
+    const localeDir = path.join(areasDir, locale);
+    if (!statSync(localeDir).isDirectory()) continue;
+    for (const name of readdirSync(localeDir)) {
+      areaAssets.push(`/data/areas/${locale}/${name}`);
+    }
+  }
+} catch {
+  /* area bundles not built yet */
+}
+
 const precache = [
   "/",
   "/home",
@@ -55,6 +69,7 @@ const precache = [
   "/data/kjv-index.json",
   "/data/swahili-index.json",
   ...poolAssets,
+  ...areaAssets,
   ...staticAssets,
 ];
 

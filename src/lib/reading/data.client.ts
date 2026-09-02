@@ -150,25 +150,43 @@ export async function loadReadingData(
   reports: DevelopmentReport[];
 }> {
   await ensureReadingMetaClient(deviceId, timezone, locale, notifyHours);
-  await backfillAbsentSlotsClient(deviceId);
-  await generateDueReportsClient(deviceId);
 
   const meta = await getDeviceMetaClient(deviceId);
   const events = await listReadEventsClient(deviceId);
   const reports = await listReportsClient(deviceId);
 
+  void refreshReadingData(deviceId, timezone, locale);
+
+  return { meta, events, reports };
+}
+
+/** Backfill, generate reports, and sync — safe to run in the background. */
+export async function refreshReadingData(
+  deviceId: string,
+  timezone: string,
+  locale: "en" | "sw",
+): Promise<{
+  meta: Awaited<ReturnType<typeof getDeviceMetaClient>>;
+  events: ReadEvent[];
+  reports: DevelopmentReport[];
+}> {
+  await backfillAbsentSlotsClient(deviceId);
+  await generateDueReportsClient(deviceId);
+
   if (isOnline()) {
-    void (async () => {
-      try {
-        await pushReadingToServer(deviceId);
-        await syncReadingFromServer(deviceId, timezone, locale);
-        await backfillAbsentSlotsClient(deviceId);
-      } catch {
-        /* sync when back online */
-      }
-    })();
+    try {
+      await pushReadingToServer(deviceId);
+      await syncReadingFromServer(deviceId, timezone, locale);
+      await backfillAbsentSlotsClient(deviceId);
+      await generateDueReportsClient(deviceId);
+    } catch {
+      /* sync when back online */
+    }
   }
 
+  const meta = await getDeviceMetaClient(deviceId);
+  const events = await listReadEventsClient(deviceId);
+  const reports = await listReportsClient(deviceId);
   return { meta, events, reports };
 }
 

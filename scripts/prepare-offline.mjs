@@ -126,8 +126,35 @@ writeFileSync(
 );
 console.log("Wrote hourly-schedule.json");
 
+const areasPublic = path.join(publicData, "areas");
+mkdirSync(areasPublic, { recursive: true });
+
 for (const locale of ["en", "sw"]) {
   const verses = loadIndex(locale);
+  const localeDir = path.join(areasPublic, locale);
+  mkdirSync(localeDir, { recursive: true });
+
+  for (const file of readdirSync(poolsSrc)) {
+    if (file === "index.json") continue;
+    const areaId = file.replace(/\.json$/, "");
+    const refs = loadPoolRefs(areaId);
+    const resolved = [];
+    for (const ref of refs) {
+      const passage = findVerse(verses, ref, locale);
+      if (!passage) continue;
+      resolved.push({
+        ref: passage.ref,
+        text: passage.text,
+        ...(passage.refEn ? { refEn: passage.refEn } : {}),
+      });
+    }
+    writeFileSync(
+      path.join(localeDir, `${areaId}.json`),
+      JSON.stringify({ id: areaId, locale, count: resolved.length, verses: resolved }),
+    );
+  }
+  console.log(`Wrote area bundles → public/data/areas/${locale}/`);
+
   const slots = HOURLY.map((slot) => {
     const refs = loadPoolRefs(slot.theme);
     const seed = hourlyPoolSeed(slot.theme, today, slot.hour);

@@ -12,6 +12,7 @@ import {
   fetchPoolIndex,
   resolveAreaPoolVerses,
 } from "@/lib/bible/resolve-hourly-verse.client";
+import { loadAreaVerseBundle } from "@/lib/bible/area-bundle.client";
 import { isBrowserOffline } from "@/lib/network";
 import { cn } from "@/lib/utils";
 
@@ -131,28 +132,38 @@ export function AreasView() {
     void (async () => {
       setVersesLoading(true);
       try {
+        const bundled = await loadAreaVerseBundle(selected.id, locale);
+        if (!cancelled && bundled.length > 0) {
+          setVerses(bundled);
+          setVersesLoading(false);
+        }
+
         if (isBrowserOffline()) {
-          const data = await resolveAreaPoolVerses(selected.id, locale);
-          if (!cancelled) setVerses(data);
+          if (bundled.length === 0) {
+            const data = await resolveAreaPoolVerses(selected.id, locale);
+            if (!cancelled) setVerses(data);
+          }
           return;
         }
 
-        const { fetchWithTimeout } = await import("@/lib/network");
-        const res = await fetchWithTimeout(
-          `/api/area-verses?area=${encodeURIComponent(selected.id)}&locale=${locale}`,
-          { cache: "no-store" },
-          2500,
-        );
-        if (res.ok) {
-          const payload = (await res.json()) as { verses?: RetrievedPassage[] };
-          if (!cancelled && payload.verses?.length) {
-            setVerses(payload.verses);
-            return;
+        if (bundled.length === 0) {
+          const { fetchWithTimeout } = await import("@/lib/network");
+          const res = await fetchWithTimeout(
+            `/api/area-verses?area=${encodeURIComponent(selected.id)}&locale=${locale}`,
+            { cache: "no-store" },
+            2000,
+          );
+          if (res.ok) {
+            const payload = (await res.json()) as { verses?: RetrievedPassage[] };
+            if (!cancelled && payload.verses?.length) {
+              setVerses(payload.verses);
+              return;
+            }
           }
-        }
 
-        const data = await resolveAreaPoolVerses(selected.id, locale);
-        if (!cancelled) setVerses(data);
+          const data = await resolveAreaPoolVerses(selected.id, locale);
+          if (!cancelled) setVerses(data);
+        }
       } catch {
         if (!cancelled) setVerses([]);
       } finally {

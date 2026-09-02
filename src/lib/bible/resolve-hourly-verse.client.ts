@@ -1,3 +1,4 @@
+import { loadAreaVerseBundle } from "./area-bundle.client";
 import type { ContentAreaId } from "./content-areas";
 import type { HourlyThemeId } from "./hourly-themes";
 import type { BibleLocale } from "./locale";
@@ -84,6 +85,9 @@ export async function resolveAreaPoolVerses(
   areaId: ContentAreaId,
   locale: BibleLocale,
 ): Promise<RetrievedPassage[]> {
+  const bundled = await loadAreaVerseBundle(areaId, locale);
+  if (bundled.length > 0) return bundled;
+
   const refs = await loadPoolRefs(areaId);
   const verses = await loadVerseIndex(locale);
   const result: RetrievedPassage[] = [];

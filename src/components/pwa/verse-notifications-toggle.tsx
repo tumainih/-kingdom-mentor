@@ -12,6 +12,7 @@ import {
   isVerseNotificationsSupported,
   syncVerseNotifications,
 } from "@/lib/notifications/verse-notifications";
+import { withTimeout } from "@/lib/network";
 
 interface VerseNotificationsToggleProps {
   compact?: boolean;
@@ -47,16 +48,20 @@ export function VerseNotificationsToggle({
     setBusy(true);
     try {
       if (enabled) {
-        await disableVerseNotifications();
+        await withTimeout(disableVerseNotifications(), 8000, "disable timed out");
         setEnabled(false);
         setDenied(false);
         return;
       }
 
-      const permission = await enableVerseNotifications(locale, {
-        showNow: false,
-        notifyHours: getNotifyHours(),
-      });
+      const permission = await withTimeout(
+        enableVerseNotifications(locale, {
+          showNow: false,
+          notifyHours: getNotifyHours(),
+        }),
+        12000,
+        "enable timed out",
+      );
       setDenied(permission === "denied");
       setEnabled(permission === "granted");
     } catch {

@@ -4,9 +4,9 @@ import { getSlotForHour, themeLabel, type HourlyThemeId } from "./hourly-themes"
 import {
   fetchHourlyVerseFromApi,
   getHourlyVerseFromSnapshot,
-  loadHourlySnapshot,
   type HourlySnapshotEntry,
 } from "./hourly-snapshot.client";
+import { resolveHourlyVerseClient } from "./resolve-hourly-verse.client";
 
 export interface HistoryVerseResult {
   date: string;
@@ -30,6 +30,24 @@ function snapshotToHistory(entry: HourlySnapshotEntry, date: string): HistoryVer
   };
 }
 
+async function resolveHistoryVerseLocal(
+  date: string,
+  hour: number,
+  locale: BibleLocale,
+): Promise<HistoryVerseResult> {
+  const slot = getSlotForHour(hour);
+  const local = await resolveHourlyVerseClient(slot.theme, locale, hour, date);
+  return {
+    date,
+    hour,
+    theme: slot.theme,
+    themeLabel: themeLabel(slot.theme, locale),
+    scheduledRef: local.scheduledRef,
+    poolSize: local.poolSize,
+    passage: local.passage,
+  };
+}
+
 export async function resolveHistoryVerse(
   date: string,
   hour: number,
@@ -40,59 +58,47 @@ export async function resolveHistoryVerse(
     return snapshotToHistory(fromSnapshot, date);
   }
 
-  const fromApi = await fetchHourlyVerseFromApi(locale, hour, date);
-  if (fromApi?.passage) {
-    return snapshotToHistory(fromApi, date);
+  const local = await resolveHistoryVerseLocal(date, hour, locale);
+  if (local.passage) return local;
+
+  if (!isBrowserOffline()) {
+    const fromApi = await fetchHourlyVerseFromApi(locale, hour, date);
+    if (fromApi?.passage) {
+      return snapshotToHistory(fromApi, date);
+    }
   }
 
-  const slot = getSlotForHour(hour);
-  return {
-    date,
-    hour,
-    theme: slot.theme,
-    themeLabel: themeLabel(slot.theme, locale),
-    scheduledRef: "",
-    poolSize: 0,
-    passage: null,
-  };
+  return local;
 }
 
 export async function resolveHistoryVerseBatch(
   slots: { date: string; hour: number }[],
   locale: BibleLocale,
-  concurrency = 8,
 ): Promise<HistoryVerseResult[]> {
-  const snapshot = await loadHourlySnapshot(locale);
-  const snapshotDate = snapshot[0]?.date;
-  const snapshotByKey = new Map(
-    snapshot.map((entry) => [`${entry.date}:${entry.hour}`, entry]),
-  );
-
   const results: HistoryVerseResult[] = [];
-  const pending: { date: string; hour: number }[] = [];
 
   for (const { date, hour } of slots) {
-    const key = `${date}:${hour}`;
-    const cached = snapshotByKey.get(key);
-    if (cached?.passage && (!snapshotDate || date === snapshotDate)) {
-      results.push(snapshotToHistory(cached, date));
+    const fromSnapshot = await getHourlyVerseFromSnapshot(locale, hour, date);
+    if (fromSnapshot?.passage) {
+      results.push(snapshotToHistory(fromSnapshot, date));
       continue;
     }
-    pending.push({ date, hour });
-  }
 
-  for (let i = 0; i < pending.length; i += concurrency) {
-    if (isBrowserOffline()) break;
-    const chunk = pending.slice(i, i + concurrency);
-    const batch = await Promise.all(
-      chunk.map(({ date, hour }) => fetchHourlyVerseFromApi(locale, hour, date)),
-    );
-    for (let j = 0; j < batch.length; j++) {
-      const item = batch[j];
-      if (item?.passage) {
-        results.push(snapshotToHistory(item, chunk[j].date));
+    const local = await resolveHistoryVerseLocal(date, hour, locale);
+    if (local.passage) {
+      results.push(local);
+      continue;
+    }
+
+    if (!isBrowserOffline()) {
+      const fromApi = await fetchHourlyVerseFromApi(locale, hour, date);
+      if (fromApi?.passage) {
+        results.push(snapshotToHistory(fromApi, date));
+        continue;
       }
     }
+
+    results.push(local);
   }
 
   return results.sort((a, b) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Bell, Check, Copy, MessageSquare } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
@@ -55,6 +55,7 @@ export function HourlyVerseHome() {
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
   const [compact, setCompact] = useState(false);
+  const lastFetchKeyRef = useRef("");
 
   useEffect(() => {
     const update = () => setCompact(window.innerWidth < 640);
@@ -64,8 +65,8 @@ export function HourlyVerseHome() {
   }, []);
 
   const fetchVerse = useCallback(
-    async (hour: number, dateStr: string) => {
-      setLoading(true);
+    async (hour: number, dateStr: string, showSpinner: boolean) => {
+      if (showSpinner) setLoading(true);
       try {
         const data = await resolveHourlyVerseFast(locale, hour, dateStr);
         if (data?.passage) {
@@ -92,7 +93,7 @@ export function HourlyVerseHome() {
       } catch {
         setVerse(null);
       } finally {
-        setLoading(false);
+        if (showSpinner) setLoading(false);
       }
     },
     [locale],
@@ -109,10 +110,15 @@ export function HourlyVerseHome() {
 
   useEffect(() => {
     if (currentHour === null || !now) return;
-    void fetchVerse(currentHour, localDateString(now)).catch(() => {
+    const dateStr = localDateString(now);
+    const fetchKey = `${locale}:${dateStr}:${currentHour}`;
+    if (fetchKey === lastFetchKeyRef.current) return;
+    const isFirstLoad = lastFetchKeyRef.current === "";
+    lastFetchKeyRef.current = fetchKey;
+    void fetchVerse(currentHour, dateStr, isFirstLoad).catch(() => {
       /* verse fetch handled inside fetchVerse */
     });
-  }, [currentHour, now, fetchVerse]);
+  }, [currentHour, now, fetchVerse, locale]);
 
   const copyVerse = useCallback(async () => {
     if (!verse?.passage) return;

@@ -143,8 +143,13 @@ async function cacheFirst(request, options) {
 }
 
 async function navigateHandler(request) {
-  const cached = await caches.match(request);
+  const reload =
+    request.cache === "reload" ||
+    request.headers.get("cache-control")?.includes("max-age=0") ||
+    request.headers.get("pragma") === "no-cache";
+
   if (isProbablyOffline()) {
+    const cached = await caches.match(request);
     return (
       cached ||
       (await caches.match("/home")) ||
@@ -152,14 +157,35 @@ async function navigateHandler(request) {
       Response.error()
     );
   }
+
+  const fetchRequest = reload
+    ? new Request(request.url, { cache: "no-store", headers: request.headers })
+    : request;
+  const timeoutMs = reload ? 8000 : NETWORK_TIMEOUT_MS;
+
   try {
-    const response = await fetchWithTimeout(request);
+    const response = await fetchWithTimeout(fetchRequest, timeoutMs);
     if (response.ok) {
       const cache = await caches.open(CACHE);
-      cache.put(request, response.clone());
+      await cache.put(request, response.clone());
     }
     return response;
   } catch {
+    if (reload) {
+      try {
+        const response = await fetch(fetchRequest, { cache: "no-store" });
+        if (response.ok) {
+          const cache = await caches.open(CACHE);
+          await cache.put(request, response.clone());
+        }
+        return response;
+      } catch {
+        const cached = await caches.match(request);
+        return cached || Response.error();
+      }
+    }
+
+    const cached = await caches.match(request);
     return (
       cached ||
       (await caches.match("/home")) ||

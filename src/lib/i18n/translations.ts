@@ -113,6 +113,11 @@ export const translations = {
     installOfflineReady: "Ready for offline — open from your home screen anytime",
     offlineBanner:
       "Offline — verses, history, reports, alerts, and local guidance still work. Only AI chat needs internet.",
+    updateAvailableHint: "A new version is ready.",
+    updateInstalledHint:
+      "Update ready — pull-to-refresh won't apply it on an installed app. Tap Update.",
+    updateNow: "Update now",
+    updateWorking: "Updating…",
     notifyTitle: "Hourly verse alerts",
     notifyHint:
       "Get a Scripture notification at the start of each selected hour — even when the app is closed (installed PWA + push). Uses your phone's notification sound.",
@@ -336,6 +341,11 @@ export const translations = {
     installOfflineReady: "Tayari bila mtandao — fungua kutoka skrini ya nyumbani wakati wowote",
     offlineBanner:
       "Nje ya mtandao — mistari, historia, ripoti, arifa, na mwongozo wa ndani bado vinafanya kazi. AI pekee inahitaji intaneti.",
+    updateAvailableHint: "Toleo jipya liko tayari.",
+    updateInstalledHint:
+      "Sasisho liko tayari — kuvuta chini kuonyesha upya haitoshei kwenye programu iliyosakinishwa. Gusa Sasisha.",
+    updateNow: "Sasisha sasa",
+    updateWorking: "Inasasisha…",
     notifyTitle: "Arifa za mstari kila saa",
     notifyHint:
       "Pokea arifa ya mstari mwanzoni mwa kila saa uliyochagua — hata app imefungwa (PWA + push). Inatumia sauti ya arifa ya simu.",

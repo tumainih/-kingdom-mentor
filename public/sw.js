@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build yYiT19yaJm_XhXBKbxhNq) */
-const CACHE = "kingdom-ai-yYiT19yaJm_XhXBKbxhNq";
+/* Kingdom AI — offline-capable service worker (build rYHelOh2Cajm-i4hnFUT-) */
+const CACHE = "kingdom-ai-rYHelOh2Cajm-i4hnFUT-";
 const PRECACHE = [
   "/",
   "/home",
@@ -88,26 +88,27 @@ const PRECACHE = [
   "/data/areas/sw/strength.json",
   "/data/areas/sw/trust.json",
   "/data/areas/sw/wisdom.json",
-  "/_next/static/chunks/04u5bse93n8o7.js",
-  "/_next/static/chunks/0_6df9eqqo761.js",
   "/_next/static/chunks/0ajknyisuvam9.css",
+  "/_next/static/chunks/0cmru_xxc1fyi.js",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
-  "/_next/static/chunks/0d-m5wh8piqdj.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
+  "/_next/static/chunks/0hxpm9lodtva4.js",
   "/_next/static/chunks/0hyie6vy1j-zd.js",
-  "/_next/static/chunks/0zrky5p-zqdw3.js",
-  "/_next/static/chunks/11mtpq-x4a-qg.js",
-  "/_next/static/chunks/1cmk72eecyy08.js",
+  "/_next/static/chunks/1-x51v34sn-b8.js",
+  "/_next/static/chunks/15jkndep3zfaa.js",
+  "/_next/static/chunks/1g181p9nyr1iy.js",
   "/_next/static/chunks/1h0lni661c03r.js",
   "/_next/static/chunks/1z99mlp5cofct.js",
-  "/_next/static/chunks/24t7crwozt_yd.js",
-  "/_next/static/chunks/2dkgjl86akf9u.js",
-  "/_next/static/chunks/2n612fe5thts9.js",
+  "/_next/static/chunks/2-u-itew0utu3.js",
+  "/_next/static/chunks/2ch34h4uxvyen.js",
+  "/_next/static/chunks/2ykf5qkb66igv.js",
   "/_next/static/chunks/2ylvm6fgkxodi.js",
   "/_next/static/chunks/3adwt13tezgym.js",
+  "/_next/static/chunks/3bvjcy6cs_rb6.js",
+  "/_next/static/chunks/3iyz9wjxnlwcv.js",
   "/_next/static/chunks/3q576hlfnuh0n.js",
+  "/_next/static/chunks/3w4cftoeva8_6.js",
   "/_next/static/chunks/3wtl5qdkwgu5z.js",
-  "/_next/static/chunks/3x-rtbex_ewid.js",
   "/_next/static/chunks/turbopack-0snm50y8kpj5e.js",
   "/_next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2",
   "/_next/static/media/2bbe8d2671613f1f-s.0k62hbripvv8p.woff2",
@@ -125,9 +126,9 @@ const PRECACHE = [
   "/_next/static/media/e9457141811d41ae-s.02frcczqg7k-8.woff2",
   "/_next/static/media/favicon.2vob68tjqpejf.ico",
   "/_next/static/media/icon.1v5cwft9ue97g.svg",
-  "/_next/static/yYiT19yaJm_XhXBKbxhNq/_buildManifest.js",
-  "/_next/static/yYiT19yaJm_XhXBKbxhNq/_clientMiddlewareManifest.js",
-  "/_next/static/yYiT19yaJm_XhXBKbxhNq/_ssgManifest.js"
+  "/_next/static/rYHelOh2Cajm-i4hnFUT-/_buildManifest.js",
+  "/_next/static/rYHelOh2Cajm-i4hnFUT-/_clientMiddlewareManifest.js",
+  "/_next/static/rYHelOh2Cajm-i4hnFUT-/_ssgManifest.js"
 ];
 
 self.addEventListener("install", (event) => {
@@ -196,8 +197,13 @@ async function cacheFirst(request, options) {
 }
 
 async function navigateHandler(request) {
-  const cached = await caches.match(request);
+  const reload =
+    request.cache === "reload" ||
+    request.headers.get("cache-control")?.includes("max-age=0") ||
+    request.headers.get("pragma") === "no-cache";
+
   if (isProbablyOffline()) {
+    const cached = await caches.match(request);
     return (
       cached ||
       (await caches.match("/home")) ||
@@ -205,14 +211,35 @@ async function navigateHandler(request) {
       Response.error()
     );
   }
+
+  const fetchRequest = reload
+    ? new Request(request.url, { cache: "no-store", headers: request.headers })
+    : request;
+  const timeoutMs = reload ? 8000 : NETWORK_TIMEOUT_MS;
+
   try {
-    const response = await fetchWithTimeout(request);
+    const response = await fetchWithTimeout(fetchRequest, timeoutMs);
     if (response.ok) {
       const cache = await caches.open(CACHE);
-      cache.put(request, response.clone());
+      await cache.put(request, response.clone());
     }
     return response;
   } catch {
+    if (reload) {
+      try {
+        const response = await fetch(fetchRequest, { cache: "no-store" });
+        if (response.ok) {
+          const cache = await caches.open(CACHE);
+          await cache.put(request, response.clone());
+        }
+        return response;
+      } catch {
+        const cached = await caches.match(request);
+        return cached || Response.error();
+      }
+    }
+
+    const cached = await caches.match(request);
     return (
       cached ||
       (await caches.match("/home")) ||

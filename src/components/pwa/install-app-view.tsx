@@ -28,6 +28,7 @@ import {
   isOfflineReadyFlagSet,
   markOfflineReady,
 } from "@/lib/offline/client-reply";
+import { applyServiceWorkerUpdate } from "@/lib/pwa/sw-update";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -78,6 +79,7 @@ export function InstallAppView() {
   const [offlineReady, setOfflineReady] = useState(false);
   const [offlinePreparing, setOfflinePreparing] = useState(false);
   const [canShare, setCanShare] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     setPlatform(detectInstallPlatform());
@@ -265,6 +267,21 @@ export function InstallAppView() {
                 <Home className="h-4 w-4" />
                 {t("installOpenApp")}
               </Link>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full gap-2 text-xs"
+                disabled={updating}
+                onClick={() => {
+                  setUpdating(true);
+                  void applyServiceWorkerUpdate().finally(() => setUpdating(false));
+                }}
+              >
+                {updating ? t("updateWorking") : t("updateNow")}
+              </Button>
+              <p className="text-center text-[10px] leading-snug text-muted-foreground">
+                {t("updateInstalledHint")}
+              </p>
             </div>
           ) : (
             <div className="mt-6 space-y-3">

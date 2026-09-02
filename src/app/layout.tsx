@@ -4,6 +4,7 @@ import { EnsureReadingDevice } from "@/components/reading/ensure-reading-device"
 import { LocaleProvider } from "@/context/locale-context";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import { OfflineBanner } from "@/components/pwa/offline-banner";
+import { UpdateBanner } from "@/components/pwa/update-banner";
 import "./globals.css";
 
 const inter = Inter({
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <LocaleProvider>
           <EnsureReadingDevice />
           <OfflineBanner />
+          <UpdateBanner />
           {children}
         </LocaleProvider>
       </body>

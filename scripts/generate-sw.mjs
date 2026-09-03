@@ -36,19 +36,8 @@ try {
   /* pools not built yet */
 }
 
-const areaAssets = [];
-const areasDir = path.join(root, "public", "data", "areas");
-try {
-  for (const locale of readdirSync(areasDir)) {
-    const localeDir = path.join(areasDir, locale);
-    if (!statSync(localeDir).isDirectory()) continue;
-    for (const name of readdirSync(localeDir)) {
-      areaAssets.push(`/data/areas/${locale}/${name}`);
-    }
-  }
-} catch {
-  /* area bundles not built yet */
-}
+// Do NOT precache full Bible indexes (~13MB) or all area verse bundles (~2.6MB).
+// Those are cache-on-demand via /data/ fetch handler — precaching them OOMs Chrome.
 
 const precache = [
   "/",
@@ -66,10 +55,8 @@ const precache = [
   "/data/hourly-schedule.json",
   "/data/hourly-en.json",
   "/data/hourly-sw.json",
-  "/data/kjv-index.json",
-  "/data/swahili-index.json",
+  "/data/pools/index.json",
   ...poolAssets,
-  ...areaAssets,
   ...staticAssets,
 ];
 

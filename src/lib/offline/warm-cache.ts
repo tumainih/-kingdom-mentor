@@ -1,4 +1,4 @@
-/** Routes and data to prefetch so the installed app works offline. */
+/** Routes and light data to prefetch so the installed app works offline. */
 const APP_ROUTES = [
   "/",
   "/home",
@@ -10,9 +10,8 @@ const APP_ROUTES = [
   "/privacy",
 ] as const;
 
+/** Keep warm-cache small — full Bible indexes are ~13MB and crash some phones. */
 const CORE_DATA = [
-  "/data/kjv-index.json",
-  "/data/swahili-index.json",
   "/data/hourly-en.json",
   "/data/hourly-sw.json",
   "/data/hourly-schedule.json",
@@ -30,6 +29,10 @@ async function poolDataUrls(): Promise<string[]> {
   }
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
 async function waitForServiceWorker(): Promise<void> {
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
   try {
@@ -39,18 +42,38 @@ async function waitForServiceWorker(): Promise<void> {
   }
 }
 
-/** Prefetch Bible data, verse pools, and app pages into the cache (via SW when active). */
+async function fetchQuiet(url: string): Promise<void> {
+  try {
+    await fetch(url, { cache: "force-cache", credentials: "same-origin" });
+  } catch {
+    /* best-effort */
+  }
+}
+
+/** Prefetch app pages + small verse pools. Full Bible loads later on idle if needed. */
 export async function warmOfflineCache(): Promise<void> {
   if (typeof window === "undefined" || !navigator.onLine) return;
 
   const pools = await poolDataUrls();
   const urls = [...CORE_DATA, ...pools, ...APP_ROUTES];
 
-  void Promise.allSettled(
-    urls.map((url) =>
-      fetch(url, { cache: "force-cache", credentials: "same-origin" }),
-    ),
-  );
+  for (const url of urls) {
+    await fetchQuiet(url);
+    await sleep(40);
+  }
+
+  // Defer huge indexes so first paint / navigation stays responsive.
+  const idle = window.requestIdleCallback
+    ? (cb: () => void) => window.requestIdleCallback(cb, { timeout: 12_000 })
+    : (cb: () => void) => window.setTimeout(cb, 4000);
+
+  idle(() => {
+    void (async () => {
+      await fetchQuiet("/data/kjv-index.json");
+      await sleep(500);
+      await fetchQuiet("/data/swahili-index.json");
+    })();
+  });
 }
 
 /** Mark offline-ready immediately; warm cache in background when online. */

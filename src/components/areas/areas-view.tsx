@@ -103,6 +103,11 @@ export function AreasView() {
   const [versesLoading, setVersesLoading] = useState(false);
   const [copiedRef, setCopiedRef] = useState<string | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(40);
+
+  useEffect(() => {
+    setVisibleCount(40);
+  }, [selected, locale]);
 
   useEffect(() => {
     let cancelled = false;
@@ -304,7 +309,7 @@ export function AreasView() {
                       {copiedAll ? t("historyCopiedAll") : t("historyCopyAll")}
                     </Button>
                   </div>
-                  {verses.map((passage, index) => (
+                  {verses.slice(0, visibleCount).map((passage, index) => (
                     <PoolVerseCard
                       key={`${passage.ref}-${index}`}
                       passage={passage}
@@ -314,6 +319,22 @@ export function AreasView() {
                       copiedLabel={t("copied")}
                     />
                   ))}
+                  {visibleCount < verses.length ? (
+                    <div className="flex justify-center pt-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs"
+                        onClick={() => setVisibleCount((n) => n + 40)}
+                      >
+                        {t("areasLoadMore", {
+                          shown: Math.min(visibleCount, verses.length),
+                          total: verses.length,
+                        })}
+                      </Button>
+                    </div>
+                  ) : null}
                 </>
               )}
             </div>

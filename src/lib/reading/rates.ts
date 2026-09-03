@@ -8,7 +8,7 @@ export function lapseMsToRate(lapseMs: number, missed = false): number {
 export const UNREAD_RATE = 0;
 export const UNREAD_COLOR = "#92400e";
 
-/** Rate 0 = brown (unread). Rates 1–6+ whitish → reddish. */
+/** Rate 0 = brown (unread). Rates 1–6+ whitish → reddish. Cap display at 6. */
 const RATE_COLORS = [
   "#f8fafc",
   "#fde8e8",
@@ -18,10 +18,18 @@ const RATE_COLORS = [
   "#b91c1c",
 ] as const;
 
+export const MAX_DISPLAY_RATE = 6;
+
 export function rateToColor(rate: number): string {
   if (rate <= 0) return UNREAD_COLOR;
-  const idx = Math.min(RATE_COLORS.length - 1, Math.max(0, rate - 1));
+  const idx = Math.min(RATE_COLORS.length - 1, Math.max(0, Math.round(rate) - 1));
   return RATE_COLORS[idx]!;
+}
+
+/** Clamp rate for UI labels (speed scale tops out at 6). */
+export function displayRate(rate: number): number {
+  if (rate <= 0) return 0;
+  return Math.min(MAX_DISPLAY_RATE, Math.round(rate * 10) / 10);
 }
 
 export function averageRate(rates: number[]): number {

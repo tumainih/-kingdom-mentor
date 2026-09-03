@@ -67,6 +67,9 @@ export function aggregateScaleCell(
   const inRange = eventsInRange(events, start, end);
   const avgRate = inRange.length ? averageRate(inRange.map((e) => e.rate)) : 0;
   const rounded = Math.round(avgRate * 10) / 10;
+  const display = rounded <= 0 ? 0 : Math.min(6, rounded);
+  const hasData = inRange.length > 0;
+  const colorize = finished || hasData;
 
   return {
     id,
@@ -74,14 +77,14 @@ export function aggregateScaleCell(
     unit,
     start,
     end,
-    avgRate: rounded,
-    color: finished
-      ? inRange.length
+    avgRate: display,
+    color: colorize
+      ? hasData
         ? rateToColor(Math.round(avgRate))
         : UNREAD_COLOR
       : "#334155",
     eventCount: inRange.length,
-    finished,
+    finished: finished || hasData,
     reportUnit: reportUnit ?? (unit === "day" ? "24h" : unit === "half" ? undefined : (unit as ReportUnit)),
   };
 }

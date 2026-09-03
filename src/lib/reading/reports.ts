@@ -1,6 +1,10 @@
 import { backfillAbsentSlots } from "@/lib/reading/backfill";
 import { completedReportWindows, periodKey } from "@/lib/reading/periods";
-import { aggregateReport, buildReadEvent } from "@/lib/reading/report-math";
+import {
+  aggregateReport,
+  buildReadEvent,
+  generateReportFromEvents,
+} from "@/lib/reading/report-math";
 import {
   eventsInRange,
   getDeviceMeta,
@@ -12,7 +16,12 @@ import {
   saveReadEvent,
   saveReport,
 } from "@/lib/reading/store.server";
-import type { DevelopmentReport, PendingNotification, ReadEvent, ReportUnit } from "@/lib/reading/types";
+import type {
+  DevelopmentReport,
+  PendingNotification,
+  ReadEvent,
+  ReportUnit,
+} from "@/lib/reading/types";
 
 export { buildReadEvent, aggregateReport } from "@/lib/reading/report-math";
 
@@ -80,26 +89,31 @@ export async function generateDueReportsForDevice(
 
   const windows = completedReportWindows(meta.startedAt, now.getTime(), meta.timezone);
   const existing = await listReports(deviceId);
-  const existingIds = new Set(existing.map((r) => r.id));
+  const existingById = new Map(existing.map((r) => [r.id, r]));
+  const allEvents = await listReadEvents(deviceId);
   const created: DevelopmentReport[] = [];
 
   for (const window of windows) {
     const id = periodKey(window.unit, window.start, window.end);
-    const report = await generateReportForRange(
+    const report = generateReportFromEvents(
       deviceId,
       window.unit,
       window.start,
       window.end,
+      allEvents,
     );
     if (!report) continue;
 
-    if (!existingIds.has(id)) {
-      await saveReport(report);
-      created.push(report);
-      existingIds.add(id);
-    } else {
-      await saveReport(report);
+    const prev = existingById.get(id);
+    if (prev) {
+      report.note = prev.note;
+      report.submittedAt = prev.submittedAt;
+      report.notifiedAt = prev.notifiedAt;
     }
+
+    await saveReport(report);
+    if (!prev) created.push(report);
+    existingById.set(id, report);
   }
 
   return created;

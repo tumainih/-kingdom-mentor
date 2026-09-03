@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { parseLocale } from "@/lib/bible/locale";
-import { buildReadEvent } from "@/lib/reading/reports";
-import { removePendingNotification, saveReadEvent, ensureDeviceMeta } from "@/lib/reading/store.server";
+import { buildReadEvent, generateDueReportsForDevice } from "@/lib/reading/reports";
+import {
+  ensureDeviceMeta,
+  removePendingNotification,
+  saveReadEvent,
+} from "@/lib/reading/store.server";
 
 export const runtime = "nodejs";
 
@@ -36,12 +40,13 @@ export async function POST(request: Request) {
   const timezone = body.timezone?.trim() || "UTC";
   await ensureDeviceMeta(deviceId, timezone, locale);
 
+  const notificationId = body.notificationId || `n-${readAt}`;
   const event = buildReadEvent({
     deviceId,
-    notificationId: body.notificationId || `n-${readAt}`,
+    notificationId,
     shownAt,
     readAt,
-    hour: Number(body.hour) ?? new Date(readAt).getHours(),
+    hour: Number.isFinite(Number(body.hour)) ? Number(body.hour) : new Date(readAt).getHours(),
     verseRef: body.verseRef || "",
     theme: body.theme || "",
     themeLabel: body.themeLabel || "",
@@ -51,5 +56,8 @@ export async function POST(request: Request) {
   });
 
   await saveReadEvent(event);
+  await removePendingNotification(deviceId, notificationId);
+  await generateDueReportsForDevice(deviceId, new Date(readAt));
+
   return NextResponse.json({ ok: true, event });
 }

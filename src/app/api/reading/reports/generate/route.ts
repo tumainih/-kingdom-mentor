@@ -51,7 +51,12 @@ export async function POST(request: Request) {
   }
 
   const existing = await getReport(deviceId, report.id);
-  if (!existing) await saveReport(report);
+  if (existing) {
+    report.note = existing.note;
+    report.submittedAt = existing.submittedAt;
+    report.notifiedAt = existing.notifiedAt;
+  }
+  await saveReport(report);
 
-  return NextResponse.json({ ok: true, report: existing ?? report });
+  return NextResponse.json({ ok: true, report });
 }

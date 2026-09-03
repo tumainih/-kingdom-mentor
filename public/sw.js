@@ -1,5 +1,5 @@
-/* Kingdom AI — offline-capable service worker (build MHnX2mawJxf1nuBPduw-N) */
-const CACHE = "kingdom-ai-MHnX2mawJxf1nuBPduw-N";
+/* Kingdom AI — offline-capable service worker (build etbhxMQY4_a_3LlzmVe1U) */
+const CACHE = "kingdom-ai-etbhxMQY4_a_3LlzmVe1U";
 const PRECACHE = [
   "/",
   "/home",
@@ -88,9 +88,6 @@ const PRECACHE = [
   "/data/areas/sw/strength.json",
   "/data/areas/sw/trust.json",
   "/data/areas/sw/wisdom.json",
-  "/_next/static/MHnX2mawJxf1nuBPduw-N/_buildManifest.js",
-  "/_next/static/MHnX2mawJxf1nuBPduw-N/_clientMiddlewareManifest.js",
-  "/_next/static/MHnX2mawJxf1nuBPduw-N/_ssgManifest.js",
   "/_next/static/chunks/0cmru_xxc1fyi.js",
   "/_next/static/chunks/0cz1d0mv5g_q7.js",
   "/_next/static/chunks/0ehjiuuxbbhq9.js",
@@ -113,6 +110,9 @@ const PRECACHE = [
   "/_next/static/chunks/3w4cftoeva8_6.js",
   "/_next/static/chunks/3wtl5qdkwgu5z.js",
   "/_next/static/chunks/turbopack-0snm50y8kpj5e.js",
+  "/_next/static/etbhxMQY4_a_3LlzmVe1U/_buildManifest.js",
+  "/_next/static/etbhxMQY4_a_3LlzmVe1U/_clientMiddlewareManifest.js",
+  "/_next/static/etbhxMQY4_a_3LlzmVe1U/_ssgManifest.js",
   "/_next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2",
   "/_next/static/media/2bbe8d2671613f1f-s.0k62hbripvv8p.woff2",
   "/_next/static/media/2c55a0e60120577a-s.0-dom-5bn10r2.woff2",

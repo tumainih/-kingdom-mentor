@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { backfillAbsentSlots } from "@/lib/reading/backfill";
+import { generateDueReportsForDevice } from "@/lib/reading/reports";
 import {
   ensureDeviceMeta,
   getDeviceMeta,
@@ -31,6 +32,7 @@ export async function GET(request: Request) {
 
   await ensureDeviceMeta(deviceId, timezone, locale, notifyHours);
   await backfillAbsentSlots(deviceId);
+  await generateDueReportsForDevice(deviceId);
 
   const meta = await getDeviceMeta(deviceId);
   const events = await listReadEvents(deviceId);
